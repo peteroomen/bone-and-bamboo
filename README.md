@@ -10,3 +10,11 @@ face-up stacks, and beat four friendly hosts' scores, one per wind.
 - Working in this repo: [`CLAUDE.md`](CLAUDE.md)
 
 Sibling of Twelve Petals, a koi-koi roguelike.
+
+## Dragon expansion design lab
+
+- [60-dragon catalogue](docs/dragons/catalogue.md)
+- [Modelling findings and proposed tuning](docs/balance/2026-10-02-dragon-expansion.md)
+- [Per-dragon results](docs/dragons/model-results.md)
+- [Artist prompts](docs/dragons/artist-prompts.md)
+- [Reproduce the model and tests](tools/dragon-lab/README.md)

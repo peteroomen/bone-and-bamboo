@@ -1,0 +1,10 @@
+# Proposed sheets; do not trace until generated and reviewed.
+dragon-expansion-01.png sparrowNest goldToad pongHall outside ironTeapot longSleeves
+dragon-expansion-02.png lantern mahjong twoSuits allSimples pureStraight nightOwl
+dragon-expansion-03.png kongBell windChime twinCranes threeTreasures stoneLion oddBeads
+dragon-expansion-04.png evenComb littleSteps highPeaks middlePath fiveLanterns closedFan
+dragon-expansion-05.png paperFan jadeOx coinBelt emptyChair lastEmber stillPond
+dragon-expansion-06.png firstEcho pairBridge chowDrum pongSeal windSail eastCompass
+dragon-expansion-07.png rainbowChow threeBrothers singleSuit nineWindows terminalGuard balancedScales
+dragon-expansion-08.png fourTools quietScholar smallGarden fullGranary dawnRooster pairPeddler
+dragon-expansion-09.png kongMint windCourier teaLedger spareCup twinPeaches fourthPillar

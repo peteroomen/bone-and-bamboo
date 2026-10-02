@@ -84,3 +84,8 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
   milestone M1 on the `mvp` branch.
 - The art style trial (shadow theatre, porcelain or papercut) is with the user. Until it decides,
   the colourway is a setting.
+
+- **2026-10-02 dragon expansion:** a separate 60-dragon design laboratory now lives in
+  `tools/dragon-lab/`, with catalogue, findings and artist prompts linked from README. It does
+  not alter MVP balance. Its Python tests and experiments are documented in its README;
+  application pnpm gates still apply when porting effects to the MVP.
