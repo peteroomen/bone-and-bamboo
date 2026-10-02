@@ -107,20 +107,27 @@ Four rounds: **East (spring), South (summer), West (autumn), North (winter).**
 - **After each of rounds 1-3:** the spirit's **gift** (pick 1 of 2 rare dragons, free; if your
   dragon row is full you may swap one out or decline), then the **teahouse**.
 
-### Hosts and twists
+### Winds and twists
 
-Before each round you choose your host from two: the wind's **folk spirit**, or its **great
-beast** (target ×1.5 *tune*, and its gift offers 3 rare dragons instead of 2 plus $5). Each host
-changes one rule for its round. Twists are data (`src/content/hosts.ts`), not engine special cases.
+Each round is hosted by **its wind tile**: 東 East, 南 South, 西 West, 北 North, drawn like every
+tile (code body, traced face). There are no painted spirits for now; the wind tiles may later
+become little characters like the guide. Before each round you choose how that wind blows:
+**calm** (a gentle twist) or **storm** (a sharper twist, target ×1.5 *tune*, and its gift offers
+3 rare dragons instead of 2 plus $5). Each choice changes one rule for its round. Twists are data
+(`src/content/hosts.ts`, ids unchanged), not engine special cases. The names in brackets are the
+twists' old spirit names, kept as ids only; the UI shows the wind tile, Calm or Storm, and the
+twist's name and rule.
 
-| Wind | Folk spirit: twist | Great beast: twist |
+| Wind | Calm: twist | Storm: twist |
 |---|---|---|
-| East | **Fox spirit**, Masked: the tile under each stack top is hidden, but each tile you play that you took while it was hidden gives +2 mult | **Azure Dragon**, The coil: one stack is locked until you play a chow; chows score double chips |
-| South | **Monkey spirit**, Swaps: after every 2nd play two stack tops swap; once a round you may swap two stack tops yourself | **Vermilion Bird**, Embers: 3 tiles in the wall are burning; play a set containing one for +3 mult, or it burns away when it reaches a stack top unplayed for 2 turns |
-| West | **Jade Rabbit**, Moon tide: hand size +1, but discarded tiles go back to the bottom of a random stack | **White Tiger**, Claws: pongs and kongs score double chips; chows score half |
-| North | **Kitchen God**, The report: each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | **Black Tortoise**, The shell: 6 stacks instead of 8; the top tile of each stack is armoured until you play a pong or kong; kongs +4 mult |
+| East 東 | Masked (`fox`): the tile under each stack top is hidden, but each tile you play that you took while it was hidden gives +2 mult | The coil (`azureDragon`): one stack is locked until you play a chow; chows score double chips |
+| South 南 | Swaps (`monkey`): after every 2nd play two stack tops swap; once a round you may swap two stack tops yourself | Embers (`vermilionBird`): 3 tiles in the wall are burning; play a set containing one for +3 mult, or it burns away when it reaches a stack top unplayed for 2 turns |
+| West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles go back to the bottom of a random stack | Claws (`whiteTiger`): pongs and kongs score double chips; chows score half |
+| North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): 6 stacks instead of 8; the top tile of each stack is armoured until you play a pong or kong; kongs +4 mult |
 
-All twists are *tune*: the run simulator does not model them yet (milestone M5 adds them).
+All twists are *tune*: the run simulator does not model them yet (milestone M5 adds them). Until
+M5, the choice screen shows the wind, the target and the reward, and labels the twist as coming
+soon (see the accepted gameplay review below).
 
 ### The teahouse (shop)
 
@@ -286,7 +293,8 @@ means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo k
   in one neutral style, traced into vector shapes that keep a colour slot each (ink, red, blue,
   green, gold, brown, pink, ivory), and painted by the game with the colourway's palette, like the
   tiles. One icon set serves every colourway.
-- **Paintings** (hosts, great beasts, backdrops) are generated per colourway. They come from the planner and the
+- **Paintings** (hosts, great beasts, backdrops) are shelved for now: hosts are wind tiles and the
+  table is a flat colourway colour. If paintings return they are per colourway, and come from the planner and the
   user, through `art-source/prompts/`. Until it lands, use the placeholders described in
   `docs/work/2026-10-02-mvp-plan.md`.
 - **Sound** is synthesised as in Twelve Petals: bone-on-wood clacks for tiles, Chinese opera
