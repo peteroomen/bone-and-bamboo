@@ -46,3 +46,10 @@ Only the guide is a character. The dragons (the jokers) are plain tiles with a p
 thing on the face and a White, Green or Red Dragon frame for rarity, exactly like Balatro's joker
 cards. The dragon sheets now ask for objects (no faces or limbs) compact enough for an upright tile
 face. Shadow theatre is the starting colourway.
+
+## 2026-10-02 · Icons once, recoloured in code
+
+Tiles and colourways stay in code. Icons for tile faces are generated once in a neutral TILE ICON
+style (eight flat colours) and traced with a colour slot per shape; the game paints the slots per
+colourway. The icon sheets leave the per-style trial (the trial is now 7 images: the fox and the
+Azure Dragon in three styles, and dragon sheet 1 once).

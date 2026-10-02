@@ -267,7 +267,11 @@ means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo k
 
 - **Tiles** are drawn from code: `art-source/tiles/tiles.js` (port to TypeScript at
   `src/ui/art/tiles.ts`). Three colourways, unlocked by playing (see Colourways).
-- **Generated art** (hosts, the guide, the dragons' faces, backdrops, object sheets) comes from the planner and the
+- **Icons** (the pictures on the dragons, fortunes, packs and shop services) are generated once
+  in one neutral style, traced into vector shapes that keep a colour slot each (ink, red, blue,
+  green, gold, brown, pink, ivory), and painted by the game with the colourway's palette, like the
+  tiles. One icon set serves every colourway.
+- **Paintings** (hosts, great beasts, backdrops) are generated per colourway. They come from the planner and the
   user, through `art-source/prompts/`. Until it lands, use the placeholders described in
   `docs/work/2026-10-02-mvp-plan.md`.
 - **Sound** is synthesised as in Twelve Petals: bone-on-wood clacks for tiles, Chinese opera

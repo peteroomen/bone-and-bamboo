@@ -51,6 +51,16 @@
     }
   };
 
+  // Icons for tile faces are generated once, in this neutral style, and traced. Each traced shape
+  // keeps its colour slot (ink, red, blue, green, gold, brown, pink, ivory) and the game paints the
+  // slots with the colourway's palette, as it does the tiles.
+  var ICON_STYLE = "STYLE · TILE ICON (keep identical for every icon sheet)\n" +
+    "Pictures for the faces of tiles in a mahjong-tile game, in the manner of the painted faces of a classic bone-and-bamboo mahjong set: simple, bold, flat and instantly recognisable.\n" +
+    "- Line: one bold dark outline around every shape, even in weight. Only a few inner lines, and only where they show what the object is.\n" +
+    "- Colour: flat fills only, from exactly these eight: ink black, vermilion red, cobalt blue, jade green, ochre gold, wood brown, soft pink and warm ivory. Each shape is one of them. The game recolours each of these for its colour schemes, so keep them distinct and use no in-between shades.\n" +
+    "- Shape: a few large, chunky shapes with the object's real proportions, recognisable at 30 pixels. Fewer, bigger shapes rather than many small ones.\n" +
+    "- No shading, gradients, texture, shine, glow or shadows. Not 3D, not emoji, not kawaii; objects have no faces unless the object is a figure (a toad, an owl, a lion, cranes).";
+
   var BG = {
     green: "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: one perfectly even colour with no shadow, no gradient, no texture, no scenery and no floating objects. It is only there to be cut away.\n" +
       "- No green of that brightness anywhere in the figure; any green in it is a dark pine green. A clean dark edge runs everywhere the figure meets the green, including along the bottom edge.",
@@ -102,7 +112,7 @@
         "- Each object is upright, seen from the front or a little from above, centred in its cell and filling about 70% of it.\n" +
         "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. No green of that brightness in the objects; leaves and bamboo are dark pine green.\n" +
         "- These objects will be traced into vector shapes and shown as small as 18 pixels. So: a thick, even dark edge closes every shape, every colour area is one flat fill, and there is no detail smaller than about 1/25 of a cell. No hatching, texture, shine, highlights, drop shadows or glow.\n" +
-        "- Colours only from the STYLE's palette.\n" +
+        "- Colours only from the STYLE's eight.\n" +
         "- No text, letters, characters, numbers, labels, seal stamps, signatures or watermarks anywhere, on the objects too. Books, envelopes and tiles are blank or carry one simple flower, dot or stick shape.";
     }
     if (kind === "backdrop") {
@@ -146,30 +156,31 @@
     { id: "north-winter", kind: "backdrop", group: "Backdrops",
       text: "SUBJECT: North wind, winter\nA plum tree in snow: a gnarled plum branch with red blossom reaching in from the left, snow-covered rocks along the bottom, a far pagoda on a hill on the right." },
     // the dragons (the jokers): pictures for their tile faces
-    { id: "dragons-1", kind: "dragons", group: "Dragon tile pictures (jokers)", trial: true,
+    { id: "dragons-1", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)", trial: true,
       ids: ["abacus", "redString", "coinString", "bambooGrove", "coinPurse", "scroll"],
       text: "SUBJECTS (six objects, one per cell, in this order)\n1. Abacus: a wooden suanpan abacus standing upright, a dark frame, one crossbar, five columns of round beads.\n2. Red String: a red Chinese knot, a diamond-shaped weave with two short tails hanging below.\n3. Coin String: a short string of square-holed bronze cash coins threaded on a red cord, hanging in a curve.\n4. Bamboo Grove: a small round pot holding three bamboo stems with a few leaves.\n5. Coin Purse: a round embroidered silk purse with a drawstring top and a simple coin shape on its side.\n6. Scroll: a hand scroll partly unrolled, blank, with wooden rollers at each end." },
-    { id: "dragons-2", kind: "dragons", group: "Dragon tile pictures (jokers)",
+    { id: "dragons-2", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)",
       ids: ["sparrowNest", "goldToad", "pongHall", "outside", "ironTeapot", "longSleeves"],
       text: "SUBJECTS (six objects, one per cell, in this order)\n1. Nest: a woven twig nest holding two speckled eggs.\n2. Gold Toad: the three-legged money toad sitting on a little heap of square-holed coins, one coin in its mouth.\n3. Bell Hall: three identical bronze bells hanging in a row from a small wooden frame.\n4. Moon Gate: a round moon gate in a short length of white garden wall, seen straight on.\n5. Iron Teapot: a squat cast-iron teapot with a round lid knob and a curved spout.\n6. Long Sleeves: a folded silk robe with very long sleeves draped over a stand." },
-    { id: "dragons-3", kind: "dragons", group: "Dragon tile pictures (jokers)",
+    { id: "dragons-3", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)",
       ids: ["lantern", "mahjong", "twoSuits", "allSimples", "pureStraight", "nightOwl"],
       text: "SUBJECTS (six objects, one per cell, in this order)\n1. Lantern: a round red silk lantern with gold caps top and bottom and a short gold tassel.\n2. Mahjong!: a neat stack of four blank mahjong tiles with a pair of dice in front.\n3. Two Fish: two fish curled head to tail in a circle.\n4. Rice Bowl: a plain rice bowl with a pair of chopsticks resting across its rim.\n5. Nine Rings: the nine linked rings puzzle: nine metal rings on a long bar with a loop handle.\n6. Night Owl: a small round owl figurine with big round eyes, a crescent moon behind it." },
-    { id: "dragons-4", kind: "dragons", group: "Dragon tile pictures (jokers)",
+    { id: "dragons-4", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)",
       ids: ["kongBell", "windChime", "twinCranes", "threeTreasures", "stoneLion", "-"],
       text: "SUBJECTS (five objects, one per cell, in this order; leave the sixth cell empty)\n1. Great Bell: one large bronze temple bell with rows of round knobs and a dragon-shaped loop on top.\n2. Wind Chime: a glass wind chime with a cream bell and a long blank paper strip below.\n3. Twin Cranes: two red-crowned cranes standing side by side, necks crossing.\n4. Three Treasures: three identical gold ingots (boat-shaped sycee) stacked in a small pyramid.\n5. Stone Lion: a small stone guardian lion sitting with one paw on a ball.\n6. (empty)" },
     // objects: fortunes, almanac, packs, shop
-    { id: "objects-1", kind: "sheet", group: "Object sheets",
+    { id: "objects-1", kind: "sheet", oneStyle: true, group: "Object sheets",
       ids: ["rubbing", "fire", "brush", "jade", "bone", "gold"],
       text: "SUBJECTS (six objects, one per cell, in this order)\n1. Rubbing (copy a tile): a round cloth ink-dauber, black with ink, resting on a small sheet of paper.\n2. Fire (burn tiles): a small three-legged bronze brazier with flames rising from it.\n3. Brush (repaint a suit): a calligraphy brush resting on a mountain-shaped brush rest.\n4. Jade: a flat green jade bi disc with a round hole in the middle.\n5. Bone: a small bundle of carved bone counting sticks tied with a red thread.\n6. Gold Leaf: a small stack of thin gold leaf sheets with one corner lifting." },
-    { id: "objects-2", kind: "sheet", group: "Object sheets",
+    { id: "objects-2", kind: "sheet", oneStyle: true, group: "Object sheets",
       ids: ["almanac", "pack", "reroll", "burn", "porcelain", "windPack"],
       text: "SUBJECTS (six objects, one per cell, in this order)\n1. Almanac page (level a set): a thread-bound almanac book, closed, with a blank cover.\n2. Tile pack: a red envelope (hongbao) with a gold border, blank.\n3. Reroll: a bamboo dice cup with two dice beside it.\n4. Burn a kind: a bronze incense censer with three sticks of incense smoking.\n5. Porcelain: a small blue-and-white porcelain vase.\n6. Wind pack: a folded paper fan, half open." },
   ];
 
   function assemble(subject, styleKey) {
     var S = STYLES[styleKey];
-    var parts = [S.style];
+    var icons = subject.kind === "sheet" || subject.kind === "dragons";
+    var parts = [icons ? ICON_STYLE : S.style];
     if (VIBE[subject.kind]) parts.push(VIBE[subject.kind]);
     parts.push(FORMAT(subject.kind, S));
     parts.push(subject.text);
@@ -185,7 +196,7 @@
     return parts.join("\n\n");
   }
 
-  var api = { STYLES: STYLES, SUBJECTS: SUBJECTS, assemble: assemble };
+  var api = { STYLES: STYLES, SUBJECTS: SUBJECTS, assemble: assemble, ICON_STYLE: ICON_STYLE };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BBPrompts = api;
 })(typeof window !== "undefined" ? window : this);

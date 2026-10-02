@@ -205,89 +205,22 @@ FINAL REMINDER
 A genuine Chinese folk paper-cut: one connected sheet of red paper, moon-teeth and sawtooth cuts, black only for eyes. Follow the FORMAT for the frame and background exactly. A large, readable face. At most one held item. No text, no seal, no border.
 ```
 
-### trial-A-dragons-1.png (Shadow theatre, dragons-1)
+### dragons-1.png (icons, dragons-1)
 
 ```
-STYLE A · SHADOW THEATRE (keep identical for every image)
-Art for a Chinese mahjong-tile game, made as a real traditional Chinese shadow puppet (piying), the dyed-leather puppets of Shaanxi and Hebei shadow theatre, laid flat against a light so its colours glow. It must look like a genuine hand-cut puppet, not a modern illustration inspired by one.
-- Material: thin translucent dyed leather, cut with a knife. Its colours glow as if lit from behind: clear, saturated vermilion, pine green, amber and indigo, with black.
-- Line and pattern: every shape is defined by its cut edge and a few bold openwork patterns carved through the leather (cloud scrolls, coin shapes, simple flowers). Patterns are large and few, never lace-fine.
-- Construction: figures are flat pieces joined at shoulders, elbows, hips and knees by small round rivets, and the joints show. A thin dark control rod may run from the neck or a hand.
-- Faces follow real puppets: a clear profile or three-quarter view, one large readable eye, a simple carved line for the mouth.
-- Shape: large, simple flat shapes and a strong silhouette. No shading, no 3D lighting, no texture beyond the faint grain of the leather.
-- Do not drift into: red-only paper-cut art, 3D rendering, realistic animals, anime or cartoon styling, glow effects or lens flare.
+STYLE · TILE ICON (keep identical for every icon sheet)
+Pictures for the faces of tiles in a mahjong-tile game, in the manner of the painted faces of a classic bone-and-bamboo mahjong set: simple, bold, flat and instantly recognisable.
+- Line: one bold dark outline around every shape, even in weight. Only a few inner lines, and only where they show what the object is.
+- Colour: flat fills only, from exactly these eight: ink black, vermilion red, cobalt blue, jade green, ochre gold, wood brown, soft pink and warm ivory. Each shape is one of them. The game recolours each of these for its colour schemes, so keep them distinct and use no in-between shades.
+- Shape: a few large, chunky shapes with the object's real proportions, recognisable at 30 pixels. Fewer, bigger shapes rather than many small ones.
+- No shading, gradients, texture, shine, glow or shadows. Not 3D, not emoji, not kawaii; objects have no faces unless the object is a figure (a toad, an owl, a lion, cranes).
 
 FORMAT · DRAGON TILE PICTURES (keep identical every time)
 - One square image, 1:1, holding six separate objects in a neat grid of 3 columns and 2 rows, in the order the subjects are listed: the top row left to right, then the bottom row. Each object sits alone in its own invisible cell with wide empty space around it, never touching another object or the edges.
 - Each object is upright, seen from the front or a little from above, centred in its cell and filling about 70% of it.
 - The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. No green of that brightness in the objects; leaves and bamboo are dark pine green.
 - These objects will be traced into vector shapes and shown as small as 18 pixels. So: a thick, even dark edge closes every shape, every colour area is one flat fill, and there is no detail smaller than about 1/25 of a cell. No hatching, texture, shine, highlights, drop shadows or glow.
-- Colours only from the STYLE's palette.
-- No text, letters, characters, numbers, labels, seal stamps, signatures or watermarks anywhere, on the objects too. Books, envelopes and tiles are blank or carry one simple flower, dot or stick shape.
-- Each picture will be printed on the face of an upright mahjong tile (a dragon, the game's joker), so each object is compact and fits an upright box a little taller than wide. The game draws the tile and its frame: do NOT draw a tile, a frame or a border, and do NOT add faces, eyes or limbs to the objects.
-
-SUBJECTS (six objects, one per cell, in this order)
-1. Abacus: a wooden suanpan abacus standing upright, a dark frame, one crossbar, five columns of round beads.
-2. Red String: a red Chinese knot, a diamond-shaped weave with two short tails hanging below.
-3. Coin String: a short string of square-holed bronze cash coins threaded on a red cord, hanging in a curve.
-4. Bamboo Grove: a small round pot holding three bamboo stems with a few leaves.
-5. Coin Purse: a round embroidered silk purse with a drawstring top and a simple coin shape on its side.
-6. Scroll: a hand scroll partly unrolled, blank, with wooden rollers at each end.
-
-FINAL REMINDER
-Six separate objects on flat #00FF00 green, 3 across and 2 down, never touching, each compact enough for an upright tile face. No tiles, frames, faces or limbs. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.
-```
-
-### trial-B-dragons-1.png (Porcelain, dragons-1)
-
-```
-STYLE B · BLUE-AND-WHITE PORCELAIN (keep identical for every image)
-Art for a Chinese mahjong-tile game, painted as the decoration on real Ming-dynasty blue-and-white porcelain (qinghua): cobalt painted on white porcelain under a clear glaze. It must look like a genuine painted plate, not a modern illustration inspired by one.
-- Line: fine, confident cobalt brush outlines with a little variation in weight, as painted by a skilled kiln painter.
-- Colour: cobalt blue only, in three or four strengths, from a pale wash to the darkest heaped blue where the cobalt pooled, on white glaze. One exception: a single small accent of underglaze copper red, used once at most. No other colours.
-- Fill: flat washes of blue inside the outlines; the white glaze shows through as the light areas. The only gradient is the soft edge of a brush wash.
-- Surface: the soft sheen of glaze, seen straight on. No crackle, no chips, no plate shown at an angle, no 3D object.
-- Shape: large, simple shapes with calm white areas between them; fewer, bigger shapes rather than many small ones.
-- Do not drift into: Delftware, willow-pattern transfer prints, tattoo flash, watercolour on paper, digital vector art.
-
-FORMAT · DRAGON TILE PICTURES (keep identical every time)
-- One square image, 1:1, holding six separate objects in a neat grid of 3 columns and 2 rows, in the order the subjects are listed: the top row left to right, then the bottom row. Each object sits alone in its own invisible cell with wide empty space around it, never touching another object or the edges.
-- Each object is upright, seen from the front or a little from above, centred in its cell and filling about 70% of it.
-- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. No green of that brightness in the objects; leaves and bamboo are dark pine green.
-- These objects will be traced into vector shapes and shown as small as 18 pixels. So: a thick, even dark edge closes every shape, every colour area is one flat fill, and there is no detail smaller than about 1/25 of a cell. No hatching, texture, shine, highlights, drop shadows or glow.
-- Colours only from the STYLE's palette.
-- No text, letters, characters, numbers, labels, seal stamps, signatures or watermarks anywhere, on the objects too. Books, envelopes and tiles are blank or carry one simple flower, dot or stick shape.
-- Each picture will be printed on the face of an upright mahjong tile (a dragon, the game's joker), so each object is compact and fits an upright box a little taller than wide. The game draws the tile and its frame: do NOT draw a tile, a frame or a border, and do NOT add faces, eyes or limbs to the objects.
-
-SUBJECTS (six objects, one per cell, in this order)
-1. Abacus: a wooden suanpan abacus standing upright, a dark frame, one crossbar, five columns of round beads.
-2. Red String: a red Chinese knot, a diamond-shaped weave with two short tails hanging below.
-3. Coin String: a short string of square-holed bronze cash coins threaded on a red cord, hanging in a curve.
-4. Bamboo Grove: a small round pot holding three bamboo stems with a few leaves.
-5. Coin Purse: a round embroidered silk purse with a drawstring top and a simple coin shape on its side.
-6. Scroll: a hand scroll partly unrolled, blank, with wooden rollers at each end.
-
-FINAL REMINDER
-Six separate objects on flat #00FF00 green, 3 across and 2 down, never touching, each compact enough for an upright tile face. No tiles, frames, faces or limbs. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.
-```
-
-### trial-C-dragons-1.png (Papercut, dragons-1)
-
-```
-STYLE C · PAPERCUT (keep identical for every image)
-Art for a Chinese mahjong-tile game, made as a real Chinese paper-cut (jianzhi): cut from one sheet of red paper with scissors and a knife, as hung in windows at New Year. Genuine folk paper-cutting, not a modern vector illustration inspired by one.
-- Material: one sheet of vermilion red paper. The whole figure is one connected piece; every line is paper left between cuts.
-- Detail: interior detail is cut away in the traditional marks: crescent 'moon-teeth' for fur and feathers, sawtooth edges, round holes for eyes, swirls and small flowers on bodies and haunches. Patterns are large and few.
-- Colour: the red paper only, plus at most small pieces of black paper for eyes. No shading, no gradients, no outlines in another colour.
-- Shape: a bold, readable silhouette with plenty of cut-away space inside.
-- Do not drift into: 3D paper craft, layered shadow boxes, origami, stencil spray art, tattoo flash, digital vector art.
-
-FORMAT · DRAGON TILE PICTURES (keep identical every time)
-- One square image, 1:1, holding six separate objects in a neat grid of 3 columns and 2 rows, in the order the subjects are listed: the top row left to right, then the bottom row. Each object sits alone in its own invisible cell with wide empty space around it, never touching another object or the edges.
-- Each object is upright, seen from the front or a little from above, centred in its cell and filling about 70% of it.
-- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. No green of that brightness in the objects; leaves and bamboo are dark pine green.
-- These objects will be traced into vector shapes and shown as small as 18 pixels. So: a thick, even dark edge closes every shape, every colour area is one flat fill, and there is no detail smaller than about 1/25 of a cell. No hatching, texture, shine, highlights, drop shadows or glow.
-- Colours only from the STYLE's palette.
+- Colours only from the STYLE's eight.
 - No text, letters, characters, numbers, labels, seal stamps, signatures or watermarks anywhere, on the objects too. Books, envelopes and tiles are blank or carry one simple flower, dot or stick shape.
 - Each picture will be printed on the face of an upright mahjong tile (a dragon, the game's joker), so each object is compact and fits an upright box a little taller than wide. The game draws the tile and its frame: do NOT draw a tile, a frame or a border, and do NOT add faces, eyes or limbs to the objects.
 

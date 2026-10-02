@@ -80,15 +80,15 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
 
   <section>
     <div class="eyebrow">Round 1</div>
-    <h2>Style trial: 9 images</h2>
-    <p class="muted">One spirit, one great beast and the first sheet of pictures for the dragons (the jokers: tiles whose face shows a picture). The guide is the Red Dragon tile itself, drawn in code, so it needs no image, each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
+    <h2>Style trial: 7 images</h2>
+    <p class="muted">One spirit and one great beast in each of the three styles, plus the first sheet of tile icons, which is made once: the game draws the tiles and colourways in code, traces the icons and recolours them for each colourway. The guide is the Red Dragon tile itself, drawn in code, so it needs no image, each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
     <div id="trial" class="list"></div>
   </section>
 
   <section>
     <div class="eyebrow">Round 2</div>
     <h2>Everything else</h2>
-    <p class="muted">Ready now, but best run after the trial picks a style. From the second image on in a style, attach the approved trial images as references (I'll add a reference block once we have them).</p>
+    <p class="muted">Hosts, beasts and backdrops are per style (the style switch below); the icon sheets are one style for all and show the same prompt whichever style is picked. From the second image on in a style, attach the approved trial images as references (I'll add a reference block once we have them).</p>
     <div class="row"><span class="tag">Style</span><div class="seg" id="styles" role="group" aria-label="Style for round 2"></div></div>
     <div id="rest" class="list"></div>
   </section>
@@ -145,6 +145,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   }
   function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   function file(subject, style, trial) {
+    if (subject.oneStyle) return subject.id + ".png";
     return (trial ? "trial-" + style + "-" : "") + subject.id + ".png";
   }
   function cell(subject, style, trial, titled) {
@@ -170,7 +171,8 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   var trial = P.SUBJECTS.filter(function (s) { return s.trial; });
   document.getElementById("trial").innerHTML = trial.map(function (s) {
     return '<div class="subject"><header><h3>' + esc(label(s)) + '</h3><span class="tag">' + s.group + "</span></header>" +
-      '<div class="trio">' + Object.keys(P.STYLES).map(function (k) { return cell(s, k, true, true); }).join("") + "</div></div>";
+      (s.oneStyle ? '<p class="muted" style="font-size:0.9rem">One sheet for every colourway: the game traces it and recolours it.</p><div class="trio">' + cell(s, "A", true, false) + "</div></div>"
+        : '<div class="trio">' + Object.keys(P.STYLES).map(function (k) { return cell(s, k, true, true); }).join("") + "</div></div>");
   }).join("");
 
   // round 2
