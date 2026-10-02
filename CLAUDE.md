@@ -92,5 +92,8 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 - `localStorage` key `bb.dev.v1` sets a fixed seed or targets for the next run (used by e2e).
 - M6 done: the guided first run (`bb.profile.v1` `guidedDone`; seed 11, a plain East round, the
   guide's tip queue in `src/content/guide.ts` and `src/ui/game/tips.ts`). - M7 done: title, setup (tile set and lantern), collection, settings, the profile and unlocks
-  (`src/engine/profile.ts`), offline install and save transfer (`BB1.` codes). Next: M8. Milestone status is in the PR.
+  (`src/engine/profile.ts`), offline install and save transfer (`BB1.` codes). - M8 done: synthesised sound (`src/ui/audio`: bone clacks, the ban, gong and cymbal, a guzheng
+  and dizi score per wind and a calm teahouse, a wind bed), haptics, volume settings, and instant
+  speed that switches every animation off. The MVP milestones M1-M8 are built; M9 (art) is with
+  the planner. Milestone status is in the PR.
 - The art style trial: three colourways exist; colourways become unlocks in M7.

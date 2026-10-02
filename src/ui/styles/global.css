@@ -216,3 +216,13 @@ button {
   font-size: var(--fs-md);
   color: var(--fg-2);
 }
+
+/* Instant speed: no animation or transition anywhere. */
+[data-speed='instant'] *,
+[data-speed='instant'] *::before,
+[data-speed='instant'] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}

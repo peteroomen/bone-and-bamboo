@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { runReduce } from '@/engine/run';
 import type { RunAction, RunEvent, RunState } from '@/engine/runTypes';
+import { playEvents } from '@/ui/audio/audio';
 import { getState, setState, useStore } from '@/ui/state/store';
 
 export interface GameApi {
@@ -28,6 +29,7 @@ export function useGame(): GameApi {
     if (!cur) return [];
     const r = runReduce(cur, action);
     if (r.state !== cur) setState({ run: r.state });
+    playEvents(r.events, r.state);
     if (r.events.some((e) => e.type === 'round' && e.event.type === 'end')) setScoring(true);
     return r.events;
   }, []);

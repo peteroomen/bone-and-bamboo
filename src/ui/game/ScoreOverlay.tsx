@@ -3,6 +3,7 @@ import { DRAGONS } from '@/content/dragons';
 import { SET_TYPES } from '@/content/sets';
 import type { PlayedSet, ScoreResult, ScoreStep } from '@/engine/scoring';
 import { kindName } from '@/engine/tiles';
+import { haptics, sfx } from '@/ui/audio/audio';
 import { speedFactor } from '@/ui/state/store';
 import { GuideBubble } from './GuideBubble';
 
@@ -87,11 +88,25 @@ export function ScoreOverlay({
     return () => clearTimeout(t);
   }, [shown, finished]);
 
+  // a tick for each step as it appears, and the gong when the count ends
+  useEffect(() => {
+    if (shown > 0 && shown <= steps.length && !instant) sfx.tick(shown);
+  }, [shown, steps.length, instant]);
+  const won = score.total >= target;
+  useEffect(() => {
+    if (!finished) return;
+    if (won) {
+      sfx.win();
+      haptics.win();
+    } else {
+      sfx.lose();
+      haptics.lose();
+    }
+  }, [finished, won]);
   const last = shown > 0 ? steps[shown - 1] : undefined;
   const chips = last ? last.chips : 0;
   const mult = last ? last.mult : 0;
   const x = last ? (last.type === 'set' ? last.x : last.xTotal) : 1;
-  const won = score.total >= target;
 
   return (
     <div className="overlay" role="dialog" aria-label="Scoring" data-testid="score-overlay">
