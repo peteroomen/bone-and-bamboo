@@ -38,7 +38,16 @@ export function HostView({ run, choose }: { run: RunState; choose: (storm: boole
             <span className="host-text">
               <b>{storm ? 'Storm' : 'Calm'}</b>
               <i>
-                Target {fmt(targetFor(run.lantern, run.roundIndex, storm, run.targets))}
+                Target{' '}
+                {fmt(
+                  targetFor(
+                    run.lantern,
+                    run.roundIndex,
+                    storm,
+                    run.targets,
+                    h.targetMult ?? run.stormMult,
+                  ),
+                )}
                 {storm ? ' · a bigger gift' : ''}
               </i>
               <span className="host-twist">{plain ? 'A plain round' : h.title}</span>

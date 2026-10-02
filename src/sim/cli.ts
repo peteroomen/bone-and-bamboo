@@ -181,88 +181,6 @@ function summarise(res: SimRunResult[], shopper: string, mode: 'free' | 'run') {
   }
 }
 
-/** Candidate fixes for the flagged twists, each against the same seeds (not applied to the game). */
-async function variantsMode(args: string[], jobs: number, from: number) {
-  const runs = Number(flag(args, 'runs', '300'));
-  const base = {
-    shopper: 'smart' as const,
-    gift: true,
-    fire: 6,
-    targets: [1000, 4000, 9000, 18000],
-  };
-  const find = (id: string) => HOSTS.find((h) => h.id === id)?.twist;
-  const masked = find('fox');
-  const claws = find('whiteTiger');
-  if (masked?.id !== 'masked' || claws?.id !== 'claws') return;
-  const variants: [string, number, Omit<SimRunOptions, 'seed'>][] = [
-    ['Masked as written (+2 per tile)', 0, { ...base, storm: [false, false, false, false] }],
-    [
-      'Masked +1 per tile',
-      0,
-      { ...base, storm: [false, false, false, false], twists: { fox: { ...masked, mult: 1 } } },
-    ],
-    [
-      'Masked +0.5 per tile',
-      0,
-      { ...base, storm: [false, false, false, false], twists: { fox: { ...masked, mult: 0.5 } } },
-    ],
-    [
-      'Claws as written (chows half, storm ×1.5)',
-      2,
-      { ...base, storm: [false, false, true, false] },
-    ],
-    [
-      'Claws chows ×1',
-      2,
-      {
-        ...base,
-        storm: [false, false, true, false],
-        twists: { whiteTiger: { ...claws, chowChipsX: 1 } },
-      },
-    ],
-    [
-      'Claws chows ×0.75',
-      2,
-      {
-        ...base,
-        storm: [false, false, true, false],
-        twists: { whiteTiger: { ...claws, chowChipsX: 0.75 } },
-      },
-    ],
-    [
-      'Claws as written, storm target ×1.25',
-      2,
-      { ...base, storm: [false, false, true, false], stormMult: 1.25 },
-    ],
-    ['Shell as written (storm ×1.5)', 3, { ...base, storm: [false, false, false, true] }],
-    [
-      'Shell, storm target ×1.25',
-      3,
-      { ...base, storm: [false, false, false, true], stormMult: 1.25 },
-    ],
-    [
-      'Shell, storm target ×1.15',
-      3,
-      { ...base, storm: [false, false, false, true], stormMult: 1.15 },
-    ],
-  ];
-  console.log(
-    `| Variant | Round win rate | Median score ÷ target | Runs reaching it | (smart, ${runs} runs) |`,
-  );
-  console.log('|---|---|---|---|---|');
-  for (const [label, w, opts] of variants) {
-    const res = await runMany(opts, from, runs, jobs);
-    const rs = res
-      .map((x) => x.rounds[w])
-      .filter((x): x is { score: number; target: number } => !!x);
-    const wins = rs.filter((r) => r.score >= r.target).length;
-    const ratio = median(rs.map((r) => (100 * r.score) / r.target)) / 100;
-    console.log(
-      `| ${label} | ${((100 * wins) / Math.max(1, rs.length)).toFixed(0)}% | ${ratio.toFixed(2)} | ${rs.length} | |`,
-    );
-  }
-}
-
 async function hostsMode(args: string[], jobs: number, from: number, shopper: 'smart' | 'casual') {
   const runs = Number(flag(args, 'runs', '400'));
   const base = { shopper, gift: true, fire: 6, targets: [1000, 4000, 9000, 18000] };
@@ -350,7 +268,6 @@ async function main() {
   const from = Number(flag(args, 'seed', '0'));
   const shopper = (flag(args, 'shopper', 'smart') ?? 'smart') as 'smart' | 'casual';
   if (mode === 'round') return roundMode(args);
-  if (mode === 'variants') return variantsMode(args, jobs, from);
   if (mode === 'hosts') return hostsMode(args, jobs, from, shopper);
   if (mode === 'policies') return policiesMode(args, jobs, from, shopper);
   if (mode === 'trace') return trace(args);

@@ -5,7 +5,7 @@
  */
 export type Twist =
   | {
-      /** The tile under each stack top is hidden; tiles played that were taken while hidden give mult. */
+      /** The tile under each stack top is hidden; each set played with a tile taken while hidden gives mult. */
       readonly id: 'masked';
       readonly mult: number;
     }
@@ -34,10 +34,9 @@ export type Twist =
       readonly hand: number;
     }
   | {
-      /** Pongs and kongs score double chips; chows score half. */
+      /** Pongs and kongs score double chips. */
       readonly id: 'claws';
       readonly bigChipsX: number;
-      readonly chowChipsX: number;
     }
   | {
       /** Each discard costs points at the end; finish with none used for ×mult. */
@@ -46,7 +45,7 @@ export type Twist =
       readonly noDiscardX: number;
     }
   | {
-      /** Fewer stacks, armoured tops until a pong or kong; kongs +mult. */
+      /** Fewer stacks, armoured tops until any set is played; kongs +mult. */
       readonly id: 'shell';
       readonly stacks: number;
       readonly kongMult: number;
@@ -65,6 +64,8 @@ export interface Host {
   readonly title: string;
   readonly twistText: string;
   readonly twist: Twist;
+  /** This storm's target multiplier, where it differs from the usual storm's (planner tuning). */
+  readonly targetMult?: number;
 }
 
 export const HOSTS: readonly Host[] = [
@@ -75,8 +76,8 @@ export const HOSTS: readonly Host[] = [
     tile: 'w1',
     title: 'Masked',
     twistText:
-      'The tile under each stack top is hidden. Each tile you play that you took while it was hidden gives +2 mult.',
-    twist: { id: 'masked', mult: 2 },
+      'The tile under each stack top is hidden. Each set you play that has a tile you took while it was hidden gives +1 mult.',
+    twist: { id: 'masked', mult: 1 },
   },
   {
     id: 'azureDragon',
@@ -122,8 +123,8 @@ export const HOSTS: readonly Host[] = [
     storm: true,
     tile: 'w3',
     title: 'Claws',
-    twistText: 'Pongs and kongs score double chips. Chows score half.',
-    twist: { id: 'claws', bigChipsX: 2, chowChipsX: 0.5 },
+    twistText: 'Pongs and kongs score double chips.',
+    twist: { id: 'claws', bigChipsX: 2 },
   },
   {
     id: 'kitchenGod',
@@ -140,8 +141,9 @@ export const HOSTS: readonly Host[] = [
     storm: true,
     tile: 'w4',
     title: 'The shell',
+    targetMult: 1.25,
     twistText:
-      '6 stacks instead of 8. The top tile of each stack is armoured until you play a pong or kong. Kongs +4 mult.',
+      '6 stacks instead of 8. The top tile of each stack is armoured until you play a set. Kongs +4 mult.',
     twist: { id: 'shell', stacks: 6, kongMult: 4 },
   },
 ];

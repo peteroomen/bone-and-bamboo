@@ -67,14 +67,14 @@ describe('Masked (fox)', () => {
     expect(s.rules.peek).toBe(0);
     expect(viewStack(s.stacks[0] ?? [], s.rules.peek).under).toEqual([]);
   });
-  it('gives +2 mult to each played tile that was not a stack top at the deal', () => {
+  it('gives +1 mult to each set played that holds a tile that was not a stack top at the deal', () => {
     let s = roundWith({ hand: 'p1 p2 p3 s4 s5 s6', rules: { handSize: 6 }, twist: twist('fox') });
     const topId = s.hand[0]?.id as number;
     s = { ...s, twist: { ...(s.twist as NonNullable<typeof s.twist>), tops: [topId] } };
     const r = play(s, 'p1', 'p2', 'p3');
-    // 5 chips... chow 10+6 chips; mult 1 + 2 blind tiles x2 = 5
+    // a chow is one set: mult 1 + 1 (once, not per tile)
     expect(r.state.table).toHaveLength(1);
-    expect(preview(r.state).now.mult).toBe(1 + 2 * 2);
+    expect(preview(r.state).now.mult).toBe(1 + 1);
   });
 });
 
@@ -221,7 +221,7 @@ describe('Moon tide (rabbit)', () => {
 });
 
 describe('Claws (white tiger)', () => {
-  it('doubles pong and kong chips and halves chow chips', () => {
+  it('doubles pong and kong chips and leaves chows alone', () => {
     const s = roundWith({
       hand: 'p5 p5 p5 s1 s2 s3',
       rules: { handSize: 6 },
@@ -230,7 +230,7 @@ describe('Claws (white tiger)', () => {
     const pong = play(s, 'p5', 'p5', 'p5');
     expect(preview(pong.state).now.total).toBe((40 + 15) * 2 * 4);
     const chow = play(s, 's1', 's2', 's3');
-    expect(preview(chow.state).now.total).toBe((16 / 2) * 1);
+    expect(preview(chow.state).now.total).toBe(16 * 1);
   });
 });
 
@@ -264,7 +264,7 @@ describe('The shell (black tortoise)', () => {
     expect(s.twist?.armour).toBe(true);
     expect(s.twist?.tops).toHaveLength(6);
   });
-  it('keeps armoured tiles in hand until a pong or kong is played; kongs +4 mult', () => {
+  it('keeps armoured tiles in hand until any set is played; kongs +4 mult', () => {
     let s = roundWith({
       hand: 'p1 p2 s9 m9 p5 p5 p5 p5',
       rules: { handSize: 8 },
@@ -286,5 +286,14 @@ describe('The shell (black tortoise)', () => {
       ),
     ).toBe(false);
     expect(preview(kong.state).now.mult).toBe(8 + 4);
+  });
+  it('lifts the armour when any set is played, even a pair', () => {
+    const s = roundWith({
+      hand: 'p1 p1 s9',
+      rules: { handSize: 3 },
+      twist: twist('blackTortoise'),
+    });
+    expect(s.twist?.armour).toBe(true);
+    expect(play(s, 'p1', 'p1').state.twist?.armour).toBe(false);
   });
 });

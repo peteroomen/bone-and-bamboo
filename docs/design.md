@@ -120,10 +120,10 @@ twist's name and rule.
 
 | Wind | Calm: twist | Storm: twist |
 |---|---|---|
-| East 東 | Masked (`fox`): the tile under each stack top is hidden, but each tile you play that you took while it was hidden gives +2 mult | The coil (`azureDragon`): one stack is locked until you play a chow; chows score double chips |
+| East 東 | Masked (`fox`): the tile under each stack top is hidden, but each set you play that has a tile you took while it was hidden gives +1 mult | The coil (`azureDragon`): one stack is locked until you play a chow; chows score double chips |
 | South 南 | Swaps (`monkey`): after every 2nd play two stack tops swap; once a round you may swap two stack tops yourself | Embers (`vermilionBird`): 3 tiles in the wall are burning; play a set containing one for +3 mult, or it burns away when it reaches a stack top unplayed for 2 turns |
-| West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles go back to the bottom of a random stack | Claws (`whiteTiger`): pongs and kongs score double chips; chows score half |
-| North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): 6 stacks instead of 8; the top tile of each stack is armoured until you play a pong or kong; kongs +4 mult |
+| West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles go back to the bottom of a random stack | Claws (`whiteTiger`): pongs and kongs score double chips |
+| North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): 6 stacks instead of 8; the top tile of each stack is armoured until you play a set; kongs +4 mult; target ×1.25 rather than ×1.5 |
 
 All twists are *tune*: the run simulator does not model them yet (milestone M5 adds them). Until
 M5, the choice screen shows the wind, the target and the reward, and labels the twist as coming
@@ -313,3 +313,5 @@ The next slice completes the four-wind run, gifts, shops and save/resume. It add
 introductory teaching sheet and illustrated set book, plus persistent off/sets/full hint levels.
 The full scripted first-run lesson queue remains M6 work. M5 host twists remain unimplemented;
 the prototype host screen must say so instead of advertising inactive rules as working.
+
+*Twist tuning (planner, 2 Oct): Masked per set, +1; Claws loses the chow half; the shell is lifted by any set and has a target of ×1.25. Results in `docs/balance/2026-10-02-hosts.md`.*

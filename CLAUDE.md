@@ -97,3 +97,4 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
   speed that switches every animation off. The MVP milestones M1-M8 are built; M9 (art) is with
   the planner. Milestone status is in the PR.
 - The art style trial: three colourways exist; colourways become unlocks in M7.
+- **2 Oct (later):** M1-M8 done, plus the planner's twist tuning (Masked +1 per set, Claws without the chow half, the shell lifted by any set with target ×1.25; see `docs/balance/2026-10-02-hosts.md`) and a centred hand layout. Stopped at M9 (art). The PR is a draft.

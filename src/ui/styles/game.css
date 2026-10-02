@@ -195,17 +195,17 @@
 }
 
 .hand {
-  display: grid;
-  grid-template-columns: repeat(var(--hc, 4), 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
   --tw: var(--tw-round, 56px);
   min-height: calc(var(--tw) * 4 / 3 * 2 + 6px + 12px);
   align-content: end;
 }
 .hand-tile {
-  justify-self: center;
-  align-self: start;
-  width: 100%;
+  flex: 0 0 calc((100% - 6px * (var(--hc, 4) - 1)) / var(--hc, 4));
+  align-self: flex-start;
   min-height: var(--touch);
   padding: 0;
   border: 0;
@@ -219,9 +219,6 @@
 }
 .hand-tile.selected .tile {
   filter: drop-shadow(0 3px 0 var(--accent));
-}
-.hand-gap {
-  min-height: var(--touch);
 }
 
 .actions {

@@ -29,8 +29,9 @@ Set in the browser console (`localStorage`), then reload:
    hold its fourth tile: the Kong button appears. Once the table beats the target a "bank" bar
    replaces the progress bar.
 4. **The eight twists.** Each wind offers Calm and Storm; the banner at the start says the rule.
-   Known rough spots (see the PR): Masked is far too strong, Claws and the Shell are hard, the
-   armour rule is my reading of the design.
+   Tuned on 2 Oct (see `docs/balance/2026-10-02-hosts.md`): Masked +1 per set, Claws without the
+   chow half, the shell lifted by any set with target ×1.25. The shell is still the hardest wind
+   (64% in the sim); tell me how it feels.
 5. **The teahouse.** Dragons, pages, fortunes (use one from the pocket), a pack, reroll, burn a kind,
    sell. Does the money feel right?
 6. **Colourways** (with the unlock flag): tiles, table and accents should all change together.
@@ -38,8 +39,15 @@ Set in the browser console (`localStorage`), then reload:
    it (browser rule). Hide the tab and it should go silent.
 8. **Offline.** After one online load, switch the network off and reload.
 
+## Playing it
+
+Run `pnpm dev` and open the printed address on your phone (same network), or `pnpm build && pnpm
+preview`. Nothing is deployed; a host such as Vercel can serve `dist/` as a static site later.
+
 ## Known gaps
 
+- The porcelain colourway unlocks on a win and papercut on all four storms, but only two are
+  reachable until the planner sets the art; porcelain is listed as a follow-up.
 - Only six dragons have traced pictures; the rest show their initial. Fortunes, packs and pages are
   glyph squares.
 - The CJK font is the device's own.

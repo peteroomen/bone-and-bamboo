@@ -367,9 +367,6 @@ export function RoundView({
             )}
           </button>
         ))}
-        {Array.from({ length: Math.max(0, round.rules.handSize - hand.length) }, (_, i) => (
-          <span key={`gap${i}`} className="hand-gap" aria-hidden />
-        ))}
       </section>
 
       <PlayerBar run={run} dispatch={dispatch} />

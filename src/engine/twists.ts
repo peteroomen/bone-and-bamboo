@@ -77,7 +77,7 @@ export function takeProblem(s: RoundState, stack: number): string | null {
 export function discardProblem(s: RoundState, ids: readonly number[]): string | null {
   const t = s.twist;
   if (t && t.armour && ids.some((id) => t.tops.includes(id)))
-    return 'Armoured tiles stay in your hand until you play a pong or kong.';
+    return 'Armoured tiles stay in your hand until you play a set.';
   return null;
 }
 
@@ -86,12 +86,11 @@ export function armouredIds(s: RoundState): readonly number[] {
   return s.twist?.armour ? s.twist.tops : [];
 }
 
-/** After a set is played (or a pong upgraded): chows unlock stacks, big sets break the armour. */
+/** After a set is played (or a pong upgraded): chows unlock stacks, any set breaks the armour. */
 export function afterSetPlayed(t: TwistState, kind: string): TwistState {
   let next: TwistState = { ...t, played: t.played + 1 };
   if (t.twist.id === 'coil' && kind === 'chow') next = { ...next, locked: [] };
-  if (t.twist.id === 'shell' && (kind === 'pong' || kind === 'kong'))
-    next = { ...next, armour: false };
+  if (t.twist.id === 'shell') next = { ...next, armour: false };
   return next;
 }
 
@@ -179,14 +178,17 @@ export function twistModifiers(s: RoundState): ScoreModifiers | undefined {
   switch (w.id) {
     case 'masked': {
       const tileMult: Record<number, number> = {};
-      for (const set of s.table)
-        for (const tile of set.tiles) if (!t.tops.includes(tile.id)) tileMult[tile.id] = w.mult;
+      // +mult per set that holds a tile taken while hidden: carried by the first such tile
+      for (const set of s.table) {
+        const blind = set.tiles.find((tile) => !t.tops.includes(tile.id));
+        if (blind) tileMult[blind.id] = w.mult;
+      }
       return { tileMult };
     }
     case 'coil':
       return { chipsX: { chow: w.chowChipsX } };
     case 'claws':
-      return { chipsX: { pong: w.bigChipsX, kong: w.bigChipsX, chow: w.chowChipsX } };
+      return { chipsX: { pong: w.bigChipsX, kong: w.bigChipsX } };
     case 'embers': {
       const tileMult: Record<number, number> = {};
       for (const set of s.table)

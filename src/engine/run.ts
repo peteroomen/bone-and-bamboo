@@ -209,8 +209,14 @@ export function runReduce(s: RunState, a: RunAction): R {
 
 function chooseHost(s: RunState, storm: boolean): R {
   if (s.phase !== 'host') return illegal(s, 'Not choosing a host.');
-  const target = targetFor(s.lantern, s.roundIndex, storm, s.targets, s.stormMult);
   const host = hostFor(s.roundIndex, storm);
+  const target = targetFor(
+    s.lantern,
+    s.roundIndex,
+    storm,
+    s.targets,
+    host.targetMult ?? s.stormMult,
+  );
   // The lesson's first round is a plain one: no twist to explain yet.
   const plain = s.guided && s.roundIndex === 0;
   const round = dealRound(
