@@ -1,0 +1,1086 @@
+{
+  "source": "MVP 909dab5",
+  "n": 1000,
+  "seedStart": 900000,
+  "limitations": [
+    "No host twists",
+    "Single-item experiments use an unlevelled starting deck",
+    "Deck edits change shuffle mapping",
+    "Two heuristic policies; not human win forecasts",
+    "Income excluded from one-round score"
+  ],
+  "output": [
+    {
+      "name": "base",
+      "policy": "greedy",
+      "median": 2464,
+      "mean": 2722,
+      "activationPct": null,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "abacus",
+      "policy": "greedy",
+      "median": 5129,
+      "mean": 5195,
+      "activationPct": 100,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 90.9,
+      "improvedPct": 100
+    },
+    {
+      "name": "redString",
+      "policy": "greedy",
+      "median": 3808,
+      "mean": 4070,
+      "activationPct": 100,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 54.5,
+      "improvedPct": 100
+    },
+    {
+      "name": "coinString",
+      "policy": "greedy",
+      "median": 3014,
+      "mean": 3302,
+      "activationPct": 100,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 22.6,
+      "improvedPct": 100
+    },
+    {
+      "name": "bambooGrove",
+      "policy": "greedy",
+      "median": 3619,
+      "mean": 3922,
+      "activationPct": 99.1,
+      "meanPongs": 1.196,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.144,
+      "medianPairedGainPct": 43.2,
+      "improvedPct": 86.4
+    },
+    {
+      "name": "coinPurse",
+      "policy": "greedy",
+      "median": 3520,
+      "mean": 3797,
+      "activationPct": 99.5,
+      "meanPongs": 1.119,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.147,
+      "medianPairedGainPct": 43.9,
+      "improvedPct": 84.4
+    },
+    {
+      "name": "scroll",
+      "policy": "greedy",
+      "median": 3553,
+      "mean": 3876,
+      "activationPct": 99.6,
+      "meanPongs": 1.161,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.164,
+      "medianPairedGainPct": 44.7,
+      "improvedPct": 85.2
+    },
+    {
+      "name": "sparrowNest",
+      "policy": "greedy",
+      "median": 6600,
+      "mean": 6809,
+      "activationPct": 100,
+      "meanPongs": 0.579,
+      "kongRoundPct": 0,
+      "meanDiscards": 0.264,
+      "medianPairedGainPct": 175.2,
+      "improvedPct": 98.7
+    },
+    {
+      "name": "goldToad",
+      "policy": "greedy",
+      "median": 2464,
+      "mean": 2722,
+      "activationPct": null,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "pongHall",
+      "policy": "greedy",
+      "median": 2464,
+      "mean": 4164,
+      "activationPct": 35.3,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 0,
+      "improvedPct": 35.3
+    },
+    {
+      "name": "outside",
+      "policy": "greedy",
+      "median": 5390,
+      "mean": 5614,
+      "activationPct": 99.7,
+      "meanPongs": 1.116,
+      "kongRoundPct": 0,
+      "meanDiscards": 1.772,
+      "medianPairedGainPct": 114.8,
+      "improvedPct": 96.4
+    },
+    {
+      "name": "ironTeapot",
+      "policy": "greedy",
+      "median": 2530,
+      "mean": 2886,
+      "activationPct": null,
+      "meanPongs": 1.318,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.908,
+      "medianPairedGainPct": 0,
+      "improvedPct": 29.9
+    },
+    {
+      "name": "longSleeves",
+      "policy": "greedy",
+      "median": 2596,
+      "mean": 2957,
+      "activationPct": null,
+      "meanPongs": 1.363,
+      "kongRoundPct": 0,
+      "meanDiscards": 1.614,
+      "medianPairedGainPct": 3.3,
+      "improvedPct": 58
+    },
+    {
+      "name": "lantern",
+      "policy": "greedy",
+      "median": 2596,
+      "mean": 2964,
+      "activationPct": null,
+      "meanPongs": 1.386,
+      "kongRoundPct": 0,
+      "meanDiscards": 1.843,
+      "medianPairedGainPct": 3,
+      "improvedPct": 55.2
+    },
+    {
+      "name": "mahjong",
+      "policy": "greedy",
+      "median": 4532,
+      "mean": 4843,
+      "activationPct": 95,
+      "meanPongs": 1.057,
+      "kongRoundPct": 0,
+      "meanDiscards": 1.94,
+      "medianPairedGainPct": 84.9,
+      "improvedPct": 87.2
+    },
+    {
+      "name": "twoSuits",
+      "policy": "greedy",
+      "median": 2475,
+      "mean": 2802,
+      "activationPct": 4.5,
+      "meanPongs": 1.246,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.403,
+      "medianPairedGainPct": 0,
+      "improvedPct": 27.3
+    },
+    {
+      "name": "allSimples",
+      "policy": "greedy",
+      "median": 3120,
+      "mean": 3879,
+      "activationPct": 61.1,
+      "meanPongs": 0.977,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.67,
+      "medianPairedGainPct": 35.5,
+      "improvedPct": 65.8
+    },
+    {
+      "name": "pureStraight",
+      "policy": "greedy",
+      "median": 2717,
+      "mean": 3414,
+      "activationPct": 16.5,
+      "meanPongs": 1.199,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.041,
+      "medianPairedGainPct": 0,
+      "improvedPct": 34.2
+    },
+    {
+      "name": "nightOwl",
+      "policy": "greedy",
+      "median": 3024,
+      "mean": 3401,
+      "activationPct": null,
+      "meanPongs": 1.351,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.278,
+      "medianPairedGainPct": 21,
+      "improvedPct": 100
+    },
+    {
+      "name": "kongBell",
+      "policy": "greedy",
+      "median": 2464,
+      "mean": 2722,
+      "activationPct": 0,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "dragonLantern",
+      "policy": "greedy",
+      "median": 2464,
+      "mean": 2722,
+      "activationPct": 0,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "twinCranes",
+      "policy": "greedy",
+      "median": 3075,
+      "mean": 3341,
+      "activationPct": 38.7,
+      "meanPongs": 1.22,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.107,
+      "medianPairedGainPct": 0,
+      "improvedPct": 38.7
+    },
+    {
+      "name": "chowLevel1",
+      "policy": "greedy",
+      "median": 4811,
+      "mean": 4909,
+      "activationPct": null,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 83.1,
+      "improvedPct": 100
+    },
+    {
+      "name": "pongLevel1",
+      "policy": "greedy",
+      "median": 3107,
+      "mean": 3685,
+      "activationPct": null,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 26.4,
+      "improvedPct": 70.6
+    },
+    {
+      "name": "pairLevel1",
+      "policy": "greedy",
+      "median": 2772,
+      "mean": 3048,
+      "activationPct": null,
+      "meanPongs": 1.211,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.097,
+      "medianPairedGainPct": 9.6,
+      "improvedPct": 60.9
+    },
+    {
+      "name": "noPeek",
+      "policy": "greedy",
+      "median": 1826,
+      "mean": 2037,
+      "activationPct": null,
+      "meanPongs": 0.756,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.793,
+      "medianPairedGainPct": -25.9,
+      "improvedPct": 28.6
+    },
+    {
+      "name": "noDiscards",
+      "policy": "greedy",
+      "median": 2010,
+      "mean": 2155,
+      "activationPct": null,
+      "meanPongs": 0.83,
+      "kongRoundPct": 0,
+      "meanDiscards": 0,
+      "medianPairedGainPct": -10,
+      "improvedPct": 17
+    },
+    {
+      "name": "sixPlays",
+      "policy": "greedy",
+      "median": 1485,
+      "mean": 1564,
+      "activationPct": null,
+      "meanPongs": 0.906,
+      "kongRoundPct": 0,
+      "meanDiscards": 1.632,
+      "medianPairedGainPct": -39.8,
+      "improvedPct": 0
+    },
+    {
+      "name": "oneFourth",
+      "policy": "greedy",
+      "median": 2497,
+      "mean": 2772,
+      "activationPct": null,
+      "meanPongs": 1.218,
+      "kongRoundPct": 1.2,
+      "meanDiscards": 2.104,
+      "medianPairedGainPct": 0.9,
+      "improvedPct": 50.2
+    },
+    {
+      "name": "kongBellOneFourth",
+      "policy": "greedy",
+      "median": 2497,
+      "mean": 2837,
+      "activationPct": 1.2,
+      "meanPongs": 1.218,
+      "kongRoundPct": 1.2,
+      "meanDiscards": 2.104,
+      "medianPairedGainPct": 1.1,
+      "improvedPct": 50.4
+    },
+    {
+      "name": "kongBellThreeFourths",
+      "policy": "greedy",
+      "median": 2497,
+      "mean": 3040,
+      "activationPct": 2.6,
+      "meanPongs": 1.274,
+      "kongRoundPct": 2.6,
+      "meanDiscards": 2.124,
+      "medianPairedGainPct": 2.6,
+      "improvedPct": 52.2
+    },
+    {
+      "name": "allSimplesTrimmed",
+      "policy": "greedy",
+      "median": 6608,
+      "mean": 6690,
+      "activationPct": 100,
+      "meanPongs": 1.69,
+      "kongRoundPct": 0,
+      "meanDiscards": 1.486,
+      "medianPairedGainPct": 156,
+      "improvedPct": 92
+    },
+    {
+      "name": "base",
+      "policy": "pongs",
+      "median": 2189,
+      "mean": 2714,
+      "activationPct": null,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "abacus",
+      "policy": "pongs",
+      "median": 3216,
+      "mean": 3551,
+      "activationPct": 86.6,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 28.6,
+      "improvedPct": 86.6
+    },
+    {
+      "name": "redString",
+      "policy": "pongs",
+      "median": 3383,
+      "mean": 3930,
+      "activationPct": 100,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 54.5,
+      "improvedPct": 100
+    },
+    {
+      "name": "coinString",
+      "policy": "pongs",
+      "median": 2739,
+      "mean": 3333,
+      "activationPct": 100,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 25.5,
+      "improvedPct": 100
+    },
+    {
+      "name": "bambooGrove",
+      "policy": "pongs",
+      "median": 3234,
+      "mean": 3764,
+      "activationPct": 99.2,
+      "meanPongs": 1.512,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 39.9,
+      "improvedPct": 90.2
+    },
+    {
+      "name": "coinPurse",
+      "policy": "pongs",
+      "median": 3256,
+      "mean": 3717,
+      "activationPct": 98.9,
+      "meanPongs": 1.494,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 39.6,
+      "improvedPct": 90.1
+    },
+    {
+      "name": "scroll",
+      "policy": "pongs",
+      "median": 3289,
+      "mean": 3824,
+      "activationPct": 99.2,
+      "meanPongs": 1.537,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 42.4,
+      "improvedPct": 91.7
+    },
+    {
+      "name": "sparrowNest",
+      "policy": "pongs",
+      "median": 7350,
+      "mean": 7579,
+      "activationPct": 98.9,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 218.2,
+      "improvedPct": 98.9
+    },
+    {
+      "name": "goldToad",
+      "policy": "pongs",
+      "median": 2189,
+      "mean": 2714,
+      "activationPct": null,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "pongHall",
+      "policy": "pongs",
+      "median": 2189,
+      "mean": 4532,
+      "activationPct": 43.9,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 43.9
+    },
+    {
+      "name": "outside",
+      "policy": "pongs",
+      "median": 4312,
+      "mean": 4743,
+      "activationPct": 96.9,
+      "meanPongs": 1.513,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 75.2,
+      "improvedPct": 93.9
+    },
+    {
+      "name": "ironTeapot",
+      "policy": "pongs",
+      "median": 2552,
+      "mean": 3002,
+      "activationPct": null,
+      "meanPongs": 1.751,
+      "kongRoundPct": 0,
+      "meanDiscards": 5,
+      "medianPairedGainPct": 4.6,
+      "improvedPct": 57.2
+    },
+    {
+      "name": "longSleeves",
+      "policy": "pongs",
+      "median": 2856,
+      "mean": 3199,
+      "activationPct": null,
+      "meanPongs": 1.822,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.998,
+      "medianPairedGainPct": 10.6,
+      "improvedPct": 63.8
+    },
+    {
+      "name": "lantern",
+      "policy": "pongs",
+      "median": 3010,
+      "mean": 3514,
+      "activationPct": null,
+      "meanPongs": 2.125,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.997,
+      "medianPairedGainPct": 24.5,
+      "improvedPct": 62.1
+    },
+    {
+      "name": "mahjong",
+      "policy": "pongs",
+      "median": 3080,
+      "mean": 4428,
+      "activationPct": 49.6,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 49.6
+    },
+    {
+      "name": "twoSuits",
+      "policy": "pongs",
+      "median": 2222,
+      "mean": 2845,
+      "activationPct": 10,
+      "meanPongs": 1.513,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 24.4
+    },
+    {
+      "name": "allSimples",
+      "policy": "pongs",
+      "median": 2506,
+      "mean": 3353,
+      "activationPct": 30.4,
+      "meanPongs": 1.36,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 5.7,
+      "improvedPct": 54.3
+    },
+    {
+      "name": "pureStraight",
+      "policy": "pongs",
+      "median": 2200,
+      "mean": 2764,
+      "activationPct": 1.1,
+      "meanPongs": 1.505,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 11
+    },
+    {
+      "name": "nightOwl",
+      "policy": "pongs",
+      "median": 2688,
+      "mean": 3256,
+      "activationPct": null,
+      "meanPongs": 1.6,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 18.3,
+      "improvedPct": 100
+    },
+    {
+      "name": "kongBell",
+      "policy": "pongs",
+      "median": 2189,
+      "mean": 2714,
+      "activationPct": 0,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "dragonLantern",
+      "policy": "pongs",
+      "median": 2189,
+      "mean": 2714,
+      "activationPct": 0,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 0
+    },
+    {
+      "name": "twinCranes",
+      "policy": "pongs",
+      "median": 2460,
+      "mean": 2929,
+      "activationPct": 15.6,
+      "meanPongs": 1.509,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 0,
+      "improvedPct": 15.5
+    },
+    {
+      "name": "chowLevel1",
+      "policy": "pongs",
+      "median": 3105,
+      "mean": 3436,
+      "activationPct": null,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 25.7,
+      "improvedPct": 86.6
+    },
+    {
+      "name": "pongLevel1",
+      "policy": "pongs",
+      "median": 2782,
+      "mean": 3936,
+      "activationPct": null,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 29.1,
+      "improvedPct": 74.2
+    },
+    {
+      "name": "pairLevel1",
+      "policy": "pongs",
+      "median": 3450,
+      "mean": 3879,
+      "activationPct": null,
+      "meanPongs": 1.507,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 51.1,
+      "improvedPct": 98.9
+    },
+    {
+      "name": "noPeek",
+      "policy": "pongs",
+      "median": 1592,
+      "mean": 1851,
+      "activationPct": null,
+      "meanPongs": 0.838,
+      "kongRoundPct": 0,
+      "meanDiscards": 3,
+      "medianPairedGainPct": -28.3,
+      "improvedPct": 29.1
+    },
+    {
+      "name": "noDiscards",
+      "policy": "pongs",
+      "median": 1760,
+      "mean": 1966,
+      "activationPct": null,
+      "meanPongs": 0.867,
+      "kongRoundPct": 0,
+      "meanDiscards": 0,
+      "medianPairedGainPct": -23.3,
+      "improvedPct": 32.6
+    },
+    {
+      "name": "sixPlays",
+      "policy": "pongs",
+      "median": 1404,
+      "mean": 1753,
+      "activationPct": null,
+      "meanPongs": 1.312,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.997,
+      "medianPairedGainPct": -34.7,
+      "improvedPct": 0
+    },
+    {
+      "name": "oneFourth",
+      "policy": "pongs",
+      "median": 2244,
+      "mean": 2794,
+      "activationPct": null,
+      "meanPongs": 1.551,
+      "kongRoundPct": 0.5,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 4.1,
+      "improvedPct": 52.5
+    },
+    {
+      "name": "kongBellOneFourth",
+      "policy": "pongs",
+      "median": 2244,
+      "mean": 2829,
+      "activationPct": 0.5,
+      "meanPongs": 1.551,
+      "kongRoundPct": 0.5,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 4.1,
+      "improvedPct": 52.5
+    },
+    {
+      "name": "kongBellThreeFourths",
+      "policy": "pongs",
+      "median": 2299,
+      "mean": 2836,
+      "activationPct": 0.9,
+      "meanPongs": 1.559,
+      "kongRoundPct": 0.9,
+      "meanDiscards": 3,
+      "medianPairedGainPct": 4.6,
+      "improvedPct": 52.7
+    },
+    {
+      "name": "allSimplesTrimmed",
+      "policy": "pongs",
+      "median": 6496,
+      "mean": 7937,
+      "activationPct": 100,
+      "meanPongs": 2.411,
+      "kongRoundPct": 0,
+      "meanDiscards": 2.995,
+      "medianPairedGainPct": 194.9,
+      "improvedPct": 90.3
+    }
+  ],
+  "decisions": [
+    {
+      "dragon": "base",
+      "example": {
+        "seed": 900001,
+        "chosenKind": "chow",
+        "chosenTiles": [
+          "p3",
+          "p2",
+          "p1"
+        ],
+        "chosen": 3514,
+        "betterKind": "pair",
+        "betterTiles": [
+          "m9",
+          "m9"
+        ],
+        "best": 3612
+      },
+      "worseLastPct": 3.3,
+      "medianAvoidableLastLoss": 44,
+      "drops": 0,
+      "playCount": 8000,
+      "roundsWithDropsPct": 0,
+      "meanPlaysRemainingAtFirst1000": 2.4016064257028114,
+      "hit1000ByPlay": [
+        {
+          "play": 4,
+          "pct": 16.5
+        },
+        {
+          "play": 5,
+          "pct": 53.6
+        },
+        {
+          "play": 6,
+          "pct": 65.2
+        },
+        {
+          "play": 7,
+          "pct": 95.6
+        },
+        {
+          "play": 8,
+          "pct": 99.6
+        }
+      ]
+    },
+    {
+      "dragon": "allSimples",
+      "example": {
+        "seed": 900000,
+        "chosenKind": "chow",
+        "chosenTiles": [
+          "s8",
+          "s7",
+          "s9"
+        ],
+        "chosen": 1648,
+        "betterKind": "pair",
+        "betterTiles": [
+          "s7",
+          "s7"
+        ],
+        "best": 3056
+      },
+      "worseLastPct": 8.4,
+      "medianAvoidableLastLoss": 1440,
+      "drops": 370,
+      "playCount": 8000,
+      "roundsWithDropsPct": 37,
+      "meanPlaysRemainingAtFirst1000": 3.705941591137966,
+      "hit1000ByPlay": [
+        {
+          "play": 4,
+          "pct": 44.1
+        },
+        {
+          "play": 5,
+          "pct": 89.5
+        },
+        {
+          "play": 6,
+          "pct": 96
+        },
+        {
+          "play": 7,
+          "pct": 97.5
+        },
+        {
+          "play": 8,
+          "pct": 99.3
+        }
+      ]
+    },
+    {
+      "dragon": "pureStraight",
+      "example": {
+        "seed": 900001,
+        "chosenKind": "chow",
+        "chosenTiles": [
+          "p3",
+          "p2",
+          "p1"
+        ],
+        "chosen": 3514,
+        "betterKind": "pair",
+        "betterTiles": [
+          "m9",
+          "m9"
+        ],
+        "best": 3612
+      },
+      "worseLastPct": 11,
+      "medianAvoidableLastLoss": 51,
+      "drops": 0,
+      "playCount": 8000,
+      "roundsWithDropsPct": 0,
+      "meanPlaysRemainingAtFirst1000": 2.5205616850551653,
+      "hit1000ByPlay": [
+        {
+          "play": 4,
+          "pct": 20.1
+        },
+        {
+          "play": 5,
+          "pct": 57.8
+        },
+        {
+          "play": 6,
+          "pct": 70.1
+        },
+        {
+          "play": 7,
+          "pct": 95.2
+        },
+        {
+          "play": 8,
+          "pct": 99.7
+        }
+      ]
+    },
+    {
+      "dragon": "sparrowNest",
+      "example": {
+        "seed": 900021,
+        "chosenKind": "pair",
+        "chosenTiles": [
+          "m1",
+          "m1"
+        ],
+        "chosen": 5632,
+        "betterKind": "chow",
+        "betterTiles": [
+          "s6",
+          "s7",
+          "s8"
+        ],
+        "best": 5776
+      },
+      "worseLastPct": 3.8,
+      "medianAvoidableLastLoss": 212,
+      "drops": 0,
+      "playCount": 8000,
+      "roundsWithDropsPct": 0,
+      "meanPlaysRemainingAtFirst1000": 4.399,
+      "hit1000ByPlay": [
+        {
+          "play": 4,
+          "pct": 96.6
+        },
+        {
+          "play": 5,
+          "pct": 99.9
+        },
+        {
+          "play": 6,
+          "pct": 99.9
+        },
+        {
+          "play": 7,
+          "pct": 100
+        },
+        {
+          "play": 8,
+          "pct": 100
+        }
+      ]
+    },
+    {
+      "dragon": "mahjong",
+      "example": {
+        "seed": 900012,
+        "chosenKind": "chow",
+        "chosenTiles": [
+          "p3",
+          "p2",
+          "p1"
+        ],
+        "chosen": 2784,
+        "betterKind": "pair",
+        "betterTiles": [
+          "m8",
+          "m8"
+        ],
+        "best": 2864
+      },
+      "worseLastPct": 2.5,
+      "medianAvoidableLastLoss": 80,
+      "drops": 0,
+      "playCount": 8000,
+      "roundsWithDropsPct": 0,
+      "meanPlaysRemainingAtFirst1000": 2.8040201005025125,
+      "hit1000ByPlay": [
+        {
+          "play": 4,
+          "pct": 7.5
+        },
+        {
+          "play": 5,
+          "pct": 81.7
+        },
+        {
+          "play": 6,
+          "pct": 92
+        },
+        {
+          "play": 7,
+          "pct": 96
+        },
+        {
+          "play": 8,
+          "pct": 99.5
+        }
+      ]
+    },
+    {
+      "dragon": "pongHall",
+      "example": {
+        "seed": 900001,
+        "chosenKind": "chow",
+        "chosenTiles": [
+          "p3",
+          "p2",
+          "p1"
+        ],
+        "chosen": 7028,
+        "betterKind": "pair",
+        "betterTiles": [
+          "m9",
+          "m9"
+        ],
+        "best": 7224
+      },
+      "worseLastPct": 3.3,
+      "medianAvoidableLastLoss": 44,
+      "drops": 0,
+      "playCount": 8000,
+      "roundsWithDropsPct": 0,
+      "meanPlaysRemainingAtFirst1000": 2.4377510040160644,
+      "hit1000ByPlay": [
+        {
+          "play": 4,
+          "pct": 16.5
+        },
+        {
+          "play": 5,
+          "pct": 53.6
+        },
+        {
+          "play": 6,
+          "pct": 65.2
+        },
+        {
+          "play": 7,
+          "pct": 95.6
+        },
+        {
+          "play": 8,
+          "pct": 99.6
+        }
+      ]
+    }
+  ],
+  "proposedPongRares": [
+    {
+      "policy": "greedy",
+      "method": "Rescore unchanged tables; does not predict play adaptation",
+      "baseMedian": 2464,
+      "threeTreasuresMedian": 3696,
+      "stoneLionMedian": 4480
+    },
+    {
+      "policy": "pongs",
+      "method": "Rescore unchanged tables; does not predict play adaptation",
+      "baseMedian": 2189,
+      "threeTreasuresMedian": 3283,
+      "stoneLionMedian": 3980
+    }
+  ],
+  "checks": {
+    "incomeBlindness": true,
+    "rowOrderIrrelevant": true
+  }
+}

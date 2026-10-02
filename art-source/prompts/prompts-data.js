@@ -51,6 +51,16 @@
     }
   };
 
+  // Icons for tile faces are generated once, in this neutral style, and traced. Each traced shape
+  // keeps its colour slot (ink, red, blue, green, gold, brown, pink, ivory) and the game paints the
+  // slots with the colourway's palette, as it does the tiles.
+  var ICON_STYLE = "STYLE · TILE ICON (keep identical for every icon sheet)\n" +
+    "Pictures for the faces of tiles in a mahjong-tile game, in the manner of the painted faces of a classic bone-and-bamboo mahjong set: simple, bold, flat and instantly recognisable.\n" +
+    "- Line: one bold dark outline around every shape, even in weight. Only a few inner lines, and only where they show what the object is.\n" +
+    "- Colour: flat fills only, from exactly these eight: ink black, vermilion red, cobalt blue, jade green, ochre gold, wood brown, soft pink and warm ivory. Each shape is one of them. The game recolours each of these for its colour schemes, so keep them distinct and use no in-between shades.\n" +
+    "- Shape: a few large, chunky shapes with the object's real proportions, recognisable at 30 pixels. Fewer, bigger shapes rather than many small ones.\n" +
+    "- No shading, gradients, texture, shine, glow or shadows. Not 3D, not emoji, not kawaii; objects have no faces unless the object is a figure (a toad, an owl, a lion, cranes).";
+
   var BG = {
     green: "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: one perfectly even colour with no shadow, no gradient, no texture, no scenery and no floating objects. It is only there to be cut away.\n" +
       "- No green of that brightness anywhere in the figure; any green in it is a dark pine green. A clean dark edge runs everywhere the figure meets the green, including along the bottom edge.",
@@ -58,7 +68,7 @@
   };
 
   var VIBE = {
-    guide: "VIBE (the guide)\nThe player's friend and teacher: a small tree sparrow who lives on the 1 of Bamboo tile. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Gentle humour, never silly, never a sticker mascot.",
+    guide: "VIBE (the guide)\nThe player's friend and teacher: the Red Dragon tile of the mahjong set, come to life, like the Joker card that hosts Balatro. A young red dragon painted on the tile leans out of it to talk. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Small and spirited, not fearsome; gentle humour, never silly, never a sticker mascot.",
     host: "VIBE (spirit hosts: keep identical for every spirit)\nThis spirit is the player's host for one wind of the year, not an enemy. It sets a score to beat and changes one rule, like a sporting rival at a teahouse table who loves a good game. Sly, playful, proud or fussy, with a personality you can read at a glance. Never menacing, never horrific, never a cute mascot either. The subject says its exact mood.",
     beast: "VIBE (the great beasts: keep identical for every beast)\nOne of the Four Symbols, the great celestial beasts of the four directions. It hosts the hardest table of its wind: majestic, ancient and a little intimidating, like meeting a mountain that wants to play mahjong. Awe rather than fear, with a glint of humour in the eye. Never monstrous, never cute.",
     sheet: "",
@@ -67,18 +77,18 @@
 
   function FORMAT(kind, S) {
     if (kind === "guide") {
-      return "FORMAT (the guide: head and shoulders)\n" +
-        "- The sparrow is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eye a little above the middle. Nothing competes with the face.\n" +
+      return "FORMAT (the guide)\n" +
+        "- The guide is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide. The tile stands upright in the centre, filling about 80% of the image's height, seen straight on. The little dragon's head is large and leans out past the tile's top corner, so the face is clearly readable at 50 pixels; nothing competes with it.\n" +
         (S.bg === "plate" ? BG.plate : BG.green) + "\n" +
         "- One square image, 1:1. No border, no frame, no mockup.\n" +
-        "- No mahjong tiles. No text, letters, characters, numbers, seal stamp, signature or watermark anywhere.";
+        "- Only the one tile, and its face carries the dragon, not a written character. No text, letters, characters, numbers, seal stamp, signature or watermark anywhere.";
     }
     if (kind === "host") {
       return "FORMAT (spirit hosts: keep identical every time)\n" +
         "- The figure fills about 75% of the image with clear space above and to the sides. The whole figure fits inside the frame, or it is cut off cleanly by the bottom edge at the chest or waist. Nothing runs off the top or the sides.\n" +
         (S.bg === "plate" ? BG.plate : BG.green) + "\n" +
         "- One square image, 1:1. No border, no frame, no mockup, no scroll around the picture.\n" +
-        "- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down.\n" +
+        "- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down. The head is at least a third of the image's width: show the figure from the waist up rather than shrinking the head to fit tails, wings or a wide robe.\n" +
         "- The spirit holds at most one item, and only the one the subject names.\n" +
         "- Any mahjong tile shown is small and simplified: a plain rectangle with one simple dot or stick shape on its face and a plain back, no writing.\n" +
         "- No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore. Women and children are never sexualised.";
@@ -92,13 +102,25 @@
         "- It holds at most one item, and only the one the subject names.\n" +
         "- No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore.";
     }
+    if (kind === "faces") {
+      return "FORMAT · TILE FACE GRID (keep identical every time)\n" +
+        "- One square image, 1:1, holding nine tile faces in a neat grid of 3 columns and 3 rows, in the order the subjects are listed: the top row left to right, then the middle row, then the bottom row. Each face sits alone in its own invisible cell, with clear empty space between cells; nothing crosses from one cell into another.\n" +
+        "- Draw only the picture that goes on each tile's face, at the same scale in every cell (a dot or a stick is the same size whether there are two or nine). Do NOT draw the tiles, their outlines, frames or borders: the game draws the tile.\n" +
+        "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. Green pieces are a deep jade, clearly darker than the background.\n" +
+        "- These will be traced into vector shapes and shown on tiles about 40 pixels wide. So: a thick, even dark edge closes every shape, every colour area is one flat fill, no detail smaller than about 1/40 of a cell. No hatching, texture, shine, drop shadows or glow.\n" +
+        "- No text, letters, characters, numbers, labels, seals, signatures or watermarks anywhere.";
+    }
+    if (kind === "dragons") {
+      return FORMAT("sheet", S).replace("FORMAT · OBJECT SHEET", "FORMAT · DRAGON TILE PICTURES") + "\n" +
+        "- Each picture will be printed on the face of an upright mahjong tile (a dragon, the game's joker), so each object is compact and fits an upright box a little taller than wide. The game draws the tile and its frame: do NOT draw a tile, a frame or a border, and do NOT add faces, eyes or limbs to the objects.";
+    }
     if (kind === "sheet") {
       return "FORMAT · OBJECT SHEET (keep identical every time)\n" +
         "- One square image, 1:1, holding six separate objects in a neat grid of 3 columns and 2 rows, in the order the subjects are listed: the top row left to right, then the bottom row. Each object sits alone in its own invisible cell with wide empty space around it, never touching another object or the edges.\n" +
         "- Each object is upright, seen from the front or a little from above, centred in its cell and filling about 70% of it.\n" +
         "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. No green of that brightness in the objects; leaves and bamboo are dark pine green.\n" +
         "- These objects will be traced into vector shapes and shown as small as 18 pixels. So: a thick, even dark edge closes every shape, every colour area is one flat fill, and there is no detail smaller than about 1/25 of a cell. No hatching, texture, shine, highlights, drop shadows or glow.\n" +
-        "- Colours only from the STYLE's palette.\n" +
+        "- Colours only from the STYLE's eight.\n" +
         "- No text, letters, characters, numbers, labels, seal stamps, signatures or watermarks anywhere, on the objects too. Books, envelopes and tiles are blank or carry one simple flower, dot or stick shape.";
     }
     if (kind === "backdrop") {
@@ -114,8 +136,6 @@
 
   var SUBJECTS = [
     // the guide
-    { id: "sparrow", kind: "guide", group: "The guide", trial: true,
-      text: "SUBJECT: The Sparrow, the player's guide\nRole in the game: it teaches the rules and gives tips in speech bubbles. It lives on the 1 of Bamboo tile, whose traditional picture is a bird, and mahjong itself is called 'sparrow' in Cantonese.\nA Eurasian tree sparrow: a chestnut-brown cap, white cheeks with one black spot on each, a small black bib under the beak, a brown back with dark streaks and two pale wing bars, a short dark beak. Head and shoulders, head cocked to one side, beak a little open as if mid-sentence.\nHolds: nothing; one wing is raised like a hand making a point.\nMood: bright, cheeky and kind. At 50 pixels, the cap, the cheek spot and the bright eye are what read." },
     // spirit hosts
     { id: "fox", kind: "host", group: "Spirit hosts", wind: "East", trial: true,
       text: "SUBJECT: The Fox Spirit (húli jīng), host of the East wind\nGame twist: 'Masked': covered tiles stay face down until you take them, but each one you use scores extra.\nA russet fox spirit with three bushy tails fanned behind it, standing upright on its hind legs like a person, in a short jacket. A painted opera mask is pushed up on top of its head, and its own narrow, amused eyes look at the viewer. Drawn as a fox, not as a woman.\nHolds: one mahjong tile, turned face down so only its plain back shows, held up to its chest like a secret.\nMood: sly and delighted, sure it knows something you don't." },
@@ -143,32 +163,48 @@
       text: "SUBJECT: West wind, autumn\nA garden courtyard on the Mid-Autumn night: a round moon gate in a white wall on the left, an osmanthus tree on the right, a big full moon low in the sky." },
     { id: "north-winter", kind: "backdrop", group: "Backdrops",
       text: "SUBJECT: North wind, winter\nA plum tree in snow: a gnarled plum branch with red blossom reaching in from the left, snow-covered rocks along the bottom, a far pagoda on a hill on the right." },
-    // object sheets (curios, fortunes, shop)
-    { id: "sheet-01", kind: "sheet", group: "Object sheets", trial: true,
-      ids: ["abacus", "goldToad", "redString", "ironTeapot", "lantern", "coinString"],
-      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Abacus: a wooden suanpan abacus, upright, a dark frame, one crossbar, five columns of round beads.\n2. Gold Toad: the three-legged money toad, sitting on a little heap of square-holed coins with one coin in its mouth.\n3. Red String: a red Chinese knot, a square diamond-shaped weave with two short tails hanging below.\n4. Iron Teapot: a squat cast-iron teapot with a round lid knob and a curved spout.\n5. Lantern: a round red silk lantern with gold caps top and bottom and a short gold tassel.\n6. Coin String: a short string of square-holed bronze cash coins threaded on a red cord, hanging in a gentle curve." },
-    { id: "sheet-02", kind: "sheet", group: "Object sheets",
-      ids: ["bambooGrove", "coinPurse", "scroll", "sparrowNest", "longSleeves", "nightOwl"],
-      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Bamboo Grove: a small round pot holding three bamboo stems with a few leaves.\n2. Coin Purse: a round embroidered silk purse with a drawstring top, a simple coin shape on its side.\n3. Scroll: a rolled hand scroll with wooden rollers at each end, tied with a ribbon.\n4. Sparrow's Nest: a woven nest of twigs holding two speckled eggs.\n5. Long Sleeves: a folded silk robe sleeve with a wide contrasting cuff.\n6. Night Owl: a small round owl figurine with big round eyes and folded wings." },
-    { id: "sheet-03", kind: "sheet", group: "Object sheets",
-      ids: ["pongHall", "outside", "mahjong", "twoSuits", "allSimples", "pureStraight"],
-      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Pong Hall: three identical bronze bells hanging in a row from a small wooden frame.\n2. Outside: a round moon gate in a short length of white garden wall, seen straight on.\n3. Mahjong: a neat stack of four blank mahjong tiles with a pair of dice in front.\n4. Two Suits: a pair of fish curled head to tail in a circle.\n5. All Simples: a plain rice bowl with a pair of chopsticks resting across its rim.\n6. Pure Straight: the nine linked rings puzzle: nine metal rings on a long bar with a loop handle." },
-    { id: "sheet-04", kind: "sheet", group: "Object sheets",
-      ids: ["kongBell", "dragonLantern", "twinCranes", "rubbing", "fire", "brush"],
-      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Kong Bell: one large bronze temple bell with rows of round knobs and a dragon-loop on top.\n2. Dragon Lantern: a red and gold dragon-head lantern on a short pole, mouth open.\n3. Twin Cranes: two red-crowned cranes standing side by side, necks crossing.\n4. Rubbing (fortune: copy a tile): a round cloth ink-dauber, black with ink, resting on a small sheet of paper.\n5. Fire (fortune: burn tiles): a small three-legged bronze brazier with flames rising from it.\n6. Brush (fortune: repaint a suit): a calligraphy brush resting on a mountain-shaped brush rest." },
-    { id: "sheet-05", kind: "sheet", group: "Object sheets",
-      ids: ["jade", "bone", "almanac", "tilePack", "reroll", "inkStone"],
-      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Jade (fortune: jade a tile): a flat green jade bi disc with a round hole in the middle.\n2. Bone (fortune: bone a tile): a small bundle of carved bone counting sticks tied with a red thread.\n3. Almanac page (level a set): a thread-bound almanac book, closed, with a blank cover.\n4. Tile pack: a red envelope (hongbao) with a gold border, blank.\n5. Reroll: a bamboo dice cup with two dice beside it.\n6. Ink Stone (fortune: turn three tiles to one suit): a rectangular ink stone with a well of black ink and an ink stick resting on it." }
+    // tile faces (suits and bonus tiles): traced and recoloured; the bamboo sheet is done
+    { id: "faces-dots", kind: "faces", oneStyle: true, group: "Tile faces",
+      ids: ["dots-1", "dots-2", "dots-3", "dots-4", "dots-5", "dots-6", "dots-7", "dots-8", "dots-9"],
+      text: "SUBJECTS (nine faces of the Dots suit, in this order; each dot is a round coin-like disc: an outer ring, a ring of ivory, a coloured centre and a small ivory hub)\n1. One dot: a single large ornamental disc, a flower-like ring of small petals round a red centre (much bigger than the other dots).\n2. Two dots, one above the other: a jade green one and a cobalt blue one.\n3. Three dots on a diagonal from top left to bottom right: cobalt, red, jade.\n4. Four dots in a square: cobalt and jade, diagonally matched.\n5. Five dots: four in a square (cobalt and jade) and a red one in the middle.\n6. Six dots in two columns of three: the top pair jade, the four below red.\n7. Seven dots: three jade dots on a diagonal at the top, then four red dots in a square below.\n8. Eight dots in two columns of four, all cobalt.\n9. Nine dots in three rows of three: a cobalt row, a red row, a jade row." },
+    { id: "faces-bonus", kind: "faces", oneStyle: true, group: "Tile faces",
+      ids: ["flower-1", "flower-2", "flower-3", "flower-4", "season-1", "season-2", "season-3", "season-4", "-"],
+      text: "SUBJECTS (eight bonus-tile faces, in this order; leave the ninth cell empty)\n1. Plum: a short gnarled brown branch with three pink five-petal blossoms.\n2. Orchid: three long arching jade leaves and one purple-pink orchid flower.\n3. Chrysanthemum: one round gold chrysanthemum flower head with a short jade stem and leaf.\n4. Bamboo: one short jade bamboo stem with three slim leaves.\n5. Spring: a willow branch with fresh jade leaves.\n6. Summer: a pink lotus flower above a round jade lotus leaf.\n7. Autumn: a single gold ginkgo leaf.\n8. Winter: a cobalt snowflake.\n9. (empty)" },
+    // the dragons (the jokers): pictures for their tile faces
+    { id: "dragons-1", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)", trial: true,
+      ids: ["abacus", "redString", "coinString", "bambooGrove", "coinPurse", "scroll"],
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Abacus: a wooden suanpan abacus standing upright, a dark frame, one crossbar, five columns of round beads.\n2. Red String: a red Chinese knot, a diamond-shaped weave with two short tails hanging below.\n3. Coin String: a short string of square-holed bronze cash coins threaded on a red cord, hanging in a curve.\n4. Bamboo Grove: a small round pot holding three bamboo stems with a few leaves.\n5. Coin Purse: a round embroidered silk purse with a drawstring top and a simple coin shape on its side.\n6. Scroll: a hand scroll partly unrolled, blank, with wooden rollers at each end." },
+    { id: "dragons-2", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)",
+      ids: ["sparrowNest", "goldToad", "pongHall", "outside", "ironTeapot", "longSleeves"],
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Nest: a woven twig nest holding two speckled eggs.\n2. Gold Toad: the three-legged money toad sitting on a little heap of square-holed coins, one coin in its mouth.\n3. Bell Hall: three identical bronze bells hanging in a row from a small wooden frame.\n4. Moon Gate: a round moon gate in a short length of white garden wall, seen straight on.\n5. Iron Teapot: a squat cast-iron teapot with a round lid knob and a curved spout.\n6. Long Sleeves: a folded silk robe with very long sleeves draped over a stand." },
+    { id: "dragons-3", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)",
+      ids: ["lantern", "mahjong", "twoSuits", "allSimples", "pureStraight", "nightOwl"],
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Lantern: a round red silk lantern with gold caps top and bottom and a short gold tassel.\n2. Mahjong!: a neat stack of four blank mahjong tiles with a pair of dice in front.\n3. Two Fish: two fish curled head to tail in a circle.\n4. Rice Bowl: a plain rice bowl with a pair of chopsticks resting across its rim.\n5. Nine Rings: the nine linked rings puzzle: nine metal rings on a long bar with a loop handle.\n6. Night Owl: a small round owl figurine with big round eyes, a crescent moon behind it." },
+    { id: "dragons-4", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)",
+      ids: ["kongBell", "windChime", "twinCranes", "threeTreasures", "stoneLion", "-"],
+      text: "SUBJECTS (five objects, one per cell, in this order; leave the sixth cell empty)\n1. Great Bell: one large bronze temple bell with rows of round knobs and a dragon-shaped loop on top.\n2. Wind Chime: a glass wind chime with a cream bell and a long blank paper strip below.\n3. Twin Cranes: two red-crowned cranes standing side by side, necks crossing.\n4. Three Treasures: three identical gold ingots (boat-shaped sycee) stacked in a small pyramid.\n5. Stone Lion: a small stone guardian lion sitting with one paw on a ball.\n6. (empty)" },
+    // objects: fortunes, almanac, packs, shop
+    { id: "objects-1", kind: "sheet", oneStyle: true, group: "Object sheets",
+      ids: ["rubbing", "fire", "brush", "jade", "bone", "gold"],
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Rubbing (copy a tile): a round cloth ink-dauber, black with ink, resting on a small sheet of paper.\n2. Fire (burn tiles): a small three-legged bronze brazier with flames rising from it.\n3. Brush (repaint a suit): a calligraphy brush resting on a mountain-shaped brush rest.\n4. Jade: a flat green jade bi disc with a round hole in the middle.\n5. Bone: a small bundle of carved bone counting sticks tied with a red thread.\n6. Gold Leaf: a small stack of thin gold leaf sheets with one corner lifting." },
+    { id: "objects-2", kind: "sheet", oneStyle: true, group: "Object sheets",
+      ids: ["almanac", "pack", "reroll", "burn", "porcelain", "windPack"],
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Almanac page (level a set): a thread-bound almanac book, closed, with a blank cover.\n2. Tile pack: a red envelope (hongbao) with a gold border, blank.\n3. Reroll: a bamboo dice cup with two dice beside it.\n4. Burn a kind: a bronze incense censer with three sticks of incense smoking.\n5. Porcelain: a small blue-and-white porcelain vase.\n6. Wind pack: a folded paper fan, half open." },
   ];
 
   function assemble(subject, styleKey) {
     var S = STYLES[styleKey];
-    var parts = [S.style];
+    var icons = subject.kind === "sheet" || subject.kind === "dragons" || subject.kind === "faces";
+    var parts = [icons ? ICON_STYLE : S.style];
     if (VIBE[subject.kind]) parts.push(VIBE[subject.kind]);
     parts.push(FORMAT(subject.kind, S));
     parts.push(subject.text);
     if (subject.kind === "sheet") {
       parts.push("FINAL REMINDER\nSix separate objects on flat #00FF00 green, 3 across and 2 down, never touching, in the STYLE's look and palette. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.");
+    } else if (subject.kind === "faces") {
+      parts.push("FINAL REMINDER\nNine tile-face pictures on flat #00FF00 green, 3 across and 3 down, one shared scale, nothing crossing between cells, no tiles or borders drawn. A thick dark edge round every shape, flat fills in the eight colours only, no shading. No text. The same hand for all nine.");
+    } else if (subject.kind === "dragons") {
+      parts.push("FINAL REMINDER\nSix separate objects on flat #00FF00 green, 3 across and 2 down, never touching, each compact enough for an upright tile face. No tiles, frames, faces or limbs. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.");
     } else if (subject.kind === "backdrop") {
       parts.push("FINAL REMINDER\nA wide 3:2 scene in the STYLE's look. Quiet middle third, interest at the sides and below. Nothing falling, no figures, no text, no border.");
     } else {
@@ -177,7 +213,7 @@
     return parts.join("\n\n");
   }
 
-  var api = { STYLES: STYLES, SUBJECTS: SUBJECTS, assemble: assemble };
+  var api = { STYLES: STYLES, SUBJECTS: SUBJECTS, assemble: assemble, ICON_STYLE: ICON_STYLE };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BBPrompts = api;
 })(typeof window !== "undefined" ? window : this);

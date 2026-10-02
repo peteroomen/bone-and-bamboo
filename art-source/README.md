@@ -14,22 +14,31 @@ to these glyphs: 一二三四五六七八九萬東南西北中發梅蘭菊竹春
 
 ## Generated art (`prompts/`)
 
+Two kinds. **Icons** for tile faces (dragons, fortunes, packs, services) are made once in the
+neutral TILE ICON style and traced; every traced shape keeps a colour slot (ink, red, blue, green,
+gold, brown, pink, ivory) and the game paints the slots with the colourway's palette from
+`tiles.js`. **Paintings** (hosts, beasts, backdrops) are made per style, one set per colourway.
+
 Image prompts for ChatGPT, built like Twelve Petals': a STYLE block, a VIBE, a FORMAT, the
 SUBJECT and a FINAL REMINDER, pasted as one prompt into a fresh chat. `prompts/prompts-data.js`
 holds every block and subject; `prompts.src.html` is the "Bone & Bamboo Art Prompts" page (copy
 buttons); `prompts.md` lists the round 1 trial prompts.
 
-- **Round 1, the style trial:** the sparrow, the Fox Spirit, the Azure Dragon and object sheet 1
+- **Round 1, the style trial:** the Fox Spirit, the Azure Dragon and the first sheet of dragon
+  tiles (the jokers). The guide is drawn in code (`tiles/tiles.js`, `guide()`), not generated.
   in each of three styles: A shadow theatre, B porcelain, C papercut. The winner sets the
   colourway and the style for everything after.
-- **Round 2:** the other hosts and beasts, four backdrops, object sheets 2-5.
+- **Round 2:** the other hosts and beasts, four backdrops, dragon sheets 2-4, object sheets 1-2.
 
-Originals go in `hosts/`, `sparrow/`, `backdrops/` and `objects/` under the file names the prompt
+Originals go in `hosts/`, `guide/`, `dragons/`, `backdrops/` and `objects/` under the file names the prompt
 page gives. Processing (planner):
 
 - Figures on green: `python3 scripts/cutout.py art-source/hosts/ID.png src/ui/art/portraits/ID.webp`
   (`pip install pillow numpy scipy`).
-- Object sheets: `scripts/trace-charms.py` from Twelve Petals traces a sheet of six into vector
-  paths. Its palette and output file are Twelve Petals' and must be adapted to the chosen style
-  before first use.
+- Icon sheets go in `icons/` and are listed in `icons/sheets.txt` (file, then ids in reading
+  order). `python3 scripts/trace-icons.py icons/SHEET.png id1 ... id6` (or `--all`) traces them
+  into `icons/icons.json`: per icon `{ w, h, p: [[slot, d], ...] }`, slots ink, red, blue, green,
+  gold, brown, pink, ivory. `node scripts/preview-icons.js` draws them on their dragon tiles in
+  every colourway (`icons/preview.html`). `tiles.js` `dragonTile({ theme, rarity, icon })` is the
+  reference renderer. Alternative takes go in `icons/alt/`.
 - Backdrops: convert to WebP at quality 78.

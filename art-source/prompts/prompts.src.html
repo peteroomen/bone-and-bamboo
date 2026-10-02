@@ -64,7 +64,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   <header style="display:grid;gap:12px">
     <div class="eyebrow">Image prompts · round 1 of 2 · 2 October 2026</div>
     <h1>Bone &amp; Bamboo Art Prompts</h1>
-    <p>Prompts for ChatGPT image generation, built the same way as Twelve Petals: one style block, a vibe, a format and a subject, pasted as one prompt. Round 1 is a style trial: four subjects in each of the three styles, so you can pick the look from real art. Round 2 is everything else, in the winning style.</p>
+    <p>Prompts for ChatGPT image generation, built the same way as Twelve Petals: one style block, a vibe, a format and a subject, pasted as one prompt. Round 1 is a style trial: three subjects in each of the three styles, so you can pick the look from real art. Round 2 is everything else, in the winning style.</p>
   </header>
 
   <section>
@@ -80,15 +80,15 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
 
   <section>
     <div class="eyebrow">Round 1</div>
-    <h2>Style trial: 12 images</h2>
-    <p class="muted">The guide, one spirit, one great beast and one sheet of curio objects, each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
+    <h2>Style trial: 7 images</h2>
+    <p class="muted">One spirit and one great beast in each of the three styles, plus the first sheet of tile icons, which is made once: the game draws the tiles and colourways in code, traces the icons and recolours them for each colourway. The guide is the Red Dragon tile itself, drawn in code, so it needs no image, each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
     <div id="trial" class="list"></div>
   </section>
 
   <section>
     <div class="eyebrow">Round 2</div>
     <h2>Everything else</h2>
-    <p class="muted">Ready now, but best run after the trial picks a style. From the second image on in a style, attach the approved trial images as references (I'll add a reference block once we have them).</p>
+    <p class="muted">Hosts, beasts and backdrops are per style (the style switch below); the icon sheets are one style for all and show the same prompt whichever style is picked. From the second image on in a style, attach the approved trial images as references (I'll add a reference block once we have them).</p>
     <div class="row"><span class="tag">Style</span><div class="seg" id="styles" role="group" aria-label="Style for round 2"></div></div>
     <div id="rest" class="list"></div>
   </section>
@@ -97,7 +97,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
     <div class="eyebrow">Review</div>
     <h2>What I check</h2>
     <ul class="check">
-      <li>It reads at game size: 60px for spirits, 50px for the sparrow, 18px for objects.</li>
+      <li>It reads at game size: 60px for spirits, 40px for dragon tiles, 18px for objects.</li>
       <li>The background keys out: even #00FF00 green, a clean edge, no bright green in the figure.</li>
       <li>It looks like the real craft, not a modern illustration of it.</li>
       <li>One held item, the right one. No text, characters, seals or signatures.</li>
@@ -113,11 +113,13 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
     <table class="inv">
       <thead><tr><th>What</th><th>Count</th><th>How it's used</th></tr></thead>
       <tbody>
-        <tr><td>The sparrow guide</td><td>1, then 3 poses</td><td>Cut out from green; a 50px face beside tips, larger on the title and tutorial</td></tr>
+        <tr><td>The guide</td><td>none</td><td>Drawn in code: the Red Dragon tile with a face, arms and moods (tile kit)</td></tr>
         <tr><td>Spirit hosts</td><td>4</td><td>Cut out; on the round intro and the score panel</td></tr>
         <tr><td>Great beasts</td><td>4</td><td>Full-bleed; the hardest host of each wind</td></tr>
         <tr><td>Backdrops</td><td>4</td><td>One per wind, behind the table</td></tr>
-        <tr><td>Object sheets</td><td>5 (30 objects)</td><td>Traced into vectors: curios, fortunes, almanac, packs, shop services</td></tr>
+        <tr><td>Tile faces</td><td>3 sheets (bamboo done, dots, bonus tiles)</td><td>Traced and recoloured; the game draws the tile, corner index and enhancements. Characters and winds stay in code</td></tr>
+        <tr><td>Dragons (jokers)</td><td>4 sheets (23 pictures)</td><td>Traced; the game prints each on a tile face with a White, Green or Red Dragon frame for its rarity</td></tr>
+        <tr><td>Object sheets</td><td>2 (12 objects)</td><td>Traced: fortunes, almanac, packs, shop services</td></tr>
         <tr><td>Teahouse, title</td><td>later</td><td>After the style is set</td></tr>
         <tr><td>Tiles</td><td>done</td><td>Drawn from code (the tile kit)</td></tr>
       </tbody>
@@ -144,6 +146,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   }
   function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
   function file(subject, style, trial) {
+    if (subject.oneStyle) return subject.id + ".png";
     return (trial ? "trial-" + style + "-" : "") + subject.id + ".png";
   }
   function cell(subject, style, trial, titled) {
@@ -161,6 +164,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   }
   function label(s) {
     if (s.kind === "sheet") return "Objects: " + s.ids.join(", ");
+    if (s.kind === "dragons") return "Dragon tiles: " + s.ids.filter(function (x) { return x !== "-"; }).join(", ");
     return title(s);
   }
 
@@ -168,7 +172,8 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   var trial = P.SUBJECTS.filter(function (s) { return s.trial; });
   document.getElementById("trial").innerHTML = trial.map(function (s) {
     return '<div class="subject"><header><h3>' + esc(label(s)) + '</h3><span class="tag">' + s.group + "</span></header>" +
-      '<div class="trio">' + Object.keys(P.STYLES).map(function (k) { return cell(s, k, true, true); }).join("") + "</div></div>";
+      (s.oneStyle ? '<p class="muted" style="font-size:0.9rem">One sheet for every colourway: the game traces it and recolours it.</p><div class="trio">' + cell(s, "A", true, false) + "</div></div>"
+        : '<div class="trio">' + Object.keys(P.STYLES).map(function (k) { return cell(s, k, true, true); }).join("") + "</div></div>");
   }).join("");
 
   // round 2

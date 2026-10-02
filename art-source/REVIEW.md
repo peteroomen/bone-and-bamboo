@@ -1,0 +1,93 @@
+# Art review log
+
+Generated art as it comes in, with the planner's review. Keepers are marked; other takes stay as
+alternatives. Cutouts are checked on all three table colours at 60px (a host in a circle), 50px
+(the sparrow beside a tip) and large.
+
+## 2026-10-02 · Style trial, first batch
+
+| File | Style | Verdict |
+|---|---|---|
+| `sparrow/trial-A-sparrow-a.png` | Shadow theatre | **Keeper.** Rivets, cloud-scroll vest and glowing leather all read; friendly eye; clear at 50px. |
+| `sparrow/trial-A-sparrow-b.png` | Shadow theatre | Alt. Same puppet with a scowl: too stern for the guide. |
+| `hosts/trial-A-fox.png` | Shadow theatre | **Keeper**, with a close crop on the head. Mask, tails, rivets and openwork are right; the tile is blank as asked. The head is small in the frame, so the whole figure is an orange blob at 60px; the game shows a head crop there. The host FORMAT now asks for a head at least a third of the width. |
+| `sparrow/trial-B-sparrow-b.png` | Porcelain | **Keeper.** The raised-wing gesture is lovely and the cheek spot and bib read at 50px. The brushwork is feathery rather than flat Ming washes; beautiful, but a step towards watercolour. The far eye shows past the beak; invisible at game size. |
+| `sparrow/trial-B-sparrow-a.png` | Porcelain | Alt. Same plate; the wing is less of a gesture. |
+| `sparrow/trial-C-sparrow.png` | Papercut | **Keeper for now.** A true one-sheet cut with good moon-teeth feathers. It reads as a chick rather than a sparrow (no cap, cheek spot or bib); the guide prompt now asks for those as cut shapes. |
+
+All six key out cleanly with `scripts/cutout.py` (no green fringe; the papercut's and the
+fox's cut-away gaps go transparent as they should).
+
+## 2026-10-02 · The guide becomes a dragon
+
+The user chose a dragon as the guide: a young red dragon from the Red Dragon tile (中). The
+sparrow images above stay in `sparrow/` as unused takes; the 1 of Bamboo keeps a sparrow as tile
+art. The trial's guide prompt (`dragon`) replaces the sparrow's, in all three styles.
+
+## 2026-10-02 · Dragon tiles are the jokers
+
+Following Balatro (its mascot is a Joker card and its jokers are cards): the guide is the Red
+Dragon tile come to life, and the jokers (curios in the simulators) are **dragon tiles**, each a
+tile with a little dragon on its face. The frame shows rarity: White Dragon common, Green
+uncommon, Red rare. Dragons leave the playable tile set; the honours are the four winds. The
+guide prompt (`guide`) and four dragon sheets (`dragons-1` to `-4`) replace the earlier guide and
+the curio object sheets; two object sheets remain for fortunes, packs and services.
+
+## 2026-10-02 · The guide is the tile itself
+
+Three generated takes of a dragon on a tile (`guide/unused/`) were set aside: the user wants the
+guide to literally be the Red Dragon tile. It is now drawn in code (`guide()` in `tiles.js`): the
+real tile with eyes, mouth, arms and feet, six moods and a blink, in every colourway. No image
+prompt is needed for it.
+
+## 2026-10-02 · Dragons are plain tiles
+
+Only the guide is a character. The dragons (the jokers) are plain tiles with a picture of their
+thing on the face and a White, Green or Red Dragon frame for rarity, exactly like Balatro's joker
+cards. The dragon sheets now ask for objects (no faces or limbs) compact enough for an upright tile
+face. Shadow theatre is the starting colourway.
+
+## 2026-10-02 · Icons once, recoloured in code
+
+Tiles and colourways stay in code. Icons for tile faces are generated once in a neutral TILE ICON
+style (eight flat colours) and traced with a colour slot per shape; the game paints the slots per
+colourway. The icon sheets leave the per-style trial (the trial is now 7 images: the fox and the
+Azure Dragon in three styles, and dragon sheet 1 once).
+
+## 2026-10-02 · Icon sheet dragons-1
+
+`icons/dragons-1.png` (take b; take a in `icons/alt/`): abacus, Chinese knot, coin string, potted
+bamboo, silk purse, scroll. **Keeper.** Clean flat fills in the eight slots, bold outlines, reads
+at 36px on a tile. Traced with `scripts/trace-icons.py` (12-39 paths each, 49 KB for six); the
+slots recolour correctly on all three colourways. Take b wins on the scroll (rolled ends read
+better). `mock/hand.src.html` is the "Bone & Bamboo Hand Mock" page: a hand in progress built from
+these, the code tiles, the guide and the fox.
+
+## 2026-10-02 · Bamboo faces
+
+`icons/bamboo.png`: the Bamboo suit 1-9 (sparrow on the 1) in the icon style. **Keeper.** Traced
+with the new grid mode (`--grid=3x3`: cuts through the widest gap between faces, one shared scale
+for the sheet) and drawn by `tiles.js` through `useFaces(icons)`: the traced face replaces the
+code face; body, index and enhancements stay. Chunkier and easier to count at hand size than the
+code faces, and it recolours cleanly. Prompts added for Dots and the bonus tiles; Characters and
+winds stay in code (they are written characters).
+
+## 2026-10-02 · Dots, Characters, winds and dragons
+
+`icons/dots.png`, `icons/chars.png` (3x3) and `icons/honours.png` (4 winds over 3 dragons, traced
+with `--grid=4,3`). **Keepers.** Every character is correct (一 to 九 over 萬, 東南西北, 中 發)
+and the brush lettering is a clear step up from the font, so the whole set now uses traced faces;
+the code-drawn faces remain as fallbacks (the kit's "Traced faces" toggle). The guide's body and
+the dragons' rarity badges use the traced 中 and 發 too. Only flowers and seasons are still code.
+
+## 2026-10-02 · Flowers and seasons, cards, dice, hanafuda
+
+- `icons/bonus.png` (4,4): the eight bonus faces (plum, iris, chrysanthemum, bamboo; blossom,
+  lotus, maple, snowy pine). **Keeper**: every tile face is now traced art.
+- `icons/cards-1.png`, `icons/cards-2.png`: playing-card faces (suits, kite, horseshoes, knight,
+  king, queen, page, jester bell, A, 0-9). `icons/dice.png`: Chinese dice pips 1-6 (red 1 and 4),
+  three jester caps and a die. `icons/hanafuda.png`: the twelve hanafuda months. All traced
+  cleanly; their use is not yet in the design (alternative tile sets?). Pips share the dice
+  sheet's scale, so they draw small; trace them as their own sheet if they become tile faces.
+- The tracer now cuts grids at the widest empty runs (rows of a sheet may differ in height);
+  every earlier icon traced identically.

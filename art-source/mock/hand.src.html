@@ -1,0 +1,118 @@
+<title>Bone &amp; Bamboo Hand Mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Serif+SC:wght@900&display=swap">
+<style>
+/* Layout: three phones side by side, one per colourway; each phone holds its own palette. */
+:root { --ground: #e9ece9; --ink: #1c211e; --muted: #59645e; --rule: #cbd3cd;
+  --f-display: "Young Serif", Georgia, serif; --f-body: "Atkinson Hyperlegible", system-ui, sans-serif; --f-mono: "IBM Plex Mono", ui-monospace, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ground: #121614; --ink: #e3e9e5; --muted: #9baba2; --rule: #2c3832; color-scheme: dark; } }
+:root[data-theme="dark"] { --ground: #121614; --ink: #e3e9e5; --muted: #9baba2; --rule: #2c3832; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--f-body); padding-inline: 16px; padding-block: 28px 56px; }
+.wrap { max-width: 1240px; margin-inline: auto; display: grid; gap: 22px; }
+h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(1.8rem, 4vw, 2.4rem); margin: 0; }
+.lede { margin: 0; max-width: 72ch; color: var(--muted); line-height: 1.5; }
+.phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 24px; justify-items: center; }
+.label { font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 6px; }
+
+/* a phone: 360 x 780 of game, colours from its colourway */
+.phone { width: 100%; max-width: 372px; border: 6px solid #111; border-radius: 26px; overflow: hidden; background: var(--t); color: var(--tink); font-family: var(--f-body); }
+.screen { padding: 10px 8px 12px; display: grid; gap: 9px; }
+.top { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; align-items: center; }
+.host { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; border: 2px solid var(--edge); background: var(--t2); }
+.host img { width: 170%; height: 170%; object-fit: cover; object-position: 50% 0%; margin-left: -35%; margin-top: -4%; display: block; }
+.who { display: grid; gap: 1px; min-width: 0; }
+.who b { font-family: var(--f-display); font-weight: 400; font-size: 1rem; }
+.who small { font-size: 0.72rem; opacity: 0.8; }
+.score { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.score .now { font-size: 1.35rem; font-weight: 600; color: var(--accent); }
+.score .of { font-size: 0.72rem; opacity: 0.8; }
+.bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--t2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.dragons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 6px; border-radius: 10px; background: var(--t2); }
+.dragons .slot { aspect-ratio: 60 / 80; border: 1.5px dashed var(--tink); opacity: 0.35; border-radius: 6px; }
+.dragons svg { width: 100%; height: auto; display: block; }
+.zone { font-family: var(--f-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; display: flex; justify-content: space-between; }
+.wall { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 14px; }
+.stack { position: relative; height: 68px; }
+.stack > div { position: absolute; left: 0; right: 0; }
+.stack svg { width: 100%; height: auto; display: block; }
+.stack .n { position: absolute; left: 0; right: 0; bottom: -15px; text-align: center; font: 600 0.62rem var(--f-mono); opacity: 0.7; }
+.table { display: flex; gap: 10px; min-height: 46px; align-items: end; padding-top: 6px; }
+.meld { display: flex; gap: 1px; }
+.meld svg { width: 28px; height: auto; display: block; }
+.tip { display: grid; grid-template-columns: 58px 1fr; gap: 6px; align-items: end; }
+.tip svg { width: 58px; height: auto; display: block; }
+.bubble { background: var(--face); color: var(--edge); border: 1.5px solid var(--edge); border-radius: 12px 12px 12px 3px; padding: 7px 9px; font-size: 0.8rem; line-height: 1.35; }
+.hand { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; padding-top: 10px; }
+.hand svg { width: 100%; height: auto; display: block; }
+.hand .sel { transform: translateY(-10px); }
+.preview { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.preview b { color: var(--accent); }
+.buttons { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.buttons span { min-height: 46px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; border: 2px solid var(--edge); }
+.buttons .discard { background: var(--face); color: var(--edge); }
+.buttons .play { background: var(--accent); color: var(--face); }
+.buttons small { font-family: var(--f-mono); font-weight: 500; opacity: 0.85; }
+.notes { max-width: 72ch; color: var(--muted); font-size: 0.92rem; line-height: 1.5; margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>Bone &amp; Bamboo Hand Mock</h1>
+    <p class="lede">A hand in progress at phone size, the same moment in each colourway. The tiles' bodies, the guide and the frames are drawn in code. Every tile face and the dragons' pictures are generated once, traced, and recoloured per colourway; the fox is a generated shadow-theatre painting. A mock of the layout, not the game.</p>
+  </header>
+  <div class="phones" id="phones"></div>
+  <ul class="notes">
+    <li>East wind, round 1, hosted by the Fox Spirit. The target is already beaten; every 25% over it pays extra cash, so you keep building. Two sets are on the table and the run 6-7-8 of Characters is selected in the hand.</li>
+    <li>The numbers are real: table now 119 chips × 13 mult = 1,547 (Coin Purse +36 chips for three Dots tiles, Abacus +2 per run, Red String +6). Playing the run makes it 150 × 16 = 2,400.</li>
+    <li>The wall shows each stack's top tile and the top strip of the one beneath (the corner index), with the count left in the stack.</li>
+  </ul>
+</div>
+
+<script>
+/*TILES*/
+</script>
+<script>
+var ICONS = /*ICONS*/;
+var FOX = "/*FOX*/";
+</script>
+<script>
+(function () {
+  var B = window.BBTiles;
+  B.useFaces(ICONS); // traced faces (the bamboo suit) replace the code-drawn ones
+  function t(suit, rank) { return { suit: suit, rank: rank }; }
+  var wall = [
+    [t("chars", 4), t("dots", 6)], [t("bamboo", 3), t("bamboo", 7)], [t("dots", 1), t("chars", 2)], [t("wind", 3), t("dots", 5)],
+    [t("chars", 9), t("bamboo", 6)], [t("dots", 8), t("dots", 2)], [t("bamboo", 1), t("chars", 5)], [t("chars", 7), t("bamboo", 4)]
+  ];
+  var left = [8, 9, 7, 9, 8, 8, 9, 7];
+  var hand = [t("dots", 2), t("dots", 2), t("chars", 6), t("chars", 7), t("chars", 8), t("bamboo", 5), t("bamboo", 9), t("wind", 1)];
+  var melds = [[t("dots", 3), t("dots", 4), t("dots", 5)], [t("bamboo", 7), t("bamboo", 7), t("bamboo", 7)]];
+  var dragons = [["abacus", "common"], ["redString", "common"], ["coinPurse", "common"]];
+  var accent = { theatre: "#c9542a", porcelain: "#1f4f9a", papercut: "#b3261e" };
+  var html = "";
+  Object.keys(B.THEMES).forEach(function (k) {
+    var T = B.THEMES[k];
+    var light = k !== "theatre";
+    var vars = "--t:" + T.table + ";--t2:" + T.table2 + ";--tink:" + (light ? T.ink : "#f3ead6") + ";--edge:" + T.edge + ";--face:" + T.face + ";--accent:" + accent[k];
+    var o = function (x) { return B.svg(x, { theme: k }); };
+    var s = '<div><div class="label">' + T.name + '</div><div class="phone" style="' + vars + '"><div class="screen">';
+    s += '<div class="top"><div class="host"><img src="' + FOX + '" alt="The Fox Spirit"></div><div class="who"><b>Fox Spirit</b><small>East wind · Masked: hidden tiles you play +2 mult</small></div>' +
+      '<div class="score"><div class="now">1,547</div><div class="of">target 1,000 ✓</div></div><div class="bar"><i style="width:100%"></i></div></div>';
+    s += '<div class="dragons">' + dragons.map(function (d) { return B.dragonTile({ theme: k, rarity: d[1], icon: ICONS[d[0]] }); }).join("") + '<div class="slot"></div><div class="slot"></div></div>';
+    s += '<div class="zone"><span>The wall</span><span>59 tiles</span></div><div class="wall">' + wall.map(function (st, i) {
+      return '<div class="stack"><div style="top:0">' + o(st[1]) + '</div><div style="top:15px">' + o(st[0]) + '</div><span class="n">' + left[i] + "</span></div>";
+    }).join("") + "</div>";
+    s += '<div class="zone" style="margin-top:10px"><span>Your table</span><span>119 × 13</span></div><div class="table">' + melds.map(function (m) { return '<div class="meld">' + m.map(o).join("") + "</div>"; }).join("") + "</div>";
+    s += '<div class="tip">' + B.guide({ theme: k, mood: "point" }) + '<div class="bubble">6-7-8 of Characters is a run. Your Abacus adds +2 mult for every run!</div></div>';
+    s += '<div class="hand">' + hand.map(function (x, i) { return '<div class="' + (i >= 2 && i <= 4 ? "sel" : "") + '">' + o(x) + "</div>"; }).join("") + "</div>";
+    s += '<div class="preview"><span>Run · +31 chips · +1 mult · Abacus +2</span><b>→ 2,400</b></div>';
+    s += '<div class="buttons"><span class="discard">Discard <small>3 left</small></span><span class="play">Play run <small>6 left</small></span></div>';
+    s += "</div></div></div>";
+    html += s;
+  });
+  document.getElementById("phones").innerHTML = html;
+})();
+</script>

@@ -1,0 +1,52 @@
+MVP 909dab5; seeds 0-399; current design shop; gifts on; Fire 6; no host twists.
+
+smart: won 74% of 400 runs; lost in round 1: 0%, 2: 9%, 3: 5%, 4: 13%
+final way of playing: {"greedy":340,"pongs":60}
+most bought: almanac:chow 1.33, almanac:pong 1.08, almanac:pair 0.81, fortune:jade 0.56, pack:almanac 0.49, fortune:bone 0.45, fortune:fire 0.43, curio:abacus 0.35, fortune:brush 0.34, curio:sparrowNest 0.30, curio:bambooGrove 0.29, curio:redString 0.28, curio:coinPurse 0.28, fortune:rubbing 0.28
+win rate with each curio at the end:
+  sparrowNest      90%  (in 30% of finished builds)
+  longSleeves      86%  (in 4% of finished builds)
+  mahjong          81%  (in 20% of finished builds)
+  nightOwl         81%  (in 52% of finished builds)
+  outside          80%  (in 10% of finished builds)
+  ironTeapot       80%  (in 1% of finished builds)
+  coinPurse        80%  (in 28% of finished builds)
+  scroll           79%  (in 26% of finished builds)
+  abacus           78%  (in 36% of finished builds)
+  allSimples       78%  (in 48% of finished builds)
+  twinCranes       78%  (in 48% of finished builds)
+  bambooGrove      77%  (in 30% of finished builds)
+  pureStraight     75%  (in 39% of finished builds)
+  redString        75%  (in 29% of finished builds)
+  kongBell         73%  (in 15% of finished builds)
+  lantern          71%  (in 4% of finished builds)
+  twoSuits         71%  (in 2% of finished builds)
+  coinString       71%  (in 24% of finished builds)
+  dragonLantern    71%  (in 15% of finished builds)
+  pongHall         56%  (in 17% of finished builds)
+
+casual: won 33% of 400 runs; lost in round 1: 0%, 2: 23%, 3: 20%, 4: 24%
+final way of playing: {"greedy":400}
+most bought: almanac:chow 0.67, almanac:kong 0.66, almanac:pair 0.65, almanac:pong 0.58, fortune:fire 0.48, fortune:jade 0.46, fortune:rubbing 0.45, fortune:bone 0.39, pack:dragons 0.26, pack:almanac 0.25, pack:fourth 0.24, pack:honour 0.23, curio:abacus 0.22, curio:bambooGrove 0.20
+win rate with each curio at the end:
+  sparrowNest      57%  (in 17% of finished builds)
+  coinPurse        57%  (in 17% of finished builds)
+  allSimples       52%  (in 36% of finished builds)
+  twinCranes       47%  (in 37% of finished builds)
+  lantern          46%  (in 6% of finished builds)
+  bambooGrove      43%  (in 21% of finished builds)
+  abacus           42%  (in 22% of finished builds)
+  scroll           41%  (in 16% of finished builds)
+  pureStraight     40%  (in 35% of finished builds)
+  redString        39%  (in 19% of finished builds)
+  mahjong          39%  (in 8% of finished builds)
+  ironTeapot       38%  (in 8% of finished builds)
+  nightOwl         36%  (in 33% of finished builds)
+  coinString       32%  (in 19% of finished builds)
+  kongBell         32%  (in 36% of finished builds)
+  longSleeves      32%  (in 11% of finished builds)
+  outside          31%  (in 8% of finished builds)
+  goldToad         30%  (in 17% of finished builds)
+  pongHall         29%  (in 11% of finished builds)
+  dragonLantern    26%  (in 34% of finished builds)
+  twoSuits         23%  (in 10% of finished builds)

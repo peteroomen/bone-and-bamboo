@@ -1,0 +1,11 @@
+# Icon sheets, one per line: the file, then its ids in reading order (- skips a cell).
+dragons-1.png abacus redString coinString bambooGrove coinPurse scroll
+bamboo.png --grid=3x3 bamboo-1 bamboo-2 bamboo-3 bamboo-4 bamboo-5 bamboo-6 bamboo-7 bamboo-8 bamboo-9
+dots.png --grid=3x3 dots-1 dots-2 dots-3 dots-4 dots-5 dots-6 dots-7 dots-8 dots-9
+chars.png --grid=3x3 chars-1 chars-2 chars-3 chars-4 chars-5 chars-6 chars-7 chars-8 chars-9
+honours.png --grid=4,3 wind-1 wind-2 wind-3 wind-4 dragon-1 dragon-2 dragon-3
+bonus.png --grid=4,4 flower-1 flower-2 flower-3 flower-4 season-1 season-2 season-3 season-4
+cards-1.png --grid=3x3 card-heart card-club card-spade card-kite card-horseshoe card-knight card-queen card-king card-jester-bell
+cards-2.png --grid=4,4,4,4,3 card-ace card-king-b card-queen-b card-page card-horseshoe-b num-0 num-1 num-2 num-3 num-4 num-5 num-6 num-7 num-8 num-9 suit-diamond suit-heart suit-club suit-spade
+dice.png --grid=3,3,3,1 pips-1 pips-2 pips-3 pips-4 pips-5 pips-6 jester-black jester-red jester-motley die
+hanafuda.png --grid=3,3,3,3 hana-boar hana-moon hana-sake hana-deer hana-butterflies hana-crane hana-phoenix hana-chrysanthemum hana-maple hana-cherry hana-pine hana-rain
