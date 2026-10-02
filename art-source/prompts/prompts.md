@@ -4,7 +4,7 @@ Generated from `prompts-data.js`. Each block below is a complete prompt: paste i
 
 ## Round 1: style trial
 
-### trial-A-sparrow.png (Shadow theatre, sparrow)
+### trial-A-dragon.png (Shadow theatre, dragon)
 
 ```
 STYLE A · SHADOW THEATRE (keep identical for every image)
@@ -17,26 +17,26 @@ Art for a Chinese mahjong-tile game, made as a real traditional Chinese shadow p
 - Do not drift into: red-only paper-cut art, 3D rendering, realistic animals, anime or cartoon styling, glow effects or lens flare.
 
 VIBE (the guide)
-The player's friend and teacher: a small tree sparrow who lives on the 1 of Bamboo tile. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Gentle humour, never silly, never a sticker mascot.
+The player's friend and teacher: a young red dragon who lives on the Red Dragon tile of the mahjong set. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Small and spirited, not fearsome; gentle humour, never silly, never a sticker mascot.
 
 FORMAT (the guide: head and shoulders)
-- The sparrow is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eye a little above the middle. Nothing competes with the face.
+- The dragon is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eyes a little above the middle. Horns and whiskers may run off the top and sides; nothing competes with the face.
 - The background is a flat, solid chroma-key green (#00FF00) and nothing else: one perfectly even colour with no shadow, no gradient, no texture, no scenery and no floating objects. It is only there to be cut away.
 - No green of that brightness anywhere in the figure; any green in it is a dark pine green. A clean dark edge runs everywhere the figure meets the green, including along the bottom edge.
 - One square image, 1:1. No border, no frame, no mockup.
 - No mahjong tiles. No text, letters, characters, numbers, seal stamp, signature or watermark anywhere.
 
-SUBJECT: The Sparrow, the player's guide
-Role in the game: it teaches the rules and gives tips in speech bubbles. It lives on the 1 of Bamboo tile, whose traditional picture is a bird, and mahjong itself is called 'sparrow' in Cantonese.
-A Eurasian tree sparrow: a chestnut-brown cap, white cheeks with one black spot on each, a small black bib under the beak, a brown back with dark streaks and two pale wing bars, a short dark beak. Head and shoulders, head cocked to one side, beak a little open as if mid-sentence.
-Holds: nothing; one wing is raised like a hand making a point.
-Mood: bright, cheeky and kind. At 50 pixels, the cap, the cheek spot and the bright eye are what read.
+SUBJECT: The little Red Dragon, the player's guide
+Role in the game: it teaches the rules and gives tips in speech bubbles. It lives on the Red Dragon tile of the mahjong set, whose character means 'centre' and 'hitting the mark'.
+A young Chinese dragon, small and lively: a red body with gold belly scales, a short camel-like snout, big round bright eyes, two short stubby gold antlers, long curling whiskers, a little mane of flame-like gold tufts, and one small clawed hand. Head and shoulders, head cocked to one side, mouth a little open as if mid-sentence.
+Holds: nothing; one clawed hand is raised with a finger up, making a point.
+Mood: bright, cheeky and kind. At 50 pixels, the red head, the gold antlers and the big eyes are what read. Clearly a young dragon, never a lizard or a Western dragon (no bat wings).
 
 FINAL REMINDER
 A genuine Chinese shadow puppet of glowing dyed leather: cut edges, a few bold openwork patterns, visible rivets at the joints, flat colour. Follow the FORMAT for the frame and background exactly. A large, readable face. At most one held item. No text, no seal, no border.
 ```
 
-### trial-B-sparrow.png (Porcelain, sparrow)
+### trial-B-dragon.png (Porcelain, dragon)
 
 ```
 STYLE B · BLUE-AND-WHITE PORCELAIN (keep identical for every image)
@@ -49,25 +49,25 @@ Art for a Chinese mahjong-tile game, painted as the decoration on real Ming-dyna
 - Do not drift into: Delftware, willow-pattern transfer prints, tattoo flash, watercolour on paper, digital vector art.
 
 VIBE (the guide)
-The player's friend and teacher: a small tree sparrow who lives on the 1 of Bamboo tile. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Gentle humour, never silly, never a sticker mascot.
+The player's friend and teacher: a young red dragon who lives on the Red Dragon tile of the mahjong set. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Small and spirited, not fearsome; gentle humour, never silly, never a sticker mascot.
 
 FORMAT (the guide: head and shoulders)
-- The sparrow is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eye a little above the middle. Nothing competes with the face.
+- The dragon is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eyes a little above the middle. Horns and whiskers may run off the top and sides; nothing competes with the face.
 - The picture is the central medallion of a plate: a circle of white glaze filling the square image edge to edge, with one thin cobalt ring at its edge. Outside the circle, the four corners are flat chroma-key green (#00FF00). Inside the circle the glaze is the background: plain white, no scenery.
 - One square image, 1:1. No border, no frame, no mockup.
 - No mahjong tiles. No text, letters, characters, numbers, seal stamp, signature or watermark anywhere.
 
-SUBJECT: The Sparrow, the player's guide
-Role in the game: it teaches the rules and gives tips in speech bubbles. It lives on the 1 of Bamboo tile, whose traditional picture is a bird, and mahjong itself is called 'sparrow' in Cantonese.
-A Eurasian tree sparrow: a chestnut-brown cap, white cheeks with one black spot on each, a small black bib under the beak, a brown back with dark streaks and two pale wing bars, a short dark beak. Head and shoulders, head cocked to one side, beak a little open as if mid-sentence.
-Holds: nothing; one wing is raised like a hand making a point.
-Mood: bright, cheeky and kind. At 50 pixels, the cap, the cheek spot and the bright eye are what read.
+SUBJECT: The little Red Dragon, the player's guide
+Role in the game: it teaches the rules and gives tips in speech bubbles. It lives on the Red Dragon tile of the mahjong set, whose character means 'centre' and 'hitting the mark'.
+A young Chinese dragon, small and lively: a red body with gold belly scales, a short camel-like snout, big round bright eyes, two short stubby gold antlers, long curling whiskers, a little mane of flame-like gold tufts, and one small clawed hand. Head and shoulders, head cocked to one side, mouth a little open as if mid-sentence.
+Holds: nothing; one clawed hand is raised with a finger up, making a point.
+Mood: bright, cheeky and kind. At 50 pixels, the red head, the gold antlers and the big eyes are what read. Clearly a young dragon, never a lizard or a Western dragon (no bat wings).
 
 FINAL REMINDER
 Genuine Ming blue-and-white: cobalt brushwork in a few strengths on white glaze, one small copper-red accent at most. Follow the FORMAT for the frame and background exactly. A large, readable face. At most one held item. No text, no seal, no border.
 ```
 
-### trial-C-sparrow.png (Papercut, sparrow)
+### trial-C-dragon.png (Papercut, dragon)
 
 ```
 STYLE C · PAPERCUT (keep identical for every image)
@@ -79,20 +79,20 @@ Art for a Chinese mahjong-tile game, made as a real Chinese paper-cut (jianzhi):
 - Do not drift into: 3D paper craft, layered shadow boxes, origami, stencil spray art, tattoo flash, digital vector art.
 
 VIBE (the guide)
-The player's friend and teacher: a small tree sparrow who lives on the 1 of Bamboo tile. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Gentle humour, never silly, never a sticker mascot.
+The player's friend and teacher: a young red dragon who lives on the Red Dragon tile of the mahjong set. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Small and spirited, not fearsome; gentle humour, never silly, never a sticker mascot.
 
 FORMAT (the guide: head and shoulders)
-- The sparrow is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eye a little above the middle. Nothing competes with the face.
+- The dragon is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eyes a little above the middle. Horns and whiskers may run off the top and sides; nothing competes with the face.
 - The background is a flat, solid chroma-key green (#00FF00) and nothing else: one perfectly even colour with no shadow, no gradient, no texture, no scenery and no floating objects. It is only there to be cut away.
 - No green of that brightness anywhere in the figure; any green in it is a dark pine green. A clean dark edge runs everywhere the figure meets the green, including along the bottom edge.
 - One square image, 1:1. No border, no frame, no mockup.
 - No mahjong tiles. No text, letters, characters, numbers, seal stamp, signature or watermark anywhere.
 
-SUBJECT: The Sparrow, the player's guide
-Role in the game: it teaches the rules and gives tips in speech bubbles. It lives on the 1 of Bamboo tile, whose traditional picture is a bird, and mahjong itself is called 'sparrow' in Cantonese.
-A Eurasian tree sparrow: a chestnut-brown cap, white cheeks with one black spot on each, a small black bib under the beak, a brown back with dark streaks and two pale wing bars, a short dark beak. Head and shoulders, head cocked to one side, beak a little open as if mid-sentence.
-Holds: nothing; one wing is raised like a hand making a point.
-Mood: bright, cheeky and kind. At 50 pixels, the cap, the cheek spot and the bright eye are what read.
+SUBJECT: The little Red Dragon, the player's guide
+Role in the game: it teaches the rules and gives tips in speech bubbles. It lives on the Red Dragon tile of the mahjong set, whose character means 'centre' and 'hitting the mark'.
+A young Chinese dragon, small and lively: a red body with gold belly scales, a short camel-like snout, big round bright eyes, two short stubby gold antlers, long curling whiskers, a little mane of flame-like gold tufts, and one small clawed hand. Head and shoulders, head cocked to one side, mouth a little open as if mid-sentence.
+Holds: nothing; one clawed hand is raised with a finger up, making a point.
+Mood: bright, cheeky and kind. At 50 pixels, the red head, the gold antlers and the big eyes are what read. Clearly a young dragon, never a lizard or a Western dragon (no bat wings).
 
 FINAL REMINDER
 A genuine Chinese folk paper-cut: one connected sheet of red paper, moon-teeth and sawtooth cuts, black only for eyes. Follow the FORMAT for the frame and background exactly. A large, readable face. At most one held item. No text, no seal, no border.
@@ -118,7 +118,7 @@ FORMAT (spirit hosts: keep identical every time)
 - The background is a flat, solid chroma-key green (#00FF00) and nothing else: one perfectly even colour with no shadow, no gradient, no texture, no scenery and no floating objects. It is only there to be cut away.
 - No green of that brightness anywhere in the figure; any green in it is a dark pine green. A clean dark edge runs everywhere the figure meets the green, including along the bottom edge.
 - One square image, 1:1. No border, no frame, no mockup, no scroll around the picture.
-- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down.
+- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down. The head is at least a third of the image's width: show the figure from the waist up rather than shrinking the head to fit tails, wings or a wide robe.
 - The spirit holds at most one item, and only the one the subject names.
 - Any mahjong tile shown is small and simplified: a plain rectangle with one simple dot or stick shape on its face and a plain back, no writing.
 - No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore. Women and children are never sexualised.
@@ -152,7 +152,7 @@ FORMAT (spirit hosts: keep identical every time)
 - The figure fills about 75% of the image with clear space above and to the sides. The whole figure fits inside the frame, or it is cut off cleanly by the bottom edge at the chest or waist. Nothing runs off the top or the sides.
 - The picture is the central medallion of a plate: a circle of white glaze filling the square image edge to edge, with one thin cobalt ring at its edge. Outside the circle, the four corners are flat chroma-key green (#00FF00). Inside the circle the glaze is the background: plain white, no scenery.
 - One square image, 1:1. No border, no frame, no mockup, no scroll around the picture.
-- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down.
+- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down. The head is at least a third of the image's width: show the figure from the waist up rather than shrinking the head to fit tails, wings or a wide robe.
 - The spirit holds at most one item, and only the one the subject names.
 - Any mahjong tile shown is small and simplified: a plain rectangle with one simple dot or stick shape on its face and a plain back, no writing.
 - No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore. Women and children are never sexualised.
@@ -186,7 +186,7 @@ FORMAT (spirit hosts: keep identical every time)
 - The background is a flat, solid chroma-key green (#00FF00) and nothing else: one perfectly even colour with no shadow, no gradient, no texture, no scenery and no floating objects. It is only there to be cut away.
 - No green of that brightness anywhere in the figure; any green in it is a dark pine green. A clean dark edge runs everywhere the figure meets the green, including along the bottom edge.
 - One square image, 1:1. No border, no frame, no mockup, no scroll around the picture.
-- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down.
+- This portrait will be cropped to a circle and shown as small as 60 pixels. Everything important stays inside the central circle; the face is large, centred left to right, with the eyes about a third of the way down. The head is at least a third of the image's width: show the figure from the waist up rather than shrinking the head to fit tails, wings or a wide robe.
 - The spirit holds at most one item, and only the one the subject names.
 - Any mahjong tile shown is small and simplified: a plain rectangle with one simple dot or stick shape on its face and a plain back, no writing.
 - No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore. Women and children are never sexualised.

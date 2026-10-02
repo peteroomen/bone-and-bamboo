@@ -58,7 +58,7 @@
   };
 
   var VIBE = {
-    guide: "VIBE (the guide)\nThe player's friend and teacher: a small tree sparrow who lives on the 1 of Bamboo tile. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Gentle humour, never silly, never a sticker mascot.",
+    guide: "VIBE (the guide)\nThe player's friend and teacher: a young red dragon who lives on the Red Dragon tile of the mahjong set. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Small and spirited, not fearsome; gentle humour, never silly, never a sticker mascot.",
     host: "VIBE (spirit hosts: keep identical for every spirit)\nThis spirit is the player's host for one wind of the year, not an enemy. It sets a score to beat and changes one rule, like a sporting rival at a teahouse table who loves a good game. Sly, playful, proud or fussy, with a personality you can read at a glance. Never menacing, never horrific, never a cute mascot either. The subject says its exact mood.",
     beast: "VIBE (the great beasts: keep identical for every beast)\nOne of the Four Symbols, the great celestial beasts of the four directions. It hosts the hardest table of its wind: majestic, ancient and a little intimidating, like meeting a mountain that wants to play mahjong. Awe rather than fear, with a glint of humour in the eye. Never monstrous, never cute.",
     sheet: "",
@@ -68,7 +68,7 @@
   function FORMAT(kind, S) {
     if (kind === "guide") {
       return "FORMAT (the guide: head and shoulders)\n" +
-        "- The sparrow is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eye a little above the middle. Nothing competes with the face.\n" +
+        "- The dragon is shown as a small circle beside the game's tip bubbles, down to 50 pixels wide, so this is a head-and-shoulders portrait. Its head fills about half the image, centred, with the eyes a little above the middle. Horns and whiskers may run off the top and sides; nothing competes with the face.\n" +
         (S.bg === "plate" ? BG.plate : BG.green) + "\n" +
         "- One square image, 1:1. No border, no frame, no mockup.\n" +
         "- No mahjong tiles. No text, letters, characters, numbers, seal stamp, signature or watermark anywhere.";
@@ -114,8 +114,8 @@
 
   var SUBJECTS = [
     // the guide
-    { id: "sparrow", kind: "guide", group: "The guide", trial: true,
-      text: "SUBJECT: The Sparrow, the player's guide\nRole in the game: it teaches the rules and gives tips in speech bubbles. It lives on the 1 of Bamboo tile, whose traditional picture is a bird, and mahjong itself is called 'sparrow' in Cantonese.\nA Eurasian tree sparrow: a chestnut-brown cap, white cheeks with one black spot on each, a small black bib under the beak, a brown back with dark streaks and two pale wing bars, a short dark beak. Head and shoulders, head cocked to one side, beak a little open as if mid-sentence.\nHolds: nothing; one wing is raised like a hand making a point.\nMood: bright, cheeky and kind. At 50 pixels, the cap, the cheek spot and the bright eye are what read. In a one-colour style, show the cap, the cheek spot and the bib as clear shapes (solid against cut-away, or dark against light) so it is unmistakably a sparrow, not a chick." },
+    { id: "dragon", kind: "guide", group: "The guide", trial: true,
+      text: "SUBJECT: The little Red Dragon, the player's guide\nRole in the game: it teaches the rules and gives tips in speech bubbles. It lives on the Red Dragon tile of the mahjong set, whose character means 'centre' and 'hitting the mark'.\nA young Chinese dragon, small and lively: a red body with gold belly scales, a short camel-like snout, big round bright eyes, two short stubby gold antlers, long curling whiskers, a little mane of flame-like gold tufts, and one small clawed hand. Head and shoulders, head cocked to one side, mouth a little open as if mid-sentence.\nHolds: nothing; one clawed hand is raised with a finger up, making a point.\nMood: bright, cheeky and kind. At 50 pixels, the red head, the gold antlers and the big eyes are what read. Clearly a young dragon, never a lizard or a Western dragon (no bat wings)." },
     // spirit hosts
     { id: "fox", kind: "host", group: "Spirit hosts", wind: "East", trial: true,
       text: "SUBJECT: The Fox Spirit (húli jīng), host of the East wind\nGame twist: 'Masked': covered tiles stay face down until you take them, but each one you use scores extra.\nA russet fox spirit with three bushy tails fanned behind it, standing upright on its hind legs like a person, in a short jacket. A painted opera mask is pushed up on top of its head, and its own narrow, amused eyes look at the viewer. Drawn as a fox, not as a woman.\nHolds: one mahjong tile, turned face down so only its plain back shows, held up to its chest like a secret.\nMood: sly and delighted, sure it knows something you don't." },

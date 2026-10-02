@@ -19,12 +19,12 @@ SUBJECT and a FINAL REMINDER, pasted as one prompt into a fresh chat. `prompts/p
 holds every block and subject; `prompts.src.html` is the "Bone & Bamboo Art Prompts" page (copy
 buttons); `prompts.md` lists the round 1 trial prompts.
 
-- **Round 1, the style trial:** the sparrow, the Fox Spirit, the Azure Dragon and object sheet 1
+- **Round 1, the style trial:** the dragon guide, the Fox Spirit, the Azure Dragon and object sheet 1
   in each of three styles: A shadow theatre, B porcelain, C papercut. The winner sets the
   colourway and the style for everything after.
 - **Round 2:** the other hosts and beasts, four backdrops, object sheets 2-5.
 
-Originals go in `hosts/`, `sparrow/`, `backdrops/` and `objects/` under the file names the prompt
+Originals go in `hosts/`, `guide/`, `backdrops/` and `objects/` under the file names the prompt
 page gives. Processing (planner):
 
 - Figures on green: `python3 scripts/cutout.py art-source/hosts/ID.png src/ui/art/portraits/ID.webp`

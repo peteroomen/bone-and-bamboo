@@ -13,7 +13,7 @@ top tile and the corner of the tile under it, so digging for the tile you want c
 on top of it. A run is four rounds, one per wind, each hosted by a friendly spirit who sets the
 score to beat and changes one rule. Between rounds the spirit leaves a gift and the teahouse sells
 curios (passive), fortunes (single use, they change your tiles), almanac pages (level up a set
-type) and tiles. A sparrow who lives on the 1 of Bamboo teaches you.
+type) and tiles. A little red dragon who lives on the Red Dragon tile (中) teaches you.
 
 ## Tiles
 
@@ -49,7 +49,7 @@ Tile chips: a suited tile is worth its rank; an honour is worth 10.
   - **Play** one set from your hand onto your table (uses a play), or
   - **Discard** 1-5 tiles from your hand (uses a discard). Discarded tiles leave the round.
 - Then refill your hand to 8 from the stack tops, one tap per tile. An **Auto** button refills for
-  you using the hint bot (and the sparrow's hint shows which stack it would take from).
+  you using the hint bot (and the guide's hint shows which stack it would take from).
 - If you hold no set and have no discards, you may play a single tile.
 - The round ends after the last play (or when your hand and the wall are both empty). Then the
   table scores. Beat the target to win the round.
@@ -209,7 +209,11 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 | Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + dragons ×2 | win a run |
 | Jade Court | the 81, hand 9, 2 discards | win with 3 different hosts |
 
-## The sparrow (teaching)
+## The dragon guide (teaching)
+
+The guide is a young red dragon from the Red Dragon tile (中, "centre", also "hitting the mark").
+It is small and red so it never blurs with the Azure Dragon, East's great beast, which is vast and
+blue-green. The 1 of Bamboo keeps its sparrow as tile art.
 
 - **Guided first run:** the first East round is scripted: a fixed seed and a queue of tips (pick
   from a stack, a pair, a run, a pong, the preview, discarding to dig, the score count). The Rain
@@ -217,7 +221,7 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
   play until dismissed.
 - **Hints (Settings), three levels:** off; *sets* (tiles in your hand that form a set glow);
   *full* (also mark wall tiles that would complete a set in your hand).
-- **Ask the sparrow:** a button that shows the hint bot's best move (a set to play, tiles to
+- **Ask the dragon:** a button that shows the hint bot's best move (a set to play, tiles to
   discard, or the stack to take from) with a one-line reason.
 - **The set book:** every set type and curio rule with a picture, and your levels.
 
@@ -236,7 +240,7 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 
 - **Tiles** are drawn from code: `art-source/tiles/tiles.js` (port to TypeScript at
   `src/ui/art/tiles.ts`). Three colourways until the style trial decides.
-- **Generated art** (hosts, the sparrow, backdrops, object sheets) comes from the planner and the
+- **Generated art** (hosts, the dragon guide, backdrops, object sheets) comes from the planner and the
   user, through `art-source/prompts/`. Until it lands, use the placeholders described in
   `docs/work/2026-10-02-mvp-plan.md`.
 - **Sound** is synthesised as in Twelve Petals: bone-on-wood clacks for tiles, Chinese opera

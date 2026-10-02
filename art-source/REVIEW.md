@@ -17,3 +17,9 @@ alternatives. Cutouts are checked on all three table colours at 60px (a host in 
 
 All six key out cleanly with `scripts/cutout.py` (no green fringe; the papercut's and the
 fox's cut-away gaps go transparent as they should).
+
+## 2026-10-02 · The guide becomes a dragon
+
+The user chose a dragon as the guide: a young red dragon from the Red Dragon tile (中). The
+sparrow images above stay in `sparrow/` as unused takes; the 1 of Bamboo keeps a sparrow as tile
+art. The trial's guide prompt (`dragon`) replaces the sparrow's, in all three styles.
