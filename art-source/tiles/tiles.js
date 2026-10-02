@@ -385,6 +385,8 @@
   function guide(opts) {
     opts = opts || {};
     var T = THEMES[opts.theme || "theatre"], mood = opts.mood || "idle";
+    var dragon = opts.dragon || "red", prop = opts.prop ? PROPS[opts.prop] : null;
+    if (prop && prop.pose) mood = prop.mood || mood;
     var size = opts.width ? ' width="' + opts.width + '" height="' + n(opts.width * 1.1) + '"' : "";
     var ink = T.edge, s = "";
     // limbs are ink with a thin light rim, so they read on a dark table as well as a light one
@@ -405,6 +407,7 @@
       wow: ["M21 54 Q9 52 4 44", "M79 54 Q91 52 96 44", [4, 42], [96, 42]],
       sad: ["M21 58 Q16 70 15 80", "M79 58 Q84 70 85 80", [15, 82], [85, 82]]
     }[mood] || null;
+    if (prop && prop.pose) arms = prop.pose;
     s += limb(arms[0]) + limb(arms[1]);
     // the tile itself (its back shows below the face)
     var g = el("rect", { x: 2, y: 6, width: 56, height: 72, rx: 7, fill: T.back, stroke: T.edge, "stroke-width": 1.5 }) +
@@ -433,14 +436,91 @@
       sad: el("path", { d: "M25 31 q5 -4 10 0", stroke: ink, "stroke-width": 1.9, fill: "none", "stroke-linecap": "round" })
     }[mood];
     g += mouth;
-    g += text(30, 66, 28, T.red, "中");
+    if (dragon === "red") g += text(30, 66, 28, T.red, "中");
+    else if (dragon === "green") g += text(30, 65, 26, T.green, "發");
+    else g += el("rect", { x: 17, y: 41, width: 26, height: 29, rx: 2, fill: "none", stroke: T.blue, "stroke-width": 2.4 }) +
+      el("rect", { x: 21, y: 45, width: 18, height: 21, rx: 1, fill: "none", stroke: T.blue, "stroke-width": 0.9 });
     s += el("g", { transform: "translate(20 12)" }, g);
+    if (prop && prop.behind) s = prop.draw(T, ink) + s;
     s += hand(arms[2][0], arms[2][1]) + hand(arms[3][0], arms[3][1]);
+    if (prop && !prop.behind) s += prop.draw(T, ink);
     if (mood === "point") s += limb("M91 24 L91 18");
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110"' + size + ">" + s + "</svg>";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -8 112 118"' + size + ">" + s + "</svg>";
   }
 
-  var api = { svg: svg, guide: guide, GUIDE_MOODS: GUIDE_MOODS, THEMES: THEMES, ALL: ALL };
+  // Props for the dragon-tile jokers (code-drawn trials; the rest may come from traced art).
+  var PROPS = {
+    abacus: {
+      pose: ["M21 58 Q12 64 14 74", "M79 58 Q90 66 86 76", [14, 76], [86, 78]],
+      draw: function (T, ink) {
+        var s = el("rect", { x: 66, y: 62, width: 32, height: 22, rx: 2, fill: T.brown, stroke: ink, "stroke-width": 1.6 });
+        s += el("rect", { x: 69, y: 65, width: 26, height: 16, fill: T.face, stroke: ink, "stroke-width": 1 });
+        s += el("line", { x1: 69, y1: 70, x2: 95, y2: 70, stroke: ink, "stroke-width": 1.2 });
+        for (var c = 0; c < 4; c++) {
+          var x = 73 + c * 6;
+          s += el("line", { x1: x, y1: 65, x2: x, y2: 81, stroke: ink, "stroke-width": 0.8 });
+          s += el("circle", { cx: x, cy: 67.4, r: 1.7, fill: T.red, stroke: ink, "stroke-width": 0.6 });
+          [74, 77.2].forEach(function (y, i) { if (c % 2 || i) s += el("circle", { cx: x, cy: y, r: 1.7, fill: T.red, stroke: ink, "stroke-width": 0.6 }); });
+        }
+        return s;
+      }
+    },
+    lantern: {
+      pose: ["M21 58 Q12 64 11 74", "M79 50 Q92 40 92 24", [11, 76], [92, 22]],
+      draw: function (T, ink) {
+        var s = el("line", { x1: 92, y1: 19, x2: 92, y2: 12, stroke: ink, "stroke-width": 1.4 });
+        s += el("ellipse", { cx: 92, cy: 2, rx: 11, ry: 10, fill: T.red, stroke: ink, "stroke-width": 1.6 });
+        s += el("path", { d: "M85 -6 q7 8 0 16 M99 -6 q-7 8 0 16 M92 -8 v20", stroke: ink, "stroke-width": 0.9, fill: "none", opacity: 0.7 });
+        s += el("rect", { x: 87, y: -10, width: 10, height: 3, rx: 1, fill: T.gold, stroke: ink, "stroke-width": 1 });
+        s += el("rect", { x: 87, y: 11, width: 10, height: 3, rx: 1, fill: T.gold, stroke: ink, "stroke-width": 1 });
+        return s;
+      }
+    },
+    owl: {
+      behind: false,
+      draw: function (T, ink) {
+        var s = el("ellipse", { cx: 50, cy: 6, rx: 10, ry: 9, fill: T.brown, stroke: ink, "stroke-width": 1.6 });
+        s += el("path", { d: "M41 -1 l2 -6 l4 4 M59 -1 l-2 -6 l-4 4", fill: T.brown, stroke: ink, "stroke-width": 1.4, "stroke-linejoin": "round" });
+        s += el("circle", { cx: 46, cy: 4, r: 3.4, fill: T.face, stroke: ink, "stroke-width": 1 }) + el("circle", { cx: 54, cy: 4, r: 3.4, fill: T.face, stroke: ink, "stroke-width": 1 });
+        s += el("circle", { cx: 46, cy: 4, r: 1.5, fill: ink }) + el("circle", { cx: 54, cy: 4, r: 1.5, fill: ink });
+        s += el("path", { d: "M48.6 8 l1.4 2.4 l1.4 -2.4z", fill: T.gold, stroke: ink, "stroke-width": 0.6 });
+        s += el("path", { d: "M44 15 l2 2 M50 15 l0 2.4 M56 15 l-2 2", stroke: ink, "stroke-width": 1.2, "stroke-linecap": "round" });
+        return s;
+      }
+    }
+  };
+
+  // ---- dragons (the jokers): a tile with a traced icon and a rarity frame ---------------------
+  // dragonTile({ theme, rarity: "common" | "uncommon" | "rare", icon, width })
+  // icon: { w, h, p: [[slot, d], ...] } from art-source/icons/icons.json; slots are painted with
+  // the colourway's palette. Without an icon, `initial` is drawn as a placeholder.
+  var SLOT = { ink: "ink", red: "red", blue: "blue", green: "green", gold: "gold", brown: "brown", pink: "pink", ivory: "face" };
+  function iconPaths(icon, T, x, y, w, h) {
+    var k = Math.min(w / icon.w, h / icon.h);
+    var ox = x + (w - icon.w * k) / 2, oy = y + (h - icon.h * k) / 2;
+    return el("g", { transform: "translate(" + n(ox) + " " + n(oy) + ") scale(" + n(k * 1000) / 1000 + ")" },
+      icon.p.map(function (pd) { return el("path", { d: pd[1], fill: T[SLOT[pd[0]] || "ink"] }); }).join(""));
+  }
+  function dragonTile(opts) {
+    opts = opts || {};
+    var T = THEMES[opts.theme || "theatre"], rarity = opts.rarity || "common";
+    var size = opts.width ? ' width="' + opts.width + '" height="' + n(opts.width * 80 / 60) + '"' : "";
+    var col = { common: T.blue, uncommon: T.green, rare: T.red }[rarity];
+    var s = el("rect", { x: 2, y: 6, width: 56, height: 72, rx: 7, fill: T.back, stroke: T.edge, "stroke-width": 1.5 });
+    s += el("rect", { x: 2, y: 2, width: 56, height: 72, rx: 7, fill: T.face, stroke: T.edge, "stroke-width": 1.5 });
+    // the rarity frame: the White Dragon's double border, in the rarity's colour
+    s += el("rect", { x: 6, y: 6, width: 48, height: 64, rx: 4, fill: "none", stroke: col, "stroke-width": 2.4 });
+    s += el("rect", { x: 9.5, y: 9.5, width: 41, height: 57, rx: 2.5, fill: "none", stroke: col, "stroke-width": 0.9 });
+    if (rarity !== "common") {
+      s += el("rect", { x: 41, y: 3.5, width: 15, height: 15, rx: 3, fill: T.face, stroke: col, "stroke-width": 1.2 });
+      s += text(48.5, 15.4, 11, col, rarity === "rare" ? "中" : "發");
+    }
+    if (opts.icon) s += iconPaths(opts.icon, T, 12, 14, 36, 50);
+    else if (opts.initial) s += text(30, 47, 22, col, opts.initial, { "font-family": "Georgia, serif", "font-weight": 700 });
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"' + size + ">" + s + "</svg>";
+  }
+
+  var api = { svg: svg, guide: guide, dragonTile: dragonTile, GUIDE_MOODS: GUIDE_MOODS, THEMES: THEMES, ALL: ALL };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BBTiles = api;
 })(typeof window !== "undefined" ? window : this);

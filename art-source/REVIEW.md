@@ -53,3 +53,12 @@ Tiles and colourways stay in code. Icons for tile faces are generated once in a 
 style (eight flat colours) and traced with a colour slot per shape; the game paints the slots per
 colourway. The icon sheets leave the per-style trial (the trial is now 7 images: the fox and the
 Azure Dragon in three styles, and dragon sheet 1 once).
+
+## 2026-10-02 · Icon sheet dragons-1
+
+`icons/dragons-1.png` (take b; take a in `icons/alt/`): abacus, Chinese knot, coin string, potted
+bamboo, silk purse, scroll. **Keeper.** Clean flat fills in the eight slots, bold outlines, reads
+at 36px on a tile. Traced with `scripts/trace-icons.py` (12-39 paths each, 49 KB for six); the
+slots recolour correctly on all three colourways. Take b wins on the scroll (rolled ends read
+better). `mock/hand.src.html` is the "Bone & Bamboo Hand Mock" page: a hand in progress built from
+these, the code tiles, the guide and the fox.

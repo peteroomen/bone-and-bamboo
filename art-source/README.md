@@ -35,7 +35,10 @@ page gives. Processing (planner):
 
 - Figures on green: `python3 scripts/cutout.py art-source/hosts/ID.png src/ui/art/portraits/ID.webp`
   (`pip install pillow numpy scipy`).
-- Icon sheets: `scripts/trace-charms.py` from Twelve Petals traces a sheet of six into vector
-  paths. Adapt it before first use: snap pixels to the eight icon colours, and write each path
-  with its slot name instead of a colour, so the game can recolour it per colourway.
+- Icon sheets go in `icons/` and are listed in `icons/sheets.txt` (file, then ids in reading
+  order). `python3 scripts/trace-icons.py icons/SHEET.png id1 ... id6` (or `--all`) traces them
+  into `icons/icons.json`: per icon `{ w, h, p: [[slot, d], ...] }`, slots ink, red, blue, green,
+  gold, brown, pink, ivory. `node scripts/preview-icons.js` draws them on their dragon tiles in
+  every colourway (`icons/preview.html`). `tiles.js` `dragonTile({ theme, rarity, icon })` is the
+  reference renderer. Alternative takes go in `icons/alt/`.
 - Backdrops: convert to WebP at quality 78.

@@ -1,0 +1,2 @@
+# Icon sheets, one per line: the file, then its ids in reading order (- skips a cell).
+dragons-1.png abacus redString coinString bambooGrove coinPurse scroll
