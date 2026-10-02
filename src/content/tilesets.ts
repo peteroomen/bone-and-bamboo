@@ -8,6 +8,7 @@ export interface TileSetDef {
   readonly copies: number;
   /** Extra honours in the starting set: kind -> copies. */
   readonly honours: Readonly<Record<TileKind, number>>;
+  /** Added to the hand size and the discards. */
   readonly hand?: number;
   readonly discards?: number;
   readonly unlock:
@@ -38,12 +39,12 @@ export const TILE_SETS: readonly TileSetDef[] = [
   {
     id: 'jadeCourt',
     name: 'Jade Court',
-    text: 'The 81, with a hand of 13 and 3 discards.',
+    text: 'The 81, with a hand one bigger and one discard fewer.',
     suits: ['p', 's', 'm'],
     copies: 3,
     honours: {},
-    hand: 13,
-    discards: 3,
+    hand: 1,
+    discards: -1,
     unlock: { kind: 'hosts', n: 3 },
   },
 ];

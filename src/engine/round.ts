@@ -26,7 +26,8 @@ import {
   twistModifiers,
   twistRules,
 } from './twists';
-import { type Stacks, deal, wallCount } from './wall';
+import { type DrawMode } from '@/content/rules';
+import { type Stacks, type Wall, buildWall, deal, freeSlots, wallCount, wallTiles } from './wall';
 
 /** The numbers a round is played with, after dragons, tile set and lantern. */
 export interface RoundRules {
@@ -36,6 +37,11 @@ export interface RoundRules {
   readonly peek: number;
   readonly stacks: number;
   readonly maxDiscard: number;
+  /** Where refills come from: the pile on its own, or the wall a tap at a time. */
+  readonly draw: DrawMode;
+  /** wall: the side's rows and its bottom row's width. */
+  readonly wallRows: number;
+  readonly wallWidth: number;
 }
 
 export const BASE_ROUND_RULES: RoundRules = {
@@ -45,6 +51,9 @@ export const BASE_ROUND_RULES: RoundRules = {
   peek: ROUND.peek,
   stacks: ROUND.stacks,
   maxDiscard: ROUND.maxDiscard,
+  draw: 'pile',
+  wallRows: 0,
+  wallWidth: 0,
 };
 
 export interface RoundResult {
@@ -59,6 +68,8 @@ export interface RoundResult {
 export interface RoundState {
   readonly rules: RoundRules;
   readonly stacks: Stacks;
+  /** draw 'wall': this wind's side of the wall, slot by slot (null once taken). */
+  readonly wall: Wall | null;
   readonly hand: readonly Tile[];
   readonly table: readonly PlayedSet[];
   readonly discarded: readonly Tile[];
@@ -79,6 +90,8 @@ export interface RoundState {
 }
 
 export type RoundAction =
+  /** draw 'wall': take a free tile from the wall into the hand. */
+  | { readonly type: 'take'; readonly slot: number }
   | { readonly type: 'play'; readonly ids: readonly number[] }
   | { readonly type: 'discard'; readonly ids: readonly number[] }
   /** Upgrade the pong at table index `setIndex` to a kong with its fourth tile from the hand. */
@@ -90,6 +103,7 @@ export type RoundAction =
 
 export type RoundEvent =
   | { readonly type: 'draw'; readonly tile: Tile }
+  | { readonly type: 'take'; readonly tile: Tile; readonly slot: number }
   | { readonly type: 'play'; readonly kind: PlayedSet['kind']; readonly tiles: readonly Tile[] }
   | { readonly type: 'discard'; readonly tiles: readonly Tile[] }
   | {
@@ -127,13 +141,20 @@ export interface RoundSetup {
 export function startRound(setup: RoundSetup, events: RoundEvent[] = []): RoundState {
   const rng = new Rng(setup.rng);
   const rules = twistRules(setup.rules, setup.twist ?? null);
-  const stacks = deal(setup.tiles, rules.stacks, rng);
+  let stacks = deal(setup.tiles, rules.stacks, rng);
   const twist = setup.twist ? initTwist(setup.twist, stacks, rng) : null;
-  const s = refill(
+  let wall: Wall | null = null;
+  if (rules.draw === 'wall') {
+    const built = buildWall(stacks[0] ?? [], rules.wallRows, rules.wallWidth);
+    wall = built.wall;
+    stacks = [built.pile];
+  }
+  const s = drawFromPile(
     {
       rules,
       twist,
       stacks,
+      wall,
       hand: [],
       table: [],
       discarded: [],
@@ -152,8 +173,27 @@ export function startRound(setup: RoundSetup, events: RoundEvent[] = []): RoundS
   return s.twist ? { ...s, twist: afterDeal(s.twist, s.hand) } : s;
 }
 
-/** Draw from the top of the pile until the hand is full or the pile is empty. */
+/** The wall's free tiles' slots (none for the pile). */
+export function freeWallSlots(s: RoundState): number[] {
+  return s.wall ? freeSlots(s.wall, s.rules.wallRows, s.rules.wallWidth) : [];
+}
+
+/** draw 'wall': the hand must be filled from the wall before the next play or discard. */
+export function needsRefill(s: RoundState): boolean {
+  return s.phase === 'play' && s.hand.length < s.rules.handSize && freeWallSlots(s).length > 0;
+}
+
+/**
+ * Refill after a turn: from the pile on its own, unless the wall still has tiles, which the
+ * player takes a tap at a time.
+ */
 export function refill(s: RoundState, events: RoundEvent[]): RoundState {
+  if (wallTiles(s.wall) > 0) return s;
+  return drawFromPile(s, events);
+}
+
+/** Draw from the top of the pile until the hand is full or the pile is empty. */
+function drawFromPile(s: RoundState, events: RoundEvent[]): RoundState {
   if (s.phase === 'done') return s;
   const pile = (s.stacks[0] ?? []).slice();
   const hand = s.hand.slice();
@@ -209,7 +249,7 @@ function illegal(s: RoundState, reason: string): Reduced<RoundState, RoundEvent>
 /** The round is over when the plays run out, or hand and wall are both empty. */
 function finishIfOver(s: RoundState, events: RoundEvent[]): RoundState {
   if (s.phase === 'done') return s;
-  const stuck = s.hand.length === 0 && wallCount(s.stacks) === 0;
+  const stuck = s.hand.length === 0 && wallCount(s.stacks) === 0 && wallTiles(s.wall) === 0;
   if (s.playsLeft > 0 && !stuck) return s;
   return settle(s, events);
 }
@@ -304,7 +344,19 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
   if (s.phase === 'done') return illegal(s, 'The round is over.');
   const events: RoundEvent[] = [];
   switch (a.type) {
+    case 'take': {
+      if (!s.wall) return illegal(s, 'There is no wall to take from.');
+      if (s.hand.length >= s.rules.handSize) return illegal(s, 'Your hand is full.');
+      if (!freeWallSlots(s).includes(a.slot))
+        return illegal(s, 'That tile is under others: take the ones on top first.');
+      const tile = s.wall[a.slot] as Tile;
+      events.push({ type: 'take', tile, slot: a.slot });
+      const wall = s.wall.map((t, i) => (i === a.slot ? null : t));
+      const next = finishIfOver(refill({ ...s, wall, hand: [...s.hand, tile] }, events), events);
+      return { state: next, events };
+    }
     case 'play': {
+      if (needsRefill(s)) return illegal(s, 'Fill your hand from the wall first.');
       const problem = playProblem(s.hand, a.ids, usableDiscards(s));
       if (problem) return illegal(s, problem);
       const ids = new Set(a.ids);
@@ -330,6 +382,7 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
       return { state: next, events };
     }
     case 'upgrade': {
+      if (needsRefill(s)) return illegal(s, 'Fill your hand from the wall first.');
       const problem = upgradeProblem(s, a.setIndex, a.tileId);
       if (problem) return illegal(s, problem);
       const set = s.table[a.setIndex] as PlayedSet;
@@ -378,6 +431,7 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
       return { state: next, events };
     }
     case 'discard': {
+      if (needsRefill(s)) return illegal(s, 'Fill your hand from the wall first.');
       if (s.discardsLeft <= 0) return illegal(s, 'No discards left.');
       if (a.ids.length < 1 || a.ids.length > s.rules.maxDiscard)
         return illegal(s, `Discard 1 to ${s.rules.maxDiscard} tiles.`);

@@ -4,6 +4,7 @@ import { targetFor } from '@/engine/run';
 import type { RunState } from '@/engine/runTypes';
 import { TileView } from '@/ui/art/Tile';
 import { useTheme } from '@/ui/state/store';
+import { WallSquare } from './WallSquare';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 
@@ -23,6 +24,7 @@ export function HostView({ run, choose }: { run: RunState; choose: (storm: boole
             {SEASON_NAMES[run.roundIndex]} · round {run.roundIndex + 1} of 4. How will it blow?
           </p>
         </div>
+        {run.draw === 'wall' && <WallSquare round={run.roundIndex} />}
       </div>
       {(run.guided && run.roundIndex === 0 ? [false] : [false, true]).map((storm) => {
         const h = hostFor(run.roundIndex, storm);

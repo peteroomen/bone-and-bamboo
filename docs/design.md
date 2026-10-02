@@ -32,7 +32,19 @@ set. Every physical tile has a unique id and may carry an enhancement.
 
 Tile chips: a suited tile is worth its rank; a wind is worth 10.
 
-## The pile
+## Where the tiles come from
+
+Two ways to draw, chosen on the setup screen, so both can be playtested. The guided first run uses
+the pile.
+
+| | Pile | Brick wall |
+|---|---|---|
+| Refills | on their own, from a face-down pile | a tap at a time, from this wind's side of the wall |
+| Hand / discards | 12 / 4 | 10 / 3 |
+| Targets (lantern 1) | 1,000 / 3,600 / 8,000 / 16,000 | 1,000 / 3,800 / 8,500 / 17,000 |
+| Sim: smart / casual win | 68% / 35% | 68% / 36% |
+
+### The pile
 
 *Changed 2 Oct after playtesting: the wall of stacks was confusing. Plan and sim results:
 `docs/work/2026-10-02-draw-pile.md`.*
@@ -43,10 +55,25 @@ Tile chips: a suited tile is worth its rank; a wind is worth 10.
 - You cannot see into the pile (the Lantern dragon shows its next 3 tiles). The pile shows how
   many tiles it holds.
 
+### The brick wall
+
+*Added 2 Oct: the way the user's oma built the wall. Plan and sim results:
+`docs/work/2026-10-02-brick-wall.md`, `docs/balance/2026-10-02-brick-wall.md`.*
+
+- The tiles stand in a square, one side per wind; the host screen shows the square with this
+  round's side lit. Each round, your shuffled set builds its wind's side: **4 rows of 7 / 8 / 7 /
+  8 tiles**, stacked like bricks (each row offset by half a tile). Faces show.
+- A tile rests on the two below it (one at the ends). A tile is **free** once nothing rests on
+  it; only free tiles can be taken. The top row starts free.
+- The rest of the set is the face-down pile. Your first hand is dealt from it. After each play,
+  upgrade or discard, refill your hand by tapping free tiles (or **Auto**, the hint bot's choice).
+  Once the side is empty, the hand refills from the pile on its own. Twists that send tiles back
+  "into the pile" use this pile.
+
 ## A round
 
-- **Hand 12 tiles. 8 plays. 4 discards** (each discard up to 5 tiles). Drawing blind loses the
-  choice the wall gave, so the hand is bigger: at 12 and 4 the sim matches the wall's win rates.
+- **Hand and discards by draw (above); 8 plays** (each discard up to 5 tiles). Drawing blind loses
+  the choice a wall gives, so the pile's hand is bigger.
 - Start: your hand is dealt full.
 - Each turn, either:
   - **Play** one set from your hand onto your table (uses a play), or
@@ -101,9 +128,8 @@ Every step is an engine event, so the UI can count it up the way Balatro does.
 
 Four rounds: **East (spring), South (summer), West (autumn), North (winter).**
 
-- **Targets (lantern 1): 1,000 / 3,600 / 8,000 / 16,000** (lowered with the pile). Simulated: the
-  smart bot wins 68%, the casual bot 35% (`docs/balance/2026-10-02-draw-pile.md`). Miss a target
-  and the run ends.
+- **Targets (lantern 1):** by draw (above), each tuned so the smart bot wins about 68% and the
+  casual bot about 35%. Miss a target and the run ends.
 - **Money:** start with $4. After rounds 1-3 you are paid $10 / $12 / $14, + $1 per unused
   discard, + $1 interest per $5 held (max $5), + dragon income.
 - **After each of rounds 1-3:** the spirit's **gift** (pick 1 of 2 rare dragons, free; if your
@@ -229,7 +255,7 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 |---|---|
 | 2 | targets ×1.25 |
 | 3 | + no interest |
-| 4 | + targets ×1.5 (not ×1.25) and 3 discards |
+| 4 | + targets ×1.5 (not ×1.25) and one discard fewer |
 
 ## Tile sets (decks)
 
@@ -237,7 +263,7 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 |---|---|---|
 | Bone & Bamboo | the starting 81 | from the start |
 | Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + one of each wind | win a run |
-| Jade Court | the 81, hand 13, 3 discards | win with 3 different hosts |
+| Jade Court | the 81, hand +1, one discard fewer | win with 3 different hosts |
 
 ## Colourways (unlocks)
 

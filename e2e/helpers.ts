@@ -3,7 +3,8 @@
  * out by tapping the same buttons and tiles a player would.
  */
 import type { Page } from '@playwright/test';
-import { chooseMove } from '../src/engine/ai';
+import { chooseMove, chooseSlot } from '../src/engine/ai';
+import { needsRefill } from '../src/engine/round';
 import type { RunState } from '../src/engine/runTypes';
 
 export interface BbHook {
@@ -51,11 +52,35 @@ export async function newRun(page: Page): Promise<void> {
 
 const T = { timeout: 5000 };
 
+/** The brick wall: take one tile per bot choice until the hand is full (or use Auto). */
+async function fillFromWall(page: Page, auto: boolean): Promise<void> {
+  for (let guard = 0; guard < 20; guard++) {
+    const round = (await hook(page))?.run.round;
+    if (!round || !needsRefill(round)) return;
+    if (auto) {
+      await page.getByTestId('btn-auto').click(T);
+      continue;
+    }
+    const i = chooseSlot(round);
+    if (i === null) return;
+    await page.getByTestId(`brick-${i}`).click(T);
+    await page.waitForFunction(
+      (n) => ((window as unknown as { __bb?: BbHook }).__bb?.run.round?.hand.length ?? 0) !== n,
+      round.hand.length,
+      T,
+    );
+  }
+}
+
 /** One turn of the bot, played through the UI. Returns false once the round is over. */
-export async function botTurn(page: Page, opts: { tips?: string[] } = {}): Promise<boolean> {
+export async function botTurn(
+  page: Page,
+  opts: { tips?: string[]; auto?: boolean } = {},
+): Promise<boolean> {
   const h = await hook(page);
   const round = h?.run.round;
   if (!round || round.phase !== 'play') return false;
+  await fillFromWall(page, opts.auto ?? false);
   if (opts.tips) opts.tips.push(...(await readTips(page)));
   const now = (await hook(page))?.run.round;
   if (!now || now.phase !== 'play') return false;
@@ -79,7 +104,10 @@ export async function botTurn(page: Page, opts: { tips?: string[] } = {}): Promi
 }
 
 /** Plays the current round to its end through the UI. */
-export async function playRound(page: Page, opts: { tips?: string[] } = {}): Promise<void> {
+export async function playRound(
+  page: Page,
+  opts: { tips?: string[]; auto?: boolean } = {},
+): Promise<void> {
   for (let guard = 0; guard < 60; guard++) {
     const more = await botTurn(page, opts);
     if (!more) return;

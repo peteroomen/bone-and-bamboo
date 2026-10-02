@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { DRAGON_IDS } from '@/content/dragons';
 import { HOSTS } from '@/content/hosts';
 import { SET_ORDER } from '@/content/sets';
-import { STORM_TARGET_MULT, TARGETS } from '@/content/targets';
+import { STORM_TARGET_MULT } from '@/content/targets';
+import { DRAW, type DrawMode } from '@/content/rules';
 import { chooseMove, moveAction, type Policy } from '@/engine/ai';
 import { newRun, runReduce } from '@/engine/run';
 import { type SimRunOptions, type SimRunResult, driveRound, playRunSim } from './driver';
@@ -28,7 +29,8 @@ const HELP = `pnpm sim: the headless simulator (reproduces tools/sim-py).
   pnpm sim trace [seed] [--shopper smart|casual]
       One run, round by round.
 
-Common: --seed N (first seed, default 0), --jobs N (worker threads, default 4).`;
+Common: --seed N (first seed, default 0), --jobs N (worker threads, default 4),
+  --draw pile|wall (how the hand refills; the pile by default).`;
 
 function flag(args: string[], name: string, def?: string): string | undefined {
   const i = args.indexOf(`--${name}`);
@@ -88,6 +90,11 @@ async function runMany(
   return (await Promise.all(parts)).flat();
 }
 
+/** `--draw pile|wall` (the pile by default). */
+function drawOf(args: string[]): DrawMode {
+  return flag(args, 'draw', 'pile') === 'wall' ? 'wall' : 'pile';
+}
+
 function roundMode(args: string[]) {
   const n = Number(flag(args, 'n', '2000'));
   const from = Number(flag(args, 'seed', '0'));
@@ -97,7 +104,7 @@ function roundMode(args: string[]) {
   let discards = 0;
   let drawn = 0;
   for (let i = 0; i < n; i++) {
-    let run = newRun({ seed: 50_000 + from + i, targets: [0, 0, 0, 0] });
+    let run = newRun({ seed: 50_000 + from + i, targets: [0, 0, 0, 0], draw: drawOf(args) });
     run = runReduce(run, { type: 'chooseHost', storm: false }).state;
     run = driveRound(run, policy);
     const r = run.round;
@@ -105,7 +112,10 @@ function roundMode(args: string[]) {
     scores.push(r.result.score.total);
     for (const s of r.table) mix.set(s.kind, (mix.get(s.kind) ?? 0) + 1);
     discards += r.rules.discards - r.discardsLeft;
-    drawn += run.tiles.length - r.stacks.reduce((a, s) => a + s.length, 0);
+    drawn +=
+      run.tiles.length -
+      r.stacks.reduce((a, s) => a + s.length, 0) -
+      (r.wall ?? []).filter((t) => t !== null).length;
   }
   console.log(`| Rules | p25 | Median | p75 | Sets per round | Discards used | Tiles drawn |`);
   console.log(`|---|---|---|---|---|---|---|`);
@@ -184,7 +194,8 @@ function summarise(res: SimRunResult[], shopper: string, mode: 'free' | 'run') {
 
 async function hostsMode(args: string[], jobs: number, from: number, shopper: 'smart' | 'casual') {
   const runs = Number(flag(args, 'runs', '400'));
-  const base = { shopper, gift: true, fire: 6, targets: [...TARGETS] };
+  const draw = drawOf(args);
+  const base = { shopper, gift: true, fire: 6, targets: [...DRAW[draw].targets], draw };
   const calm = await runMany({ ...base, storm: [false, false, false, false] }, from, runs, jobs);
   console.log(
     `| Wind | Host | Round win rate | Median score ÷ target | Runs reaching it | (${shopper}, ${runs} runs) |`,
@@ -227,11 +238,13 @@ async function policiesMode(
   shopper: 'smart' | 'casual',
 ) {
   const runs = Number(flag(args, 'runs', '400'));
+  const draw = drawOf(args);
   const base = {
     shopper,
     gift: true,
     fire: 6,
-    targets: [...TARGETS],
+    targets: [...DRAW[draw].targets],
+    draw,
   };
   console.log(
     `| Policy | Won | Money at the end | Rounds banked early | Kongs on tables | (${shopper}, ${runs} runs) |`,
@@ -274,7 +287,12 @@ async function main() {
   if (mode === 'trace') return trace(args);
   if (mode === 'free' || mode === 'run') {
     const runs = Number(flag(args, 'runs', mode === 'free' ? '200' : '400'));
-    const targetArg = flag(args, 'targets', mode === 'run' ? TARGETS.join(',') : undefined);
+    const draw = drawOf(args);
+    const targetArg = flag(
+      args,
+      'targets',
+      mode === 'run' ? DRAW[draw].targets.join(',') : undefined,
+    );
     const opts: Omit<SimRunOptions, 'seed'> = {
       shopper,
       gift: !has(args, 'no-gift'),
@@ -284,6 +302,7 @@ async function main() {
       ...(mode === 'run' && targetArg ? { targets: targetArg.split(',').map(Number) } : {}),
       ...(flag(args, 'lantern') ? { lantern: Number(flag(args, 'lantern')) } : {}),
       ...(flag(args, 'tileset') ? { tileSet: flag(args, 'tileset') as string } : {}),
+      draw,
     };
     const res = await runMany(opts, from, runs, jobs);
     return summarise(res, shopper, mode);

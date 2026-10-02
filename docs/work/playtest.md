@@ -21,9 +21,10 @@ Set in the browser console (`localStorage`), then reload:
 
 ## What to look at
 
-1. **The hand and the pile at your phone's size.** The wall is gone (2 Oct): your hand of 12
-   refills from a face-down pile after every play and discard. Is it clearer? Are the tiles
-   readable and easy to tap (two rows of six)?
+1. **Pile or brick wall?** Two ways to draw, chosen on the setup screen (New run, after the
+   first guided run). _Pile_: your hand of 12 refills on its own. _Brick wall_: each wind is a
+   side of a square wall stacked like bricks; tap a tile once both on top of it are gone. Which
+   is clearer, and which is more fun? Both are tuned to the same win rates.
 2. **The first run.** Do the tips come at the right moments, and does each wait until the table is
    still? Is "Ask" (the guide's advice) sensible?
 3. **A kong upgrade and banking.** Buy a Fourth copy pack or a Rubbing fortune, play a pong, then

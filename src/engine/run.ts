@@ -3,8 +3,9 @@ import { FORTUNE_SLOTS } from '@/content/fortunes';
 import { type Twist, hostFor } from '@/content/hosts';
 import { PACK_IDS, type PackId } from '@/content/packs';
 import { STORM_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
-import { GIFT, MONEY, SHOP } from '@/content/rules';
+import { DRAW, type DrawMode, GIFT, MONEY, SHOP } from '@/content/rules';
 import { tileSetDef } from '@/content/tilesets';
+import { autoRefill } from './ai';
 import { intoPile } from './twists';
 import { applyFortune, fortuneProblem } from './fortunes';
 import { Rng, deriveSeed, hashSeed } from './rng';
@@ -26,6 +27,7 @@ import type { ScoreStep } from './scoring';
 export interface NewRunOptions {
   readonly seed: number | string;
   readonly tileSet?: string;
+  readonly draw?: DrawMode;
   readonly lantern?: number;
   /** Override the base targets (the simulator tries ladders). */
   readonly targets?: readonly number[];
@@ -44,7 +46,8 @@ export function newRun(opts: NewRunOptions): RunState {
     rng: deriveSeed(seed, 'run'),
     tileSet: opts.tileSet ?? 'boneBamboo',
     lantern: opts.lantern ?? 1,
-    targets: opts.targets ?? TARGETS,
+    draw: opts.draw ?? 'pile',
+    targets: opts.targets ?? DRAW[opts.draw ?? 'pile'].targets,
     packPool: opts.packPool ?? PACK_IDS,
     tiles,
     nextTileId: tiles.length + 1,
@@ -56,7 +59,12 @@ export function newRun(opts: NewRunOptions): RunState {
     phase: 'host',
     hostId: null,
     storm: false,
-    target: targetFor(opts.lantern ?? 1, 0, false, opts.targets ?? TARGETS),
+    target: targetFor(
+      opts.lantern ?? 1,
+      0,
+      false,
+      opts.targets ?? DRAW[opts.draw ?? 'pile'].targets,
+    ),
     round: null,
     payout: null,
     gift: null,
@@ -87,12 +95,14 @@ export function targetFor(
 }
 
 /** The round's numbers: the base rules, the tile set, the lantern and your dragons. */
-export function roundRulesFor(run: Pick<RunState, 'dragons' | 'tileSet' | 'lantern'>): RoundRules {
+export function roundRulesFor(
+  run: Pick<RunState, 'dragons' | 'tileSet' | 'lantern'> & { readonly draw?: DrawMode },
+): RoundRules {
   const set = tileSetDef(run.tileSet);
   const lantern = LANTERNS[run.lantern - 1];
-  let hand = set.hand ?? BASE_ROUND_RULES.handSize;
-  let discards = set.discards ?? BASE_ROUND_RULES.discards;
-  if (lantern?.discards !== undefined) discards = Math.min(discards, lantern.discards);
+  const draw = DRAW[run.draw ?? 'pile'];
+  let hand = draw.hand + (set.hand ?? 0);
+  let discards = draw.discards + (set.discards ?? 0) + (lantern?.discards ?? 0);
   let plays = BASE_ROUND_RULES.plays;
   let peek = BASE_ROUND_RULES.peek;
   for (const id of run.dragons) {
@@ -104,7 +114,16 @@ export function roundRulesFor(run: Pick<RunState, 'dragons' | 'tileSet' | 'lante
       peek += e.peek ?? 0;
     }
   }
-  return { ...BASE_ROUND_RULES, handSize: hand, discards, plays, peek };
+  return {
+    ...BASE_ROUND_RULES,
+    handSize: hand,
+    discards,
+    plays,
+    peek,
+    draw: run.draw ?? 'pile',
+    wallRows: draw.wallRows,
+    wallWidth: draw.wallWidth,
+  };
 }
 
 export function dragonIncome(dragons: readonly string[]): number {
@@ -176,6 +195,11 @@ export function runReduce(s: RunState, a: RunAction): R {
       return chooseHost(s, a.storm);
     case 'round':
       return roundAction(s, a.action);
+    case 'auto': {
+      if (s.phase !== 'round' || !s.round) return illegal(s, 'No round to refill.');
+      const r = autoRefill(s.round, a.policy);
+      return afterRound(s, r.state, r.events);
+    }
     case 'continue':
       return proceed(s);
     case 'gift':

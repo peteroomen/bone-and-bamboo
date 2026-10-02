@@ -1,9 +1,10 @@
 import { SET_TYPES } from '@/content/sets';
-import { type Policy, chooseMove } from './ai';
+import { type Policy, chooseMove, chooseSlot } from './ai';
 import { brokenDragons } from './goals';
 import {
   type RoundState,
   finishProblem,
+  needsRefill,
   scoreContext,
   upgradeProblem,
   upgrades,
@@ -11,13 +12,14 @@ import {
 } from './round';
 import { type PlayedSet, scoreTable } from './scoring';
 import { classify, orderSet, playProblem } from './sets';
-import type { Tile } from './tiles';
+import { type Tile, kindName } from './tiles';
 
 /**
  * Ask the dragon: one legal action with a reason, from what you can see. It never reads the hidden
  * pile. Final-play advice compares the real scores of the whole table.
  */
 export type Advice =
+  | { readonly type: 'draw'; readonly slot: number; readonly reason: string }
   | {
       readonly type: 'play';
       readonly ids: readonly number[];
@@ -71,8 +73,23 @@ function tableAfter(s: RoundState, p: Play): PlayedSet[] {
   return [...s.table, { kind: p.kind, tiles: orderSet(p.tiles) }];
 }
 
+function describeTake(s: RoundState, slot: number): string {
+  const tile = s.wall?.[slot];
+  if (!tile) return 'The best tile on show.';
+  const have = s.hand.filter((t) => t.kind === tile.kind).length;
+  const name = kindName(tile.kind);
+  if (have >= 3) return `Take the ${name}: a fourth to make a kong.`;
+  if (have === 2) return `Take the ${name}: it makes a pong.`;
+  if (have === 1) return `Take the ${name}: it makes a pair.`;
+  return `Take the ${name}: it fits a run, your dragons, or frees a good tile.`;
+}
+
 export function advise(s: RoundState, policy: Policy = 'greedy'): Advice | null {
   if (s.phase !== 'play') return null;
+  if (needsRefill(s)) {
+    const slot = chooseSlot(s, policy);
+    return slot === null ? null : { type: 'draw', slot, reason: describeTake(s, slot) };
+  }
   const ctx = scoreContext(s);
   const now = scoreTable(s.table, ctx).total;
   const plays = legalPlays(s.hand, usableDiscards(s));

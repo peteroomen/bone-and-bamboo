@@ -1,11 +1,21 @@
 import { ENHANCEMENTS } from '@/content/enhancements';
 import { SET_TYPES, type SetKind } from '@/content/sets';
 import type { TileKind } from '@/content/tiles';
-import { type RoundAction, type RoundState, roundReduce, usableDiscards } from './round';
+import {
+  type RoundAction,
+  type RoundEvent,
+  type RoundState,
+  type Reduced,
+  freeWallSlots,
+  needsRefill,
+  roundReduce,
+  usableDiscards,
+} from './round';
 import { type PlayedSet } from './scoring';
 import { type Candidate, findSets } from './sets';
 import { type Tile, isOutside, isSuited, isWind, rankOf, suitOf, tileChips } from './tiles';
 import { armouredIds } from './twists';
+import { wallCovers, wallSlots } from './wall';
 
 /**
  * The hint bot: it plays a round the way the Python prototypes did (tools/sim-py/runsim.py,
@@ -154,6 +164,57 @@ function keepValue(s: RoundState, t: Tile, policy: Policy): number {
   return tileValue(s, t.kind, c, policy);
 }
 
+// ---- the brick wall ----------------------------------------------------------------------------
+/** How much the tiles a take would free count, against the tile itself. */
+const UNCOVER_WEIGHT = 0.4;
+
+/**
+ * Which free wall tile the bot takes, or null: the tile's worth to the hand, plus a share of the
+ * tiles taking it would free (the wall's faces all show, so this is fair to the player).
+ */
+export function chooseSlot(s: RoundState, policy: Policy = 'greedy'): number | null {
+  const wall = s.wall;
+  if (!wall) return null;
+  const covers = wallCovers(wallSlots(s.rules.wallRows, s.rules.wallWidth));
+  const c = counts(s.hand);
+  let best = -Infinity;
+  let bi: number | null = null;
+  for (const i of freeWallSlots(s)) {
+    const t = wall[i] as Tile;
+    let sc = tileValue(s, t.kind, c, policy);
+    covers.forEach((on, j) => {
+      const below = wall[j];
+      if (!below || !on.includes(i)) return;
+      // freed if i is the last tile resting on it
+      if (on.every((k) => k === i || !wall[k]))
+        sc += UNCOVER_WEIGHT * tileValue(s, below.kind, c, policy);
+    });
+    if (sc > best) {
+      best = sc;
+      bi = i;
+    }
+  }
+  return bi;
+}
+
+/** Fill the hand from the wall with the bot's choices, one take at a time. */
+export function autoRefill(
+  s: RoundState,
+  policy: Policy = 'greedy',
+): Reduced<RoundState, RoundEvent> {
+  let state = s;
+  const events: RoundEvent[] = [];
+  while (needsRefill(state)) {
+    const i = chooseSlot(state, policy);
+    if (i === null) break;
+    const r = roundReduce(state, { type: 'take', slot: i });
+    if (r.state === state) break;
+    state = r.state;
+    events.push(...r.events);
+  }
+  return { state, events };
+}
+
 // ---- a turn ------------------------------------------------------------------------------------
 function keptSets(s: RoundState, all: Candidate[]): Candidate[] {
   return all.filter((c) => setValue(s, c.kind, c.tiles) > -50 || s.playsLeft <= 2);
@@ -260,6 +321,8 @@ export function moveAction(m: Move): RoundAction {
 export function playOut(s: RoundState, policy: Policy = 'greedy'): RoundState {
   let state = s;
   for (let guard = 0; guard < 400 && state.phase === 'play'; guard++) {
+    state = autoRefill(state, policy).state;
+    if (state.phase !== 'play') break;
     const m = chooseMove(state, policy);
     if (!m) break;
     const r = roundReduce(state, moveAction(m));

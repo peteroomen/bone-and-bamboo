@@ -1247,3 +1247,106 @@
   text-align: center;
   z-index: 3;
 }
+
+/* the square of the wall on the host screen: four sides, one per wind */
+.wall-square {
+  position: relative;
+  flex: none;
+  width: 84px;
+  height: 84px;
+  margin-left: auto;
+}
+.ws-side {
+  position: absolute;
+  display: flex;
+  gap: 2px;
+}
+.ws-side i {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--bone);
+  border: 1px solid var(--line);
+}
+.ws-bottom,
+.ws-top {
+  left: 12px;
+  right: 12px;
+  height: 10px;
+}
+.ws-bottom {
+  bottom: 0;
+}
+.ws-top {
+  top: 0;
+}
+.ws-left,
+.ws-right {
+  top: 12px;
+  bottom: 12px;
+  width: 10px;
+  flex-direction: column;
+}
+.ws-left {
+  left: 0;
+}
+.ws-right {
+  right: 0;
+}
+.ws-side.now i {
+  background: var(--accent);
+}
+.ws-side.done i {
+  opacity: 0.25;
+}
+.ws-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  color: var(--fg);
+}
+
+/* the brick wall: this wind's side; a tile is free once nothing rests on it */
+.brick-wall {
+  position: relative;
+  flex: none;
+  margin: 0 -12px;
+}
+.brick {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  min-height: var(--touch);
+  cursor: pointer;
+}
+.brick:disabled {
+  cursor: default;
+}
+.brick:not(.free) .tile {
+  filter: brightness(0.62) saturate(0.7) drop-shadow(0 2px 0 rgb(0 0 0 / 0.35));
+}
+.brick.free:not(:disabled):active .tile {
+  transform: translateY(2px);
+}
+.brick.advised {
+  outline: none;
+}
+.brick.advised .tile {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 6px;
+}
+.wall-pile {
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  pointer-events: none;
+}

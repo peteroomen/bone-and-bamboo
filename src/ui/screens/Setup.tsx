@@ -3,12 +3,14 @@ import { TILE_SETS } from '@/content/tilesets';
 import { LANTERNS } from '@/content/targets';
 import { lanternReached, tileSetCondition, tileSetUnlocked } from '@/engine/profile';
 import { newRun } from '@/engine/run';
-import { allUnlocked, devOverrides, setState, useStore } from '@/ui/state/store';
+import { DRAW, DRAW_MODES } from '@/content/rules';
+import { allUnlocked, devOverrides, setState, updateSettings, useStore } from '@/ui/state/store';
 import { ScreenFrame } from './ScreenFrame';
 
 /** Choose a tile set and a lantern, then begin. */
 export function Setup() {
   const profile = useStore((s) => s.profile);
+  const draw = useStore((s) => s.settings.draw);
   const all = allUnlocked();
   const [tileSet, setTileSet] = useState('boneBamboo');
   const reached = all ? LANTERNS.length : lanternReached(profile, tileSet);
@@ -23,6 +25,7 @@ export function Setup() {
         seed,
         tileSet,
         lantern: level,
+        draw: dev.draw ?? draw,
         ...(dev.targets ? { targets: dev.targets } : {}),
       }),
       screen: 'game',
@@ -31,6 +34,24 @@ export function Setup() {
 
   return (
     <ScreenFrame title="New run" testId="setup">
+      <section>
+        <h3>Your tiles come from</h3>
+        <div className="choices lanterns">
+          {DRAW_MODES.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={`choice${draw === d ? ' on' : ''}`}
+              data-testid={`draw-${d}`}
+              aria-pressed={draw === d}
+              onClick={() => updateSettings({ draw: d })}
+            >
+              <b>{DRAW[d].name}</b>
+              <span>{DRAW[d].text}</span>
+            </button>
+          ))}
+        </div>
+      </section>
       <section>
         <h3>Tile set</h3>
         <div className="choices">

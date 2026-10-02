@@ -1,9 +1,11 @@
+import type { DrawMode } from '@/content/rules';
 import type { Twist } from '@/content/hosts';
 import { PACK_IDS } from '@/content/packs';
 import { legalPlays } from '@/engine/advice';
 import { type Policy, chooseMove, moveAction } from '@/engine/ai';
 import {
   finishProblem,
+  needsRefill,
   previewUpgrade,
   scoreContext,
   upgrades,
@@ -24,6 +26,7 @@ export interface SimRunOptions {
   readonly fire: number;
   readonly lantern?: number;
   readonly tileSet?: string;
+  readonly draw?: DrawMode;
   /** Reproduce the Python prototype's shop: no almanac pack. */
   readonly pythonShop?: boolean;
   /** Which rounds the bot calls the storm (the great beast's harder twist); calm otherwise. */
@@ -69,6 +72,8 @@ export function driveRound(start: RunState, policy: Policy, opts: PlayOptions = 
     if (opts.bank && finishProblem(run.round) === null) {
       return runReduce(run, { type: 'round', action: { type: 'finish' } }).state;
     }
+    if (needsRefill(run.round)) run = runReduce(run, { type: 'auto', policy }).state;
+    if (run.phase !== 'round' || !run.round) break;
     if (opts.upgrade) {
       const up = bestUpgrade(run.round);
       if (up) {
@@ -116,6 +121,7 @@ export function playRunSim(o: SimRunOptions): SimRunResult {
     ...(o.targets ? { targets: o.targets } : { targets: [0, 0, 0, 0] }),
     ...(o.lantern ? { lantern: o.lantern } : {}),
     ...(o.tileSet ? { tileSet: o.tileSet } : {}),
+    ...(o.draw ? { draw: o.draw } : {}),
     ...(o.twists ? { twistOverrides: o.twists } : {}),
     ...(o.stormMult ? { stormMult: o.stormMult } : {}),
     ...(o.pythonShop ? { packPool: PACK_IDS.filter((p) => p !== 'almanac') } : {}),

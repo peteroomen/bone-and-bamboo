@@ -1,8 +1,10 @@
 import type { Twist } from '@/content/hosts';
 import type { FortuneId } from '@/content/fortunes';
 import type { PackId } from '@/content/packs';
+import type { DrawMode } from '@/content/rules';
 import type { SetKind } from '@/content/sets';
 import type { SuitedSuit, TileKind } from '@/content/tiles';
+import type { Policy } from './ai';
 import type { RoundAction, RoundEvent, RoundState } from './round';
 import type { Levels } from './scoring';
 import type { Tile } from './tiles';
@@ -65,6 +67,8 @@ export interface RunState {
   readonly rng: number;
   readonly tileSet: string;
   readonly lantern: number;
+  /** How the hand refills (saves from before the choice have none: the pile). */
+  readonly draw?: DrawMode;
   /** The base targets for the four rounds (lantern 1). */
   readonly targets: readonly number[];
   /** Which packs the teahouse may sell (the simulator trims it to match the Python prototype). */
@@ -113,6 +117,8 @@ export interface FortuneArgs {
 export type RunAction =
   | { readonly type: 'chooseHost'; readonly storm: boolean }
   | { readonly type: 'round'; readonly action: RoundAction }
+  /** draw 'wall': fill the hand from the wall with the hint bot's choices. */
+  | { readonly type: 'auto'; readonly policy?: Policy }
   | { readonly type: 'continue' }
   | { readonly type: 'gift'; readonly pick: number | null; readonly replace?: number }
   | {

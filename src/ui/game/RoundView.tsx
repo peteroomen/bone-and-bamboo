@@ -5,6 +5,8 @@ import { type Advice, advise } from '@/engine/advice';
 import { dragonGoals } from '@/engine/goals';
 import {
   finishProblem,
+  freeWallSlots,
+  needsRefill,
   nextTiles,
   preview,
   previewUpgrade,
@@ -19,6 +21,7 @@ import { PlayerBar } from './PlayerBar';
 import { useFlip } from './useFlip';
 import { hostFor } from '@/content/hosts';
 import { armouredIds, discardProblem, swapProblem } from '@/engine/twists';
+import { wallSlots } from '@/engine/wall';
 import { updateSettings, useStore, useTheme } from '@/ui/state/store';
 import { STAGE_W, useStage } from './stageSize';
 import { GuideBubble } from './GuideBubble';
@@ -94,9 +97,11 @@ export function RoundView({
   const problem = live.length
     ? playProblem(round.hand, live, usableDiscards(round))
     : 'Pick tiles.';
-  const canPlay = !done && problem === null;
+  const refilling = needsRefill(round);
+  const canPlay = !done && !refilling && problem === null;
   const canDiscard =
     !done &&
+    !refilling &&
     round.discardsLeft > 0 &&
     live.length >= 1 &&
     live.length <= round.rules.maxDiscard &&
@@ -104,7 +109,7 @@ export function RoundView({
   const nowScore = pv.now.total;
   const gain = pv.withSelected ? pv.withSelected.total - nowScore : null;
   const ups = upgrades(round);
-  const up = !done ? (ups.find((u) => live.includes(u.tileId)) ?? ups[0]) : undefined;
+  const up = !done && !refilling ? (ups.find((u) => live.includes(u.tileId)) ?? ups[0]) : undefined;
   const upPreview = up ? previewUpgrade(round, up.setIndex, up.tileId) : null;
   const canBank = !done && finishProblem(round) === null;
   const target = run.target;
@@ -116,12 +121,26 @@ export function RoundView({
   const canSwap = swap && !done && swapId !== undefined && swapProblem(round, swapId) === null;
 
   // The hand is two rows; tiles take the width they can, and shrink on a short stage.
-  const hc = Math.ceil(round.rules.handSize / 2);
+  // The brick wall: this wind's side, its slots placed in half-tile steps.
+  const wall = round.wall;
+  const slots = wall ? wallSlots(round.rules.wallRows, round.rules.wallWidth) : [];
+  const free = new Set(freeWallSlots(round));
+  // the wall runs edge to edge (past the side padding) so its tiles stay 44px on a 360px phone
+  const cell = wall ? STAGE_W / round.rules.wallWidth : 0;
+  // The hand is one row while it fits (the wall), else two; tiles take the width they can and
+  // shrink on a short stage.
+  const hc =
+    wall && round.rules.handSize <= 8 ? round.rules.handSize : Math.ceil(round.rules.handSize / 2);
+  const handRows = Math.ceil(round.rules.handSize / hc);
   const byWidth = Math.floor((STAGE_W - 24 - 6 * (hc - 1)) / hc) - 2;
-  const fixed =
-    470 + (goals.length > 0 ? 24 : 0) + (pv.warnings.length > 0 ? 18 : 0) + (canBank ? 38 : 0);
-  const byHeight = Math.floor((stage.h - fixed) / 2.9);
-  const tw = Math.max(40, Math.min(64, byWidth, byHeight));
+  const extras =
+    (goals.length > 0 ? 24 : 0) + (pv.warnings.length > 0 ? 18 : 0) + (canBank ? 38 : 0);
+  const fixed = (wall ? 300 : 470) + extras;
+  const rowsTall = (handRows + (wall ? round.rules.wallRows : 0)) * 1.4;
+  const byHeight = Math.floor((stage.h - fixed) / rowsTall);
+  const tw = Math.max(wall ? 32 : 40, Math.min(64, byWidth, byHeight));
+  const wtw = wall ? Math.max(32, Math.min(Math.floor(cell) - 4, tw + 2)) : 0;
+  const rowH = Math.round((wtw * 4) / 3) + 2;
 
   const toggle = (id: number) =>
     setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
@@ -205,7 +224,43 @@ export function RoundView({
         </ul>
       )}
 
+      {wall && (
+        <section
+          className="brick-wall"
+          aria-label={`The ${WIND_NAMES[run.roundIndex]} wall`}
+          data-testid="wall"
+          style={{ height: round.rules.wallRows * rowH, ['--tw' as string]: `${wtw}px` }}
+        >
+          {slots.map((slot, i) => {
+            const t = wall[i];
+            if (!t) return null;
+            const isFree = free.has(i);
+            const canTake = isFree && !done && round.hand.length < round.rules.handSize;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                className={`brick${isFree ? ' free' : ''}${advice?.type === 'draw' && advice.slot === i ? ' advised' : ''}`}
+                data-testid={`brick-${i}`}
+                data-free={isFree}
+                disabled={!canTake}
+                aria-label={`${kindName(t.kind)}${isFree ? '' : ', under others'}`}
+                style={{ left: (slot.x * cell) / 2, top: slot.row * rowH, width: cell }}
+                onClick={() => dispatch({ type: 'round', action: { type: 'take', slot: i } })}
+              >
+                <TileView tile={t} theme={theme} className={burning.has(t.id) ? 'burning' : ''} />
+              </button>
+            );
+          })}
+        </section>
+      )}
+
       <section className="table" aria-label="Your table" data-testid="table">
+        {wall && (
+          <span className="wall-pile" data-testid="pile" data-count={pile}>
+            {pile} in the pile
+          </span>
+        )}
         {round.table.length === 0 && <p className="table-empty">Play sets here.</p>}
         {round.table.map((set, i) => (
           <div
@@ -224,13 +279,15 @@ export function RoundView({
         {advice && (
           <GuideBubble mood="think" testId="advice">
             <b>
-              {advice.type === 'play'
-                ? 'Play'
-                : advice.type === 'discard'
-                  ? 'Discard'
-                  : advice.type === 'upgrade'
-                    ? 'Upgrade'
-                    : 'Bank'}
+              {advice.type === 'draw'
+                ? 'Take'
+                : advice.type === 'play'
+                  ? 'Play'
+                  : advice.type === 'discard'
+                    ? 'Discard'
+                    : advice.type === 'upgrade'
+                      ? 'Upgrade'
+                      : 'Bank'}
               .
             </b>{' '}
             {advice.reason}
@@ -264,9 +321,11 @@ export function RoundView({
           <span className="preview-add" data-testid="score-add">
             {gain !== null && pv.withSelected
               ? `${signed(gain)} → ${fmt(pv.withSelected.total)}`
-              : live.length
-                ? problem
-                : 'Pick tiles to play'}
+              : refilling
+                ? 'Take tiles from the wall'
+                : live.length
+                  ? problem
+                  : 'Pick tiles to play'}
           </span>
         </div>
         {pv.warnings.length > 0 && (
@@ -276,36 +335,40 @@ export function RoundView({
         )}
       </section>
 
-      <section className="pile-row" aria-label="The pile">
-        <span className="pile" data-testid="pile" data-count={pile}>
-          <span className="pile-back" aria-hidden />
-          <span>
-            <b>{pile}</b> in the pile
-          </span>
-        </span>
-        {next.length > 0 && (
-          <span className="pile-next" data-testid="pile-next" aria-label="Next from the pile">
-            {next.map((t) => (
-              <TileView key={t.id} tile={t} theme={theme} />
-            ))}
-          </span>
-        )}
-        {swap && (
-          <button
-            type="button"
-            className="swap-btn"
-            data-testid="btn-swap"
-            disabled={!canSwap}
-            onClick={() => {
-              if (swapId === undefined) return;
-              dispatch({ type: 'round', action: { type: 'swap', id: swapId } });
-              setSelected([]);
-            }}
-          >
-            {swapId === undefined ? 'Pick a tile to swap' : 'Swap it'}
-          </button>
-        )}
-      </section>
+      {(!wall || next.length > 0 || swap) && (
+        <section className="pile-row" aria-label="The pile">
+          {!wall && (
+            <span className="pile" data-testid="pile" data-count={pile}>
+              <span className="pile-back" aria-hidden />
+              <span>
+                <b>{pile}</b> in the pile
+              </span>
+            </span>
+          )}
+          {next.length > 0 && (
+            <span className="pile-next" data-testid="pile-next" aria-label="Next from the pile">
+              {next.map((t) => (
+                <TileView key={t.id} tile={t} theme={theme} />
+              ))}
+            </span>
+          )}
+          {swap && (
+            <button
+              type="button"
+              className="swap-btn"
+              data-testid="btn-swap"
+              disabled={!canSwap}
+              onClick={() => {
+                if (swapId === undefined) return;
+                dispatch({ type: 'round', action: { type: 'swap', id: swapId } });
+                setSelected([]);
+              }}
+            >
+              {swapId === undefined ? 'Pick a tile to swap' : 'Swap it'}
+            </button>
+          )}
+        </section>
+      )}
 
       <section
         className="hand"
@@ -356,6 +419,16 @@ export function RoundView({
           >
             Kong {signed(upPreview.after.total - upPreview.now.total)}
             {upPreview.warnings.length ? ' ⚠' : ''}
+          </button>
+        ) : wall ? (
+          <button
+            type="button"
+            className="btn"
+            data-testid="btn-auto"
+            disabled={done || !refilling}
+            onClick={() => dispatch({ type: 'auto' })}
+          >
+            Auto
           </button>
         ) : (
           <button

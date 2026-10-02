@@ -1,7 +1,7 @@
 import type { Rng } from './rng';
 import type { Tile } from './tiles';
 
-/** Stacks of face-up tiles. The top of a stack is the last element. */
+/** Stacks of tiles. The round keeps one: `stacks[0]` is the face-down pile; its top is the last element. */
 export type Stacks = Tile[][];
 
 /** Shuffle the set and deal it round-robin into n stacks; the top is the last tile dealt. */
@@ -12,30 +12,68 @@ export function deal(tiles: readonly Tile[], stackCount: number, rng: Rng): Stac
   return stacks;
 }
 
-export interface StackView {
-  /** Tiles left in the stack. */
-  readonly count: number;
-  /** The top tile, fully visible. */
-  readonly top: Tile | null;
-  /** The tiles under the top whose top strip shows, nearest first. */
-  readonly under: readonly Tile[];
-}
-
-/** What the player sees of a stack: the top, and a strip of the next `peek` tiles. */
-export function viewStack(stack: readonly Tile[], peek: number): StackView {
-  const n = stack.length;
-  if (n === 0) return { count: 0, top: null, under: [] };
-  const under: Tile[] = [];
-  for (let i = 1; i <= peek && n - 1 - i >= 0; i++) under.push(stack[n - 1 - i] as Tile);
-  return { count: n, top: stack[n - 1] as Tile, under };
-}
-
-/** The tiles a stack shows, top first (the top and the strips). */
-export function visibleTiles(stack: readonly Tile[], peek: number): Tile[] {
-  const v = viewStack(stack, peek);
-  return v.top ? [v.top, ...v.under] : [];
-}
-
 export function wallCount(stacks: readonly (readonly Tile[])[]): number {
   return stacks.reduce((n, s) => n + s.length, 0);
+}
+
+// ---- the brick wall ----------------------------------------------------------------------------
+
+/**
+ * One wind's side of the wall, stacked like bricks. Row 0 is the top. The bottom row has `width`
+ * tiles; each row above is offset by half a tile, so rows alternate width and width - 1. `x` is
+ * in half tiles: a tile spans x to x + 2, and it rests on the tiles below it that it overlaps.
+ */
+export interface Slot {
+  readonly row: number;
+  readonly x: number;
+}
+
+export function wallSlots(rows: number, width: number): Slot[] {
+  const out: Slot[] = [];
+  for (let row = 0; row < rows; row++) {
+    const full = (rows - 1 - row) % 2 === 0;
+    const n = full ? width : width - 1;
+    for (let i = 0; i < n; i++) out.push({ row, x: full ? 2 * i : 2 * i + 1 });
+  }
+  return out;
+}
+
+/** For each slot, the slots resting on it (the row above, overlapping it). */
+export function wallCovers(slots: readonly Slot[]): number[][] {
+  return slots.map((b) =>
+    slots
+      .map((a, i) => ({ a, i }))
+      .filter(({ a }) => a.row === b.row - 1 && Math.abs(a.x - b.x) === 1)
+      .map(({ i }) => i),
+  );
+}
+
+/** The wall's slots, top row first: a tile or an empty place. */
+export type Wall = readonly (Tile | null)[];
+
+/** Slot indexes holding a tile with nothing resting on it. */
+export function freeSlots(wall: Wall, rows: number, width: number): number[] {
+  const covers = wallCovers(wallSlots(rows, width));
+  const out: number[] = [];
+  wall.forEach((t, i) => {
+    if (t && (covers[i] ?? []).every((j) => !wall[j])) out.push(i);
+  });
+  return out;
+}
+
+/** Build a side of the wall from the top of a pile (the pile loses those tiles). */
+export function buildWall(
+  pile: readonly Tile[],
+  rows: number,
+  width: number,
+): { wall: Wall; pile: Tile[] } {
+  const n = wallSlots(rows, width).length;
+  const rest = pile.slice();
+  const wall: Tile[] = [];
+  for (let i = 0; i < n && rest.length > 0; i++) wall.push(rest.pop() as Tile);
+  return { wall, pile: rest };
+}
+
+export function wallTiles(wall: Wall | null | undefined): number {
+  return wall ? wall.filter((t) => t !== null).length : 0;
 }

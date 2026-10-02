@@ -20,6 +20,8 @@ export function Title() {
         ...(dev.targets ? { targets: dev.targets } : {}),
         ...(dev.tileSet ? { tileSet: dev.tileSet } : {}),
         ...(dev.lantern ? { lantern: dev.lantern } : {}),
+        // the guided first run teaches with the pile; after it, the setup screen's choice
+        draw: guided ? 'pile' : (dev.draw ?? getState().settings.draw),
       }),
       screen: 'game',
     });

@@ -1,11 +1,13 @@
-/** Lantern 1 targets for the four rounds. */
-export const TARGETS: readonly number[] = [1000, 3600, 8000, 16000];
+import { DRAW } from './rules';
+
+/** Lantern 1 targets for the four rounds (the pile's; each draw mode has its own in DRAW). */
+export const TARGETS: readonly number[] = DRAW.pile.targets;
 
 export interface Lantern {
   readonly level: number;
   readonly targetMult: number;
   readonly interest: boolean;
-  /** Replaces the base discards when lower. */
+  /** Added to the discards (a negative number takes some away). */
   readonly discards?: number;
   readonly text: string;
 }
@@ -18,8 +20,8 @@ export const LANTERNS: readonly Lantern[] = [
     level: 4,
     targetMult: 1.5,
     interest: false,
-    discards: 3,
-    text: 'Targets ×1.5. No interest. 3 discards.',
+    discards: -1,
+    text: 'Targets ×1.5. No interest. One discard fewer.',
   },
 ];
 

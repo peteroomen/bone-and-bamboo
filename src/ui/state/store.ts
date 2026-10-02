@@ -11,6 +11,7 @@ import {
   migrateProfile,
   unlockedColourways,
 } from '@/engine/profile';
+import type { DrawMode } from '@/content/rules';
 import type { RunState } from '@/engine/runTypes';
 import type { ThemeId } from '@/ui/art/tiles';
 
@@ -34,6 +35,8 @@ export interface Settings {
   haptics: boolean;
   /** The introduction has been shown once (it can always be replayed from Help). */
   introSeen: boolean;
+  /** How the hand refills in new runs: the pile or the brick wall (chosen on the setup screen). */
+  draw: DrawMode;
 }
 
 export interface AppState {
@@ -52,6 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ambience: 0.5,
   haptics: true,
   introSeen: false,
+  draw: 'pile',
 };
 
 export const KEYS = {
@@ -67,6 +71,7 @@ export interface DevOverrides {
   targets?: number[];
   tileSet?: string;
   lantern?: number;
+  draw?: DrawMode;
   /** Unlock every colourway, tile set and lantern (for tests and screenshots; never on by default). */
   unlockAll?: boolean;
 }

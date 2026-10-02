@@ -97,6 +97,11 @@ export function HelpSheet({
               play or discard, the hand refills from the pile. A round gives you a set number of
               plays and discards.
             </p>
+            <p>
+              With the <b>brick wall</b>, each wind is one side of a square wall. A tile is free
+              once nothing rests on it: tap it to take it into your hand. When the side is empty,
+              the hand refills from the pile.
+            </p>
           </section>
           <section>
             <h4>Sets</h4>

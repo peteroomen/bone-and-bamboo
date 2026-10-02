@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { advise } from './advice';
 import { chooseMove, moveAction } from './ai';
 import { dragonGoals, brokenDragons } from './goals';
-import { finishProblem, previewUpgrade, roundReduce, startRound, upgrades, preview } from './round';
+import {
+  BASE_ROUND_RULES,
+  finishProblem,
+  previewUpgrade,
+  roundReduce,
+  startRound,
+  upgrades,
+  preview,
+} from './round';
 import type { RoundState } from './round';
 import { newRun, runReduce } from './run';
 import type { RunState } from './runTypes';
@@ -214,7 +222,7 @@ describe('ask the dragon', () => {
     for (let seed = 1; seed <= 200; seed++) {
       let s = startRound({
         tiles: buildTiles(seed % 5 === 0 ? 'twoRivers' : 'boneBamboo'),
-        rules: { handSize: 12, plays: 8, discards: 4, peek: 0, stacks: 1, maxDiscard: 5 },
+        rules: { ...BASE_ROUND_RULES },
         dragons: seed % 3 === 0 ? ['allSimples', 'pongHall'] : [],
         levels: {},
         target: 500,

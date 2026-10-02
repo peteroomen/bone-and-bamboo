@@ -34,20 +34,36 @@ export interface RoundSpec {
   /** A host's twist; `twistState` overrides parts of the state it starts with. */
   readonly twist?: Twist;
   readonly twistState?: Partial<TwistState>;
+  /**
+   * A brick wall, slot by slot from the top row (`_` for a taken place); sets draw 'wall' with
+   * `wallRows` and `wallWidth` from the rules (default 2 rows, width 3: slots 0-1 rest on 2-4).
+   */
+  readonly wall?: string;
 }
 
 /** A round in a known state, for tests. */
 export function roundWith(spec: RoundSpec = {}): RoundState {
-  const rules = twistRules({ ...BASE_ROUND_RULES, ...spec.rules }, spec.twist ?? null);
+  const wallRules = spec.wall ? { draw: 'wall' as const, wallRows: 2, wallWidth: 3 } : {};
+  const rules = twistRules(
+    { ...BASE_ROUND_RULES, ...wallRules, ...spec.rules },
+    spec.twist ?? null,
+  );
   const stacks = (spec.stacks ?? []).map((s) => tiles(s));
   const hand = tiles(spec.hand ?? '');
-  const all = [...hand, ...stacks.flat()];
+  const wall = spec.wall
+    ? spec.wall
+        .trim()
+        .split(/\s+/)
+        .map((k) => (k === '_' ? null : (tiles(k)[0] as Tile)))
+    : null;
+  const all = [...hand, ...stacks.flat(), ...(wall ?? []).filter((t): t is Tile => t !== null)];
   const twist = spec.twist
     ? { ...initTwist(spec.twist, stacks, new Rng(spec.rng ?? 1)), ...spec.twistState }
     : null;
   return {
     rules,
     stacks,
+    wall,
     hand,
     table: [],
     discarded: [],
