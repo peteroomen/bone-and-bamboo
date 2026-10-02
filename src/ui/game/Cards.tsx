@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Rarity } from '@/content/dragons';
 import { dragonTileSvg, iconSvg } from '@/ui/art/icons';
-import { useStore } from '@/ui/state/store';
+import { useTheme } from '@/ui/state/store';
 
 /** The picture of a dragon, fortune, page or pack: a rounded square with a glyph (a placeholder). */
 export function Glyph({
@@ -26,7 +26,7 @@ export function Glyph({
 
 /** A dragon: a plain tile with a picture and a White, Green or Red Dragon frame for its rarity. */
 export function DragonGlyph({ id, size = 40 }: { id: string; size?: number }) {
-  const theme = useStore((st) => st.settings.colourway);
+  const theme = useTheme();
   return (
     <span
       className="dragon-tile"
@@ -39,7 +39,7 @@ export function DragonGlyph({ id, size = 40 }: { id: string; size?: number }) {
 
 /** A fortune, pack or page: its traced icon when there is one, else a glyph square. */
 export function IconGlyph({ id, char, size = 40 }: { id: string; char: string; size?: number }) {
-  const theme = useStore((st) => st.settings.colourway);
+  const theme = useTheme();
   const svg = iconSvg(id, theme);
   if (!svg) return <Glyph char={char} size={size} />;
   return (

@@ -13,7 +13,7 @@ import { PlayerBar } from './PlayerBar';
 import { useFlip } from './useFlip';
 import { hostFor } from '@/content/hosts';
 import { armouredIds, discardProblem, takeProblem } from '@/engine/twists';
-import { updateSettings, useStore } from '@/ui/state/store';
+import { updateSettings, useStore, useTheme } from '@/ui/state/store';
 import { useStage } from './stageSize';
 import { GuideBubble } from './GuideBubble';
 import { TipLayer } from './TipLayer';
@@ -31,7 +31,7 @@ export function RoundView({
   dispatch: (a: RunAction) => RunEvent[];
 }) {
   const round = run.round;
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
   const hints = useStore((s) => s.settings.hints);
   const introSeen = useStore((s) => s.settings.introSeen);
   const [selected, setSelected] = useState<readonly number[]>([]);

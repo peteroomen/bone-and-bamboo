@@ -3,7 +3,7 @@ import { DRAGON_SLOTS } from '@/content/dragons';
 import { hostFor } from '@/content/hosts';
 import { WIND_NAMES } from '@/content/rules';
 import { TileView } from '@/ui/art/Tile';
-import { useStore } from '@/ui/state/store';
+import { useTheme } from '@/ui/state/store';
 import type { RunAction, RunEvent, RunState } from '@/engine/runTypes';
 import { DragonGlyph, OfferCard } from './Cards';
 import { dragonCard } from './cardProps';
@@ -18,7 +18,7 @@ export function GiftView({
   dispatch: (a: RunAction) => RunEvent[];
 }) {
   const gift = run.gift;
-  const theme = useStore((st) => st.settings.colourway);
+  const theme = useTheme();
   const [chosen, setChosen] = useState<number | null>(null);
   if (!gift) return null;
   const host = hostFor(run.roundIndex, run.storm);

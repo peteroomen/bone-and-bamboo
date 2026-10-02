@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DRAGON_IDS, DRAGONS } from '@/content/dragons';
 import { SET_ORDER, SET_TYPES, type SetKind } from '@/content/sets';
 import { TileView } from '@/ui/art/Tile';
-import { type HintLevel, updateSettings, useStore } from '@/ui/state/store';
+import { type HintLevel, updateSettings, useStore, useTheme } from '@/ui/state/store';
 import { DragonGlyph } from './Cards';
 import { Guide } from './GuideBubble';
 import { Sheet } from './Sheet';
@@ -19,7 +19,7 @@ const EXAMPLES: Record<SetKind, string[]> = {
 };
 
 function Example({ kinds, base }: { kinds: string[]; base: number }) {
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
   return (
     <span className="example">
       {kinds.map((k, i) => (

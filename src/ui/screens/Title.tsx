@@ -1,12 +1,13 @@
 import { newRun } from '@/engine/run';
 import { GUIDED_SEED } from '@/content/guide';
-import { devOverrides, getState, setState, useStore } from '@/ui/state/store';
+import { devOverrides, getState, setState, useStore, useTheme } from '@/ui/state/store';
 import { Guide } from '@/ui/game/GuideBubble';
 import { Viewport } from '@/ui/game/Viewport';
 
 export function Title() {
   const run = useStore((s) => s.run);
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
+  const profile = useStore((s) => s.profile);
   const start = () => {
     const dev = devOverrides();
     // A new profile gets the guided first run: a fixed seed, a plain East round and tips.
@@ -23,6 +24,8 @@ export function Title() {
       screen: 'game',
     });
   };
+  // After the guided first run, a new run begins at the setup screen (tile set and lantern).
+  const newRunPressed = () => (profile.guidedDone ? setState({ screen: 'setup' }) : start());
   return (
     <Viewport theme={theme}>
       {() => (
@@ -45,9 +48,25 @@ export function Title() {
               type="button"
               className={`btn${run ? '' : ' primary'}`}
               data-testid="btn-new"
-              onClick={start}
+              onClick={newRunPressed}
             >
               New run
+            </button>
+            <button
+              type="button"
+              className="btn"
+              data-testid="btn-collection"
+              onClick={() => setState({ screen: 'collection' })}
+            >
+              Collection
+            </button>
+            <button
+              type="button"
+              className="btn"
+              data-testid="btn-settings"
+              onClick={() => setState({ screen: 'settings' })}
+            >
+              Settings
             </button>
           </div>
         </main>

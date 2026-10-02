@@ -20,6 +20,7 @@ import type { FortuneArgs, GiftState, Payout, RunAction, RunEvent, RunState } fr
 import { openPack, rerollPrice, rollDragons, rollShop, sellPrice } from './shop';
 import { type Tile, buildTiles, countKinds } from './tiles';
 import type { Reduced } from './round';
+import type { ScoreStep } from './scoring';
 
 export interface NewRunOptions {
   readonly seed: number | string;
@@ -58,7 +59,10 @@ export function newRun(opts: NewRunOptions): RunState {
     gift: null,
     shop: null,
     scores: [],
-    stats: { bestRound: 0, roundsWon: 0, bigSetChips: 0 },
+    stats: { bestRound: 0, roundsWon: 0, bigSet: 0 },
+    hostIds: [],
+    hostsBeaten: [],
+    recorded: false,
     guided: opts.guided ?? false,
     tipsSeen: [],
   };
@@ -137,6 +141,18 @@ export function dealRound(
   return startRound(roundSetup(run, rngState, target, twist));
 }
 
+/** The points of the best single set in a score count: its chips × its mult. */
+function biggestSet(steps: readonly ScoreStep[]): number {
+  let best = 0;
+  for (const st of steps) {
+    if (st.type !== 'set') continue;
+    const chips = st.setChips + st.levelChips + st.tileChips + st.enhChips;
+    const mult = st.setMult + st.levelMult + st.enhMult + st.twistMult;
+    best = Math.max(best, Math.floor(chips * mult * st.enhX));
+  }
+  return best;
+}
+
 // ---- the reducer -------------------------------------------------------------------------------
 type R = Reduced<RunState, RunEvent>;
 
@@ -177,6 +193,8 @@ export function runReduce(s: RunState, a: RunAction): R {
       return useFortune(s, a.index, a.args);
     case 'leave':
       return leave(s);
+    case 'record':
+      return { state: { ...s, recorded: true }, events: [] };
     case 'tip':
       return s.tipsSeen.includes(a.id)
         ? { state: s, events: [] }
@@ -192,7 +210,15 @@ function chooseHost(s: RunState, storm: boolean): R {
   const plain = s.guided && s.roundIndex === 0;
   const round = dealRound(s, undefined, target, plain ? null : host.twist);
   return {
-    state: { ...s, phase: 'round', storm, hostId: hostFor(s.roundIndex, storm).id, target, round },
+    state: {
+      ...s,
+      phase: 'round',
+      storm,
+      hostId: host.id,
+      hostIds: [...s.hostIds, host.id],
+      target,
+      round,
+    },
     events: [{ type: 'phase', phase: 'round' }],
   };
 }
@@ -217,8 +243,10 @@ function afterRound(s: RunState, round: RoundState, events: RoundEvent[]): R {
     ...s.stats,
     bestRound: Math.max(s.stats.bestRound, score),
     roundsWon: s.stats.roundsWon + (won ? 1 : 0),
+    bigSet: Math.max(s.stats.bigSet, biggestSet(result.score.steps)),
   };
-  const base = { ...s, round, tiles, scores, stats };
+  const hostsBeaten = won && s.hostId ? [...s.hostsBeaten, s.hostId] : s.hostsBeaten;
+  const base = { ...s, round, tiles, scores, stats, hostsBeaten };
   if (!won) {
     out.push({ type: 'phase', phase: 'over' });
     return { state: { ...base, phase: 'over' }, events: out };

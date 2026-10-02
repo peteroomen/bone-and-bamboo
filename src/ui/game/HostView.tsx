@@ -3,13 +3,13 @@ import { SEASON_NAMES, WIND_NAMES } from '@/content/rules';
 import { targetFor } from '@/engine/run';
 import type { RunState } from '@/engine/runTypes';
 import { TileView } from '@/ui/art/Tile';
-import { useStore } from '@/ui/state/store';
+import { useTheme } from '@/ui/state/store';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 
 /** Before each round: the wind tile hosts it. Choose how it blows, calm or storm. */
 export function HostView({ run, choose }: { run: RunState; choose: (storm: boolean) => void }) {
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
   const tile = hostFor(run.roundIndex, false).tile;
   return (
     <div className="host" data-testid="host">

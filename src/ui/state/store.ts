@@ -4,10 +4,20 @@
  * exactly where you were.
  */
 import { useSyncExternalStore } from 'react';
+import type { ColourwayId } from '@/content/colourways';
+import {
+  DEFAULT_PROFILE,
+  type Profile,
+  migrateProfile,
+  unlockedColourways,
+} from '@/engine/profile';
 import type { RunState } from '@/engine/runTypes';
 import type { ThemeId } from '@/ui/art/tiles';
 
-export type Screen = 'title' | 'game';
+export { DEFAULT_PROFILE };
+export type { Profile };
+
+export type Screen = 'title' | 'setup' | 'game' | 'collection' | 'settings';
 export type Speed = 'normal' | 'fast' | 'instant';
 /** Help drawn on tiles: off; tiles that make a set glow; also wall tiles that would complete one. */
 export type HintLevel = 'off' | 'sets' | 'full';
@@ -17,14 +27,13 @@ export interface Settings {
   /** The tile colourway, until the art style trial decides. */
   colourway: ThemeId;
   hints: HintLevel;
+  sfx: number;
+  music: number;
+  /** The soundscape under the music. */
+  ambience: number;
+  haptics: boolean;
   /** The introduction has been shown once (it can always be replayed from Help). */
   introSeen: boolean;
-}
-
-/** What the player has done across runs (more arrives with the collection in M7). */
-export interface Profile {
-  /** The guided first run has been played. */
-  guidedDone: boolean;
 }
 
 export interface AppState {
@@ -34,12 +43,14 @@ export interface AppState {
   run: RunState | null;
 }
 
-export const DEFAULT_PROFILE: Profile = { guidedDone: false };
-
 export const DEFAULT_SETTINGS: Settings = {
   speed: 'normal',
   colourway: 'theatre',
   hints: 'sets',
+  sfx: 0.8,
+  music: 0.5,
+  ambience: 0.5,
+  haptics: true,
   introSeen: false,
 };
 
@@ -56,6 +67,8 @@ export interface DevOverrides {
   targets?: number[];
   tileSet?: string;
   lantern?: number;
+  /** Unlock every colourway, tile set and lantern (for tests and screenshots; never on by default). */
+  unlockAll?: boolean;
 }
 
 export function devOverrides(): DevOverrides {
@@ -101,7 +114,7 @@ function loadRun(): RunState | null {
 let state: AppState = {
   screen: 'title',
   settings: load(KEYS.settings, DEFAULT_SETTINGS),
-  profile: load(KEYS.profile, DEFAULT_PROFILE),
+  profile: migrateProfile(load<Partial<Profile>>(KEYS.profile, {})),
   run: loadRun(),
 };
 
@@ -152,4 +165,37 @@ export function speedFactorOf(speed: Speed): number {
 
 export function speedFactor(): number {
   return speedFactorOf(state.settings.speed);
+}
+
+/** Every colourway, tile set and lantern is open (the development flag). */
+export function allUnlocked(): boolean {
+  return devOverrides().unlockAll === true;
+}
+
+/** The colourway in use: the chosen one if it is unlocked, else the first. */
+export function effectiveColourway(settings: Settings, profile: Profile): ColourwayId {
+  const open = unlockedColourways(profile, allUnlocked());
+  return open.includes(settings.colourway) ? settings.colourway : 'theatre';
+}
+
+export function useTheme(): ThemeId {
+  const settings = useStore((s) => s.settings);
+  const profile = useStore((s) => s.profile);
+  return effectiveColourway(settings, profile);
+}
+
+export function updateProfileWith(fn: (p: Profile) => Profile): void {
+  setState((s) => {
+    const next = fn(s.profile);
+    return next === s.profile ? {} : { profile: next };
+  });
+}
+
+/** Replaces settings, profile and the current run with a transferred save. */
+export function replaceSave(data: Pick<AppState, 'settings' | 'profile' | 'run'>): void {
+  setState({ ...data, screen: 'title' });
+}
+
+export function resetProgress(): void {
+  setState({ profile: { ...DEFAULT_PROFILE }, run: null, screen: 'title' });
 }

@@ -5,10 +5,11 @@
  * The tile is 60 x 80: a 56 x 72 face on a coloured back that shows 4px below it (the tile's
  * thickness). Original drawings; the Chinese characters need a CJK serif (Noto Serif SC here).
  */
+import type { ColourwayId } from '@/content/colourways';
 import type { EnhancementId } from '@/content/enhancements';
 import type { TileKind } from '@/content/tiles';
 
-export type ThemeId = 'theatre' | 'porcelain' | 'papercut';
+export type ThemeId = ColourwayId;
 export type TileSuitName =
   'dots' | 'bamboo' | 'chars' | 'wind' | 'dragon' | 'flower' | 'season' | 'back';
 

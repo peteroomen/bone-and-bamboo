@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { SUITED, SUIT_NAMES, type SuitedSuit } from '@/content/tiles';
 import { type Tile, compareKinds, isSuited, kindName, suitOf } from '@/engine/tiles';
 import { TileView } from '@/ui/art/Tile';
-import { useStore } from '@/ui/state/store';
+import { useTheme } from '@/ui/state/store';
 
 type Filter = 'all' | SuitedSuit | 'honours';
 
@@ -25,7 +25,7 @@ export function TilePicker({
   error?: string | null;
   onConfirm?: (ids: number[], suit?: SuitedSuit) => void;
 }) {
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
   const [filter, setFilter] = useState<Filter>('all');
   const [picked, setPicked] = useState<number[]>([]);
   const [suit, setSuit] = useState<SuitedSuit | null>(null);

@@ -43,6 +43,10 @@ export async function freshStart(
 
 export async function newRun(page: Page): Promise<void> {
   await page.getByTestId('btn-new').click();
+  // after the guided first run, a new run begins at the setup screen
+  const begin = page.getByTestId('btn-start');
+  if ((await begin.count()) > 0 || (await page.getByTestId('setup').count()) > 0)
+    await begin.click();
 }
 
 const T = { timeout: 5000 };

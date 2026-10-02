@@ -1,4 +1,6 @@
-import { updateProfile, useStore } from '@/ui/state/store';
+import { useEffect, useState } from 'react';
+import { type Unlock, foldRun, noteRun } from '@/engine/profile';
+import { getState, setState, updateProfile, updateProfileWith, useTheme } from '@/ui/state/store';
 import { TipLayer } from './TipLayer';
 import { dueTip } from './tips';
 import { tipFor } from '@/content/guide';
@@ -15,7 +17,18 @@ import { Viewport } from './Viewport';
 
 export function GameScreen({ onExit }: { onExit: () => void }) {
   const { run, scoring, endScoring, dispatch } = useGame();
-  const theme = useStore((s) => s.settings.colourway);
+  const [unlocks, setUnlocks] = useState<Unlock[]>([]);
+  // what you have seen of the dragons and winds is kept as you go
+  useEffect(() => updateProfileWith((p) => noteRun(p, run)), [run]);
+  // a finished run goes into the profile once; what it unlocked is shown at the end
+  useEffect(() => {
+    if ((run.phase !== 'over' && run.phase !== 'won') || run.recorded) return;
+    const done = foldRun(getState().profile, run);
+    setState({ profile: done.profile });
+    setUnlocks(done.unlocks);
+    dispatch({ type: 'record' });
+  }, [run, dispatch]);
+  const theme = useTheme();
   const round = run.round;
   const showScore = scoring && round?.result;
   const scoreTip =
@@ -48,7 +61,7 @@ export function GameScreen({ onExit }: { onExit: () => void }) {
                 {run.phase === 'gift' && <GiftView run={run} dispatch={dispatch} />}
                 {run.phase === 'shop' && <ShopView run={run} dispatch={dispatch} />}
                 {(run.phase === 'over' || run.phase === 'won') && !showScore && (
-                  <EndView run={run} onExit={onExit} />
+                  <EndView run={run} unlocks={unlocks} onExit={onExit} />
                 )}
               </div>
               {run.phase !== 'over' && run.phase !== 'won' && (

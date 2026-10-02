@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { GuideMood } from '@/ui/art/tiles';
 import { guideSvg } from '@/ui/art/guide';
-import { useStore } from '@/ui/state/store';
+import { useStore, useTheme } from '@/ui/state/store';
 
 /**
  * The guide: the Red Dragon tile with a face, blinking now and then, with a line to say. Its mood
@@ -9,7 +9,7 @@ import { useStore } from '@/ui/state/store';
  * a loss).
  */
 export function Guide({ mood = 'idle', size = 56 }: { mood?: GuideMood; size?: number }) {
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
   const instant = useStore((s) => s.settings.speed === 'instant');
   const [blink, setBlink] = useState(false);
   useEffect(() => {

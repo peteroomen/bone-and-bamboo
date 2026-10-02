@@ -54,7 +54,8 @@ export interface RunStats {
   /** Best single set's score contribution is not tracked; the best round score is. */
   readonly bestRound: number;
   readonly roundsWon: number;
-  readonly bigSetChips: number;
+  /** The best single set's points (its chips × its mult). */
+  readonly bigSet: number;
 }
 
 export interface RunState {
@@ -90,6 +91,12 @@ export interface RunState {
   readonly scores: readonly number[];
   readonly stats: RunStats;
   /** The first-run lesson: a fixed seed, a plain East round and the guide's tips. */
+  /** The host chosen for each round so far. */
+  readonly hostIds: readonly string[];
+  /** The hosts whose rounds you have beaten this run. */
+  readonly hostsBeaten: readonly string[];
+  /** The run has been folded into the profile (it is done once). */
+  readonly recorded: boolean;
   readonly guided: boolean;
   /** The guide's tips already shown this run. */
   readonly tipsSeen: readonly string[];
@@ -122,7 +129,9 @@ export type RunAction =
     }
   | { readonly type: 'leave' }
   /** The guide's tip has been read. */
-  | { readonly type: 'tip'; readonly id: string };
+  | { readonly type: 'tip'; readonly id: string }
+  /** The finished run has been written to the profile. */
+  | { readonly type: 'record' };
 
 export type RunEvent =
   | { readonly type: 'round'; readonly event: RoundEvent }

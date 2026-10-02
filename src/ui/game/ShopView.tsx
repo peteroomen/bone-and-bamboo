@@ -8,7 +8,7 @@ import type { PackOffer, RunAction, RunEvent, RunState } from '@/engine/runTypes
 import { rerollPrice } from '@/engine/shop';
 import { type Tile, compareKinds, kindName } from '@/engine/tiles';
 import { TileView } from '@/ui/art/Tile';
-import { useStore } from '@/ui/state/store';
+import { useTheme } from '@/ui/state/store';
 import { Glyph, OfferCard } from './Cards';
 import { dragonCard, fortuneCard, packCard, pageCard } from './cardProps';
 import { SET_GLYPH } from '@/ui/art/glyphs';
@@ -41,7 +41,7 @@ export function ShopView({
   dispatch: (a: RunAction) => RunEvent[];
 }) {
   const shop = run.shop;
-  const theme = useStore((s) => s.settings.colourway);
+  const theme = useTheme();
   const [burning, setBurning] = useState(false);
   if (!shop) return null;
   const money = run.money;
