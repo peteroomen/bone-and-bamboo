@@ -52,9 +52,22 @@ Tile chips: a suited tile is worth its rank; a wind is worth 10.
 - Then refill your hand to 8 from the stack tops, one tap per tile. An **Auto** button refills for
   you using the hint bot (and the guide's hint shows which stack it would take from).
 - If you hold no set and have no discards, you may play a single tile.
-- The round ends after the last play (or when your hand and the wall are both empty). Then the
+- **Upgrade a tabled pong:** select its fourth matching tile in your hand, then upgrade that
+  tabled pong to a kong. **Proposed first implementation (validate in the sim):** one play,
+  then refill normally. Replace the original set and score the four physical tiles once using
+  the kong's level and bonuses. No fifth-tile upgrade.
+- **Finish round:** once the current table beats the target, optionally bank it immediately,
+  including before refilling. The proposed initial version uses the normal score count and
+  payout, including unused discards; unused plays have no cash value. Continuing is optional. A capped over-target
+  cash reward is approved for exploration but deferred until separately modelled.
+- Otherwise the round ends after the last play (or when hand and wall are both empty). Then the
   table scores. Beat the target to win the round.
-- A live preview always shows what the table would score now, and what the selected set would add.
+- A live preview always shows what the table would score now, and what the selected set or
+  pong upgrade would add, with a proper signed delta. Warn explicitly when it breaks a dragon
+  multiplier. A preview is never a promise that the next play cannot reduce the score.
+- Conditional dragons show live progress: Bell Hall's pongs/kongs, Mahjong!'s four melds and
+  pair, Nine Rings' three runs in a suit, Rice Bowl active/broken, Two Fish's suits, and the
+  repeat counts for Twin Cranes and Great Bell. Empty tables show “not yet”, not success.
 
 ### Sets
 
@@ -248,8 +261,10 @@ means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo k
   play until dismissed.
 - **Hints (Settings), three levels:** off; *sets* (tiles in your hand that form a set glow);
   *full* (also mark wall tiles that would complete a set in your hand).
-- **Ask the dragon:** a button that shows the hint bot's best move (a set to play, tiles to
-  discard, or the stack to take from) with a one-line reason.
+- **Ask the dragon:** show a legal action and its reason (play, discard, upgrade, or draw),
+  highlight the relevant tiles or stack, and leave execution to the player. Final-play hints
+  compare actual complete-table scores; earlier hints avoid breaking a multiplier when a
+  scoring alternative is available. Advice uses visible tiles only, never hidden wall contents.
 - **The set book:** every set type and dragon rule with a picture, and your levels.
 
 ## Around the game
@@ -276,3 +291,17 @@ means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo k
   `docs/work/2026-10-02-mvp-plan.md`.
 - **Sound** is synthesised as in Twelve Petals: bone-on-wood clacks for tiles, Chinese opera
   percussion (gong, cymbal, ban clapper) for plays and scoring, a sparse guzheng and dizi score.
+
+## Accepted gameplay review (2 October 2026)
+
+User decisions: **Bamboo Hook rejected**; live build goals, upgrading tabled pongs, optional early
+finish, and more teaching/hints accepted. No stack-swapping dragon is to be built from the audit.
+“Hunts” was interpreted as “hints” in the teaching request; no new hunt system is specified.
+Evidence and limitations: `docs/balance/2026-10-02-gameplay-audit.md`. Implementation handoff:
+`docs/work/2026-10-02-playability.md`. Include early-finish and upgrade experiments before
+making win-rate claims.
+
+The next slice completes the four-wind run, gifts, shops and save/resume. It adds a replayable
+introductory teaching sheet and illustrated set book, plus persistent off/sets/full hint levels.
+The full scripted first-run lesson queue remains M6 work. M5 host twists remain unimplemented;
+the prototype host screen must say so instead of advertising inactive rules as working.
