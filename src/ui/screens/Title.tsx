@@ -1,5 +1,7 @@
 import { newRun } from '@/engine/run';
-import { devOverrides, setState, useStore } from '@/ui/state/store';
+import { GUIDED_SEED } from '@/content/guide';
+import { devOverrides, getState, setState, useStore } from '@/ui/state/store';
+import { Guide } from '@/ui/game/GuideBubble';
 import { Viewport } from '@/ui/game/Viewport';
 
 export function Title() {
@@ -7,10 +9,13 @@ export function Title() {
   const theme = useStore((s) => s.settings.colourway);
   const start = () => {
     const dev = devOverrides();
-    const seed = dev.seed ?? Math.floor(Math.random() * 2 ** 32);
+    // A new profile gets the guided first run: a fixed seed, a plain East round and tips.
+    const guided = !getState().profile.guidedDone;
+    const seed = guided ? GUIDED_SEED : (dev.seed ?? Math.floor(Math.random() * 2 ** 32));
     setState({
       run: newRun({
         seed,
+        guided,
         ...(dev.targets ? { targets: dev.targets } : {}),
         ...(dev.tileSet ? { tileSet: dev.tileSet } : {}),
         ...(dev.lantern ? { lantern: dev.lantern } : {}),
@@ -22,9 +27,7 @@ export function Title() {
     <Viewport theme={theme}>
       {() => (
         <main className="title" data-testid="title">
-          <div className="title-mark" aria-hidden>
-            <span className="title-tile">條</span>
-          </div>
+          <Guide mood="happy" size={110} />
           <h1 className="title-name">Bone &amp; Bamboo</h1>
           <p className="title-sub">Four winds. Four hosts. One wall.</p>
           <div className="title-buttons">

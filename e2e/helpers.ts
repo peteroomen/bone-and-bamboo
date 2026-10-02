@@ -33,6 +33,10 @@ export async function freshStart(
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await setSettings(page, { speed: 'instant', introSeen: true, ...settings });
+  // not a new profile: no guided first run unless a test asks for one
+  await page.evaluate(() =>
+    localStorage.setItem('bb.profile.v1', JSON.stringify({ guidedDone: true })),
+  );
   await page.reload();
   await page.getByTestId('title').waitFor();
 }
@@ -62,7 +66,10 @@ async function refill(page: Page): Promise<void> {
 }
 
 /** One turn of the bot, played through the UI. Returns false once the round is over. */
-export async function botTurn(page: Page, opts: { auto?: boolean } = {}): Promise<boolean> {
+export async function botTurn(
+  page: Page,
+  opts: { auto?: boolean; tips?: string[] } = {},
+): Promise<boolean> {
   const h = await hook(page);
   const round = h?.run.round;
   if (!round || round.phase !== 'play') return false;
@@ -70,11 +77,16 @@ export async function botTurn(page: Page, opts: { auto?: boolean } = {}): Promis
     if (opts.auto) await page.getByTestId('btn-auto').click(T);
     else await refill(page);
   }
+  if (opts.tips) opts.tips.push(...(await readTips(page)));
   const now = (await hook(page))?.run.round;
   if (!now || now.phase !== 'play') return false;
   const move = chooseMove(now);
   if (!move) return false;
-  for (const id of move.ids) await page.getByTestId(`tile-${id}`).click(T);
+  for (const id of move.ids) {
+    if (opts.tips) opts.tips.push(...(await readTips(page)));
+    await page.getByTestId(`tile-${id}`).click(T);
+  }
+  if (opts.tips) opts.tips.push(...(await readTips(page)));
   await page.getByTestId(move.type === 'play' ? 'btn-play' : 'btn-discard').click(T);
   await page.waitForFunction(
     (turns) => {
@@ -88,7 +100,10 @@ export async function botTurn(page: Page, opts: { auto?: boolean } = {}): Promis
 }
 
 /** Plays the current round to its end through the UI. */
-export async function playRound(page: Page, opts: { auto?: boolean } = {}): Promise<void> {
+export async function playRound(
+  page: Page,
+  opts: { auto?: boolean; tips?: string[] } = {},
+): Promise<void> {
   for (let guard = 0; guard < 60; guard++) {
     const more = await botTurn(page, opts);
     if (!more) return;
@@ -154,4 +169,19 @@ export async function resumeFrom(page: Page, run: RunState): Promise<void> {
   await page.evaluate((r) => localStorage.setItem('bb.run.v1', JSON.stringify(r)), run);
   await page.reload();
   await page.getByTestId('btn-continue').click();
+}
+
+/** Reads and dismisses the guide's tips while any is showing; returns their texts. */
+export async function readTips(page: Page): Promise<string[]> {
+  const seen: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    const tip = page.getByTestId('tip');
+    if (!(await tip.count())) {
+      await page.waitForTimeout(60);
+      if (!(await tip.count())) break;
+    }
+    seen.push((await page.getByTestId('tip-text').textContent()) ?? '');
+    await page.getByTestId('btn-tip-ok').click(T);
+  }
+  return seen;
 }

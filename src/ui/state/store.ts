@@ -21,11 +21,20 @@ export interface Settings {
   introSeen: boolean;
 }
 
+/** What the player has done across runs (more arrives with the collection in M7). */
+export interface Profile {
+  /** The guided first run has been played. */
+  guidedDone: boolean;
+}
+
 export interface AppState {
   screen: Screen;
   settings: Settings;
+  profile: Profile;
   run: RunState | null;
 }
+
+export const DEFAULT_PROFILE: Profile = { guidedDone: false };
 
 export const DEFAULT_SETTINGS: Settings = {
   speed: 'normal',
@@ -34,7 +43,12 @@ export const DEFAULT_SETTINGS: Settings = {
   introSeen: false,
 };
 
-export const KEYS = { settings: 'bb.settings.v1', run: 'bb.run.v1', dev: 'bb.dev.v1' };
+export const KEYS = {
+  settings: 'bb.settings.v1',
+  profile: 'bb.profile.v1',
+  run: 'bb.run.v1',
+  dev: 'bb.dev.v1',
+};
 
 /** Options for the next new run, for tests and tuning: a fixed seed, targets, tile set, lantern. */
 export interface DevOverrides {
@@ -87,6 +101,7 @@ function loadRun(): RunState | null {
 let state: AppState = {
   screen: 'title',
   settings: load(KEYS.settings, DEFAULT_SETTINGS),
+  profile: load(KEYS.profile, DEFAULT_PROFILE),
   run: loadRun(),
 };
 
@@ -101,6 +116,7 @@ export function setState(patch: Partial<AppState> | ((s: AppState) => Partial<Ap
   const prev = state;
   state = { ...state, ...next };
   if (next.settings && next.settings !== prev.settings) save(KEYS.settings, state.settings);
+  if (next.profile && next.profile !== prev.profile) save(KEYS.profile, state.profile);
   if ('run' in next && next.run !== prev.run) save(KEYS.run, state.run);
   for (const l of listeners) l();
 }
@@ -116,6 +132,10 @@ export function useStore<T>(select: (s: AppState) => T): T {
     () => select(state),
     () => select(state),
   );
+}
+
+export function updateProfile(patch: Partial<Profile>): void {
+  setState((s) => ({ profile: { ...s.profile, ...patch } }));
 }
 
 export function updateSettings(patch: Partial<Settings>): void {

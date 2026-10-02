@@ -89,6 +89,10 @@ export interface RunState {
   /** Score of each round played so far. */
   readonly scores: readonly number[];
   readonly stats: RunStats;
+  /** The first-run lesson: a fixed seed, a plain East round and the guide's tips. */
+  readonly guided: boolean;
+  /** The guide's tips already shown this run. */
+  readonly tipsSeen: readonly string[];
 }
 
 export interface FortuneArgs {
@@ -116,7 +120,9 @@ export type RunAction =
       readonly index: number;
       readonly args: FortuneArgs;
     }
-  | { readonly type: 'leave' };
+  | { readonly type: 'leave' }
+  /** The guide's tip has been read. */
+  | { readonly type: 'tip'; readonly id: string };
 
 export type RunEvent =
   | { readonly type: 'round'; readonly event: RoundEvent }

@@ -28,6 +28,7 @@ export interface NewRunOptions {
   /** Override the base targets (the simulator tries ladders). */
   readonly targets?: readonly number[];
   readonly packPool?: readonly PackId[];
+  readonly guided?: boolean;
 }
 
 export function newRun(opts: NewRunOptions): RunState {
@@ -58,6 +59,8 @@ export function newRun(opts: NewRunOptions): RunState {
     shop: null,
     scores: [],
     stats: { bestRound: 0, roundsWon: 0, bigSetChips: 0 },
+    guided: opts.guided ?? false,
+    tipsSeen: [],
   };
 }
 
@@ -174,6 +177,10 @@ export function runReduce(s: RunState, a: RunAction): R {
       return useFortune(s, a.index, a.args);
     case 'leave':
       return leave(s);
+    case 'tip':
+      return s.tipsSeen.includes(a.id)
+        ? { state: s, events: [] }
+        : { state: { ...s, tipsSeen: [...s.tipsSeen, a.id] }, events: [] };
   }
 }
 
@@ -181,7 +188,9 @@ function chooseHost(s: RunState, storm: boolean): R {
   if (s.phase !== 'host') return illegal(s, 'Not choosing a host.');
   const target = targetFor(s.lantern, s.roundIndex, storm, s.targets);
   const host = hostFor(s.roundIndex, storm);
-  const round = dealRound(s, undefined, target, host.twist);
+  // The lesson's first round is a plain one: no twist to explain yet.
+  const plain = s.guided && s.roundIndex === 0;
+  const round = dealRound(s, undefined, target, plain ? null : host.twist);
   return {
     state: { ...s, phase: 'round', storm, hostId: hostFor(s.roundIndex, storm).id, target, round },
     events: [{ type: 'phase', phase: 'round' }],

@@ -4,6 +4,7 @@ import { SET_TYPES } from '@/content/sets';
 import type { PlayedSet, ScoreResult, ScoreStep } from '@/engine/scoring';
 import { kindName } from '@/engine/tiles';
 import { speedFactor } from '@/ui/state/store';
+import { GuideBubble } from './GuideBubble';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 const STEP_MS = 520;
@@ -65,11 +66,14 @@ export function ScoreOverlay({
   table,
   score,
   target,
+  tip = null,
   onDone,
 }: {
   table: readonly PlayedSet[];
   score: ScoreResult;
   target: number;
+  /** The guide's line about scoring, in the guided first run. */
+  tip?: string | null;
   onDone: () => void;
 }) {
   const steps = score.steps;
@@ -93,6 +97,11 @@ export function ScoreOverlay({
     <div className="overlay" role="dialog" aria-label="Scoring" data-testid="score-overlay">
       <div className="score-card">
         <h2>Scoring</h2>
+        {tip && (
+          <GuideBubble mood="happy" testId="score-tip">
+            {tip}
+          </GuideBubble>
+        )}
         <ol className="score-steps">
           {steps.slice(0, shown).map((s, i) => (
             <li key={i}>

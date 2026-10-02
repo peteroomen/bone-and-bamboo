@@ -16,6 +16,8 @@ import { armouredIds, discardProblem, takeProblem } from '@/engine/twists';
 import { updateSettings, useStore } from '@/ui/state/store';
 import { useStage } from './stageSize';
 import { GuideBubble } from './GuideBubble';
+import { TipLayer } from './TipLayer';
+import { dueTip } from './tips';
 import { HelpSheet } from './HelpSheet';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
@@ -74,7 +76,11 @@ export function RoundView({
   const burning = new Set(twistState?.burning ?? []);
   const armoured = new Set(armouredIds(round));
   const showBanner =
-    !bannerSeen && round.turns === 0 && round.hand.length === 0 && round.table.length === 0;
+    twistState !== null &&
+    !bannerSeen &&
+    round.turns === 0 &&
+    round.hand.length === 0 &&
+    round.table.length === 0;
 
   const live = selected.filter((id) => round.hand.some((t) => t.id === id));
   const refill = needsRefill(round);
@@ -159,7 +165,7 @@ export function RoundView({
           <span className="hud-wind-text">
             <b>{WIND_NAMES[run.roundIndex]}</b>
             <span>
-              {host.title} · {run.storm ? 'Storm' : 'Calm'}
+              {twistState ? `${host.title} · ${run.storm ? 'Storm' : 'Calm'}` : 'A plain round'}
             </span>
           </span>
         </div>
@@ -418,6 +424,12 @@ export function RoundView({
           Play
         </button>
       </footer>
+      <TipLayer
+        tip={
+          help || showBanner ? null : dueTip(run, { valid: live.length > 0 && problem === null })
+        }
+        onRead={(id) => dispatch({ type: 'tip', id })}
+      />
       {showBanner && (
         <div className="banner" role="status" data-testid="twist-banner">
           <b>

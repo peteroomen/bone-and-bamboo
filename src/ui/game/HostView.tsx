@@ -24,8 +24,9 @@ export function HostView({ run, choose }: { run: RunState; choose: (storm: boole
           </p>
         </div>
       </div>
-      {[false, true].map((storm) => {
+      {(run.guided && run.roundIndex === 0 ? [false] : [false, true]).map((storm) => {
         const h = hostFor(run.roundIndex, storm);
+        const plain = run.guided && run.roundIndex === 0;
         return (
           <button
             key={h.id}
@@ -40,9 +41,9 @@ export function HostView({ run, choose }: { run: RunState; choose: (storm: boole
                 Target {fmt(targetFor(run.lantern, run.roundIndex, storm, run.targets))}
                 {storm ? ' · a bigger gift' : ''}
               </i>
-              <span className="host-twist">{h.title}</span>
+              <span className="host-twist">{plain ? 'A plain round' : h.title}</span>
               <span className="muted" data-testid="twist-text">
-                {h.twistText}
+                {plain ? 'No twist in your first round: just you and the wall.' : h.twistText}
               </span>
             </span>
           </button>

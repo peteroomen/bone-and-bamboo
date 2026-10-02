@@ -1,4 +1,7 @@
-import { useStore } from '@/ui/state/store';
+import { updateProfile, useStore } from '@/ui/state/store';
+import { TipLayer } from './TipLayer';
+import { dueTip } from './tips';
+import { tipFor } from '@/content/guide';
 import { EndView } from './EndView';
 import { GiftView } from './GiftView';
 import { HostView } from './HostView';
@@ -15,11 +18,24 @@ export function GameScreen({ onExit }: { onExit: () => void }) {
   const theme = useStore((s) => s.settings.colourway);
   const round = run.round;
   const showScore = scoring && round?.result;
+  const scoreTip =
+    run.guided && !run.tipsSeen.includes('score') ? (tipFor('score')?.text ?? null) : null;
+  const done = () => {
+    endScoring();
+    if (scoreTip) dispatch({ type: 'tip', id: 'score' });
+    if (run.guided) updateProfile({ guidedDone: true });
+  };
   return (
     <Viewport theme={theme}>
       {() => (
         <div className="screen">
           {run.phase === 'round' && round && <RoundView run={run} dispatch={dispatch} />}
+          {run.phase === 'host' && (
+            <TipLayer
+              tip={dueTip(run, { valid: false })}
+              onRead={(id) => dispatch({ type: 'tip', id })}
+            />
+          )}
           {run.phase !== 'round' && (
             <>
               <div className="screen-body">
@@ -45,7 +61,8 @@ export function GameScreen({ onExit }: { onExit: () => void }) {
               table={round.table}
               score={round.result.score}
               target={run.target}
-              onDone={endScoring}
+              onDone={done}
+              tip={scoreTip}
             />
           )}
         </div>
