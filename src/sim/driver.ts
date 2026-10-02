@@ -1,3 +1,4 @@
+import type { Twist } from '@/content/hosts';
 import { PACK_IDS } from '@/content/packs';
 import { legalPlays } from '@/engine/advice';
 import { type Policy, chooseMove, moveAction } from '@/engine/ai';
@@ -21,6 +22,8 @@ export interface SimRunOptions {
   readonly pythonShop?: boolean;
   /** Which rounds the bot calls the storm (the great beast's harder twist); calm otherwise. */
   readonly storm?: readonly boolean[];
+  readonly twists?: Readonly<Record<string, Twist>>;
+  readonly stormMult?: number;
   /** How the bot plays its rounds. */
   readonly play?: PlayOptions;
   /** Rounds per shop evaluation. */
@@ -110,6 +113,8 @@ export function playRunSim(o: SimRunOptions): SimRunResult {
     ...(o.targets ? { targets: o.targets } : { targets: [0, 0, 0, 0] }),
     ...(o.lantern ? { lantern: o.lantern } : {}),
     ...(o.tileSet ? { tileSet: o.tileSet } : {}),
+    ...(o.twists ? { twistOverrides: o.twists } : {}),
+    ...(o.stormMult ? { stormMult: o.stormMult } : {}),
     ...(o.pythonShop ? { packPool: PACK_IDS.filter((p) => p !== 'almanac') } : {}),
   });
   let policy: Policy = 'greedy';

@@ -30,6 +30,8 @@ export interface NewRunOptions {
   readonly targets?: readonly number[];
   readonly packPool?: readonly PackId[];
   readonly guided?: boolean;
+  readonly twistOverrides?: Readonly<Record<string, Twist>>;
+  readonly stormMult?: number;
 }
 
 export function newRun(opts: NewRunOptions): RunState {
@@ -63,6 +65,8 @@ export function newRun(opts: NewRunOptions): RunState {
     hostIds: [],
     hostsBeaten: [],
     recorded: false,
+    ...(opts.twistOverrides ? { twistOverrides: opts.twistOverrides } : {}),
+    ...(opts.stormMult ? { stormMult: opts.stormMult } : {}),
     guided: opts.guided ?? false,
     tipsSeen: [],
   };
@@ -74,9 +78,10 @@ export function targetFor(
   roundIndex: number,
   storm: boolean,
   targets: readonly number[] = TARGETS,
+  stormMult: number = STORM_TARGET_MULT,
 ): number {
   const l = LANTERNS[Math.max(0, Math.min(LANTERNS.length - 1, lantern - 1))];
-  const base = (targets[roundIndex] ?? 0) * (l?.targetMult ?? 1) * (storm ? STORM_TARGET_MULT : 1);
+  const base = (targets[roundIndex] ?? 0) * (l?.targetMult ?? 1) * (storm ? stormMult : 1);
   return Math.round(base / 50) * 50;
 }
 
@@ -204,11 +209,16 @@ export function runReduce(s: RunState, a: RunAction): R {
 
 function chooseHost(s: RunState, storm: boolean): R {
   if (s.phase !== 'host') return illegal(s, 'Not choosing a host.');
-  const target = targetFor(s.lantern, s.roundIndex, storm, s.targets);
+  const target = targetFor(s.lantern, s.roundIndex, storm, s.targets, s.stormMult);
   const host = hostFor(s.roundIndex, storm);
   // The lesson's first round is a plain one: no twist to explain yet.
   const plain = s.guided && s.roundIndex === 0;
-  const round = dealRound(s, undefined, target, plain ? null : host.twist);
+  const round = dealRound(
+    s,
+    undefined,
+    target,
+    plain ? null : (s.twistOverrides?.[host.id] ?? host.twist),
+  );
   return {
     state: {
       ...s,

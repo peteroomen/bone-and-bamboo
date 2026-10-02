@@ -1,3 +1,4 @@
+import type { Twist } from '@/content/hosts';
 import type { FortuneId } from '@/content/fortunes';
 import type { PackId } from '@/content/packs';
 import type { SetKind } from '@/content/sets';
@@ -97,6 +98,9 @@ export interface RunState {
   readonly hostsBeaten: readonly string[];
   /** The run has been folded into the profile (it is done once). */
   readonly recorded: boolean;
+  /** Simulator experiments: replacement twists by host id, and a storm target multiplier. */
+  readonly twistOverrides?: Readonly<Record<string, Twist>>;
+  readonly stormMult?: number;
   readonly guided: boolean;
   /** The guide's tips already shown this run. */
   readonly tipsSeen: readonly string[];
