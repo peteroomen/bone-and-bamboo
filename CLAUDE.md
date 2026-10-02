@@ -79,6 +79,10 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
+- **2026-10-02 gameplay audit:** `docs/balance/2026-10-02-gameplay-audit.md` records matched-seed
+  experiments and design questions; `src/sim/audit.ts` reproduces the raw data. Production rules
+  are unchanged. The round e2e now permits legal opening discards before expecting a tabled set.
+
 - **2026-10-02:** M1-M3 done on the `mvp` branch. Engine (`src/engine`), content (`src/content`)
   and `pnpm sim` reproduce the Python results (`docs/balance/2026-10-02-ts-sim.md`). The UI has
   a title, the host choice and a playable round (the wall of stacks, hand, table, live preview,

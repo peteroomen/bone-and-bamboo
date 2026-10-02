@@ -46,8 +46,12 @@ test('a whole round through the UI: start, mid-round and the score count', async
   await page.screenshot({ path: shot('round-1-start', project) });
 
   // Fill the hand by tapping stacks: the hint bot picks which.
-  await botTurn(page);
-  await botTurn(page);
+  // A legal opening can spend all three discards before placing a set.
+  // Advance by observed plays, rather than assuming a turn always means a play.
+  for (let turn = 0; turn < 5; turn++) {
+    if (((await hook(page))?.run.round?.table.length ?? 0) >= 2) break;
+    await botTurn(page);
+  }
   await expect(page.locator('[data-testid^="set-"]').first()).toBeVisible();
   await page.screenshot({ path: shot('round-2-mid', project) });
   const h = await hook(page);
