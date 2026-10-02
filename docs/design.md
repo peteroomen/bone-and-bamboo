@@ -215,6 +215,23 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 | Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + one of each wind | win a run |
 | Jade Court | the 81, hand 9, 2 discards | win with 3 different hosts |
 
+## Colourways (unlocks)
+
+The colourway is the whole look: the tiles' colours, the table, the interface accents and the
+generated art for hosts and backdrops. You start with one and unlock the others by playing; the
+Settings picker lists only those you have, and the collection shows the locked ones as
+silhouettes with their condition. *tune*
+
+| Colourway | Unlock |
+|---|---|
+| Shadow theatre (bone faces, jade backs) | from the start |
+| Porcelain (white glaze, cobalt) | win a run |
+| Papercut (cream and red) | calm all four great beasts (choose and beat each wind's beast, across runs) |
+
+More tile-only palettes (for example jade, midnight, gilded) can follow as lantern rewards after
+the MVP; each is just a new entry in the tile generator's theme table. A development flag unlocks
+every colourway for testing and screenshots.
+
 ## The guide (teaching)
 
 The guide is **the Red Dragon tile itself**, the way Balatro's Jimbo is the Joker card: the real
@@ -239,7 +256,7 @@ means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo k
 - Collection: tile sets and their lanterns, every dragon (seen / owned / locked), hosts met,
   records (best round, best run, biggest single set).
 - Settings: speed (normal, fast, instant), hints, sound, music, ambience, haptics, colourway
-  (until the style trial picks one), credits, play offline, move your progress.
+  (among those unlocked), credits, play offline, move your progress.
 - Saves: the run state after every action (resume anywhere), plus the profile. Plain JSON.
 - Offline: a PWA that precaches everything; Settings has the install panel and save transfer from
   Twelve Petals.
@@ -247,7 +264,7 @@ means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo k
 ## Art and sound
 
 - **Tiles** are drawn from code: `art-source/tiles/tiles.js` (port to TypeScript at
-  `src/ui/art/tiles.ts`). Three colourways until the style trial decides.
+  `src/ui/art/tiles.ts`). Three colourways, unlocked by playing (see Colourways).
 - **Generated art** (hosts, the guide, the dragons' faces, backdrops, object sheets) comes from the planner and the
   user, through `art-source/prompts/`. Until it lands, use the placeholders described in
   `docs/work/2026-10-02-mvp-plan.md`.
