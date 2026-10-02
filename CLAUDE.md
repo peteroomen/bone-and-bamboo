@@ -79,9 +79,10 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
-- **2026-10-02:** M1 (scaffold) done on the `mvp` branch: Vite + React 19, strict TypeScript, the
-  engine purity lint rules, Vitest, Playwright (390×844, 360×640, 1366×768), PWA, `vercel.json`,
-  and an app shell that shows a title. The design, plan, Python simulators and tile generator are
-  as before. Next: M2 (engine and simulator). Milestone status is in the draft "MVP" PR.
+- **2026-10-02:** M1 (scaffold) and M2 (engine and simulator) done on the `mvp` branch. The
+  engine (`src/engine`: tiles, sets, wall, scoring, round and run reducers, shop, fortunes, hint
+  bot, shoppers), the content (`src/content`) and `pnpm sim` reproduce the Python results
+  (`docs/balance/2026-10-02-ts-sim.md`). No UI beyond a title yet. Next: M3 (a round on screen).
+  Milestone status is in the draft "MVP" PR.
 - The art style trial (shadow theatre, porcelain or papercut) is with the user. Until it decides,
   the colourway is a setting.
