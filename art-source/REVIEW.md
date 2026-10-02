@@ -62,3 +62,12 @@ at 36px on a tile. Traced with `scripts/trace-icons.py` (12-39 paths each, 49 KB
 slots recolour correctly on all three colourways. Take b wins on the scroll (rolled ends read
 better). `mock/hand.src.html` is the "Bone & Bamboo Hand Mock" page: a hand in progress built from
 these, the code tiles, the guide and the fox.
+
+## 2026-10-02 · Bamboo faces
+
+`icons/bamboo.png`: the Bamboo suit 1-9 (sparrow on the 1) in the icon style. **Keeper.** Traced
+with the new grid mode (`--grid=3x3`: cuts through the widest gap between faces, one shared scale
+for the sheet) and drawn by `tiles.js` through `useFaces(icons)`: the traced face replaces the
+code face; body, index and enhancements stay. Chunkier and easier to count at hand size than the
+code faces, and it recolours cleanly. Prompts added for Dots and the bonus tiles; Characters and
+winds stay in code (they are written characters).

@@ -341,6 +341,11 @@
     return s;
   }
 
+  // Traced faces (art-source/icons/icons.json, ids like "bamboo-5") replace the code-drawn face of
+  // a tile when registered with useFaces(); everything else (body, index, enhancements) stays.
+  var FACES = {};
+  function useFaces(icons) { FACES = icons || {}; }
+
   function svg(tile, opts) {
     opts = opts || {};
     var T = THEMES[opts.theme || "theatre"];
@@ -362,7 +367,8 @@
     s += el("rect", { x: 2, y: 2, width: 56, height: 72, rx: 7, fill: E.face, stroke: T.edge, "stroke-width": 1.5 });
     s += E.under;
     if (opts.enh !== "blank") {
-      s += faceArt(tile, TT);
+      var traced = opts.traced !== false && FACES[tile.suit + "-" + tile.rank];
+      s += traced ? iconPaths(traced, TT, 7, 13, 46, 58) : faceArt(tile, TT);
       if (opts.index !== false) s += index(tile, TT);
     }
     s += E.over;
@@ -520,7 +526,7 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 80"' + size + ">" + s + "</svg>";
   }
 
-  var api = { svg: svg, guide: guide, dragonTile: dragonTile, GUIDE_MOODS: GUIDE_MOODS, THEMES: THEMES, ALL: ALL };
+  var api = { svg: svg, useFaces: useFaces, guide: guide, dragonTile: dragonTile, GUIDE_MOODS: GUIDE_MOODS, THEMES: THEMES, ALL: ALL };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BBTiles = api;
 })(typeof window !== "undefined" ? window : this);

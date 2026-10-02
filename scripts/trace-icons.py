@@ -180,8 +180,75 @@ def write(art: dict) -> None:
     OUT.write_text(json.dumps(dict(sorted(art.items())), separators=(',', ':')) + '\n')
 
 
-def trace_sheet(sheet: str, ids: list[str], art: dict) -> None:
+def grid_objects(rgb: np.ndarray, cols: int, rows: int) -> tuple[list, list]:
+    """For sheets where one icon is several pieces (a tile face of nine sticks). Rows and columns
+    are cut through the emptiest line near each nominal grid line, so a piece that pokes past an
+    even third stays with its own icon. Every box is then grown to the size of the largest one
+    (about its own centre), so the icons of a sheet share one scale: the 2 of Bamboo's sticks are
+    drawn the same size as the 9's."""
+    r, g, b = (rgb[..., i].astype(int) for i in range(3))
+    green = (g > 140) & (g - np.maximum(r, b) > 80)
+    spill = (g > 60) & (g - np.maximum(r, b) > 60)
+    green |= spill & ndimage.binary_dilation(green, iterations=3)
+    solid = ndimage.binary_opening(~green, iterations=1)
+    h, w = solid.shape
+
+    def cuts(profile: np.ndarray, n: int, length: int) -> list[int]:
+        out = [0]
+        for k in range(1, n):
+            nominal = length * k // n
+            lo, hi = nominal - length // 6, nominal + length // 6
+            win = profile[lo:hi]
+            low = win <= win.min()
+            # the widest run of the emptiest lines: the gap between icons, not a gap inside one
+            best, start = (0, 0), None
+            for k, v in enumerate(list(low) + [False]):
+                if v and start is None:
+                    start = k
+                elif not v and start is not None:
+                    if k - start > best[1] - best[0]:
+                        best = (start, k)
+                    start = None
+            out.append(lo + (best[0] + best[1]) // 2)
+        return out + [length]
+
+    ycut = cuts(solid.sum(1), rows, h)
+    raw = []
+    for j in range(rows):
+        band = solid[ycut[j] : ycut[j + 1]]
+        xcut = cuts(band.sum(0), cols, w)
+        for i in range(cols):
+            m = np.zeros_like(solid)
+            m[ycut[j] : ycut[j + 1], xcut[i] : xcut[i + 1]] = solid[ycut[j] : ycut[j + 1], xcut[i] : xcut[i + 1]]
+            yy, xx = np.where(m)
+            raw.append((m, (yy.min(), yy.max() + 1, xx.min(), xx.max() + 1) if len(yy) else None))
+    bh = max(bb[1] - bb[0] for _, bb in raw if bb)
+    bw = max(bb[3] - bb[2] for _, bb in raw if bb)
+    boxes, masks = [], []
+    for m, bb in raw:
+        if bb is None:
+            boxes.append(None); masks.append(m); continue
+        cy, cx = (bb[0] + bb[1]) // 2, (bb[2] + bb[3]) // 2
+        y0, x0 = max(0, cy - bh // 2), max(0, cx - bw // 2)
+        boxes.append((slice(y0, min(h, y0 + bh)), slice(x0, min(w, x0 + bw))))
+        masks.append(ndimage.binary_erosion(m, iterations=1))
+    return boxes, masks
+
+
+def trace_sheet(sheet: str, ids: list[str], art: dict, grid: str | None = None) -> None:
     rgb = np.asarray(Image.open(sheet).convert('RGB'))
+    if grid:
+        cols, rows = (int(x) for x in grid.split('x'))
+        boxes, masks = grid_objects(rgb, cols, rows)
+        for item_id, box, mask in zip(ids, boxes, masks):
+            if item_id == '-' or box is None:
+                continue
+            idx = snap(rgb[box], mask[box])
+            paths, (w, h) = trace(idx)
+            art[item_id] = {'w': w, 'h': h, 'p': paths}
+            size = sum(len(d) for _, d in paths)
+            print(f'{item_id:16} {len(paths):3} paths  {size / 1024:5.1f} KB  slots: {" ".join(sorted({s for s, _ in paths}))}')
+        return
     while ids and ids[-1] == '-':  # an empty last cell (a sheet of five) holds no object
         ids = ids[:-1]
     want = len(ids)
@@ -202,6 +269,7 @@ def main() -> None:
     ap.add_argument('sheet', nargs='?')
     ap.add_argument('ids', nargs='*')
     ap.add_argument('--all', action='store_true', help='re-trace every sheet in sheets.txt')
+    ap.add_argument('--grid', help='split the sheet into equal cells, e.g. 3x3 (for multi-piece icons)')
     args = ap.parse_args()
     if args.all:
         art: dict = {}
@@ -210,10 +278,13 @@ def main() -> None:
             if not line.strip() or line.startswith('#'):
                 continue
             name, *ids = line.split()
-            trace_sheet(str(listing.parent / name), ids, art)
+            grid = None
+            if ids and ids[0].startswith('--grid='):
+                grid, ids = ids[0].split('=', 1)[1], ids[1:]
+            trace_sheet(str(listing.parent / name), ids, art, grid)
     elif args.sheet and args.ids:
         art = read_existing()
-        trace_sheet(args.sheet, args.ids, art)
+        trace_sheet(args.sheet, args.ids, art, args.grid)
     else:
         ap.error('give a sheet and its ids, or --all')
     write(art)

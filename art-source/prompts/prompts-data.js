@@ -102,6 +102,14 @@
         "- It holds at most one item, and only the one the subject names.\n" +
         "- No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore.";
     }
+    if (kind === "faces") {
+      return "FORMAT · TILE FACE GRID (keep identical every time)\n" +
+        "- One square image, 1:1, holding nine tile faces in a neat grid of 3 columns and 3 rows, in the order the subjects are listed: the top row left to right, then the middle row, then the bottom row. Each face sits alone in its own invisible cell, with clear empty space between cells; nothing crosses from one cell into another.\n" +
+        "- Draw only the picture that goes on each tile's face, at the same scale in every cell (a dot or a stick is the same size whether there are two or nine). Do NOT draw the tiles, their outlines, frames or borders: the game draws the tile.\n" +
+        "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. Green pieces are a deep jade, clearly darker than the background.\n" +
+        "- These will be traced into vector shapes and shown on tiles about 40 pixels wide. So: a thick, even dark edge closes every shape, every colour area is one flat fill, no detail smaller than about 1/40 of a cell. No hatching, texture, shine, drop shadows or glow.\n" +
+        "- No text, letters, characters, numbers, labels, seals, signatures or watermarks anywhere.";
+    }
     if (kind === "dragons") {
       return FORMAT("sheet", S).replace("FORMAT · OBJECT SHEET", "FORMAT · DRAGON TILE PICTURES") + "\n" +
         "- Each picture will be printed on the face of an upright mahjong tile (a dragon, the game's joker), so each object is compact and fits an upright box a little taller than wide. The game draws the tile and its frame: do NOT draw a tile, a frame or a border, and do NOT add faces, eyes or limbs to the objects.";
@@ -155,6 +163,13 @@
       text: "SUBJECT: West wind, autumn\nA garden courtyard on the Mid-Autumn night: a round moon gate in a white wall on the left, an osmanthus tree on the right, a big full moon low in the sky." },
     { id: "north-winter", kind: "backdrop", group: "Backdrops",
       text: "SUBJECT: North wind, winter\nA plum tree in snow: a gnarled plum branch with red blossom reaching in from the left, snow-covered rocks along the bottom, a far pagoda on a hill on the right." },
+    // tile faces (suits and bonus tiles): traced and recoloured; the bamboo sheet is done
+    { id: "faces-dots", kind: "faces", oneStyle: true, group: "Tile faces",
+      ids: ["dots-1", "dots-2", "dots-3", "dots-4", "dots-5", "dots-6", "dots-7", "dots-8", "dots-9"],
+      text: "SUBJECTS (nine faces of the Dots suit, in this order; each dot is a round coin-like disc: an outer ring, a ring of ivory, a coloured centre and a small ivory hub)\n1. One dot: a single large ornamental disc, a flower-like ring of small petals round a red centre (much bigger than the other dots).\n2. Two dots, one above the other: a jade green one and a cobalt blue one.\n3. Three dots on a diagonal from top left to bottom right: cobalt, red, jade.\n4. Four dots in a square: cobalt and jade, diagonally matched.\n5. Five dots: four in a square (cobalt and jade) and a red one in the middle.\n6. Six dots in two columns of three: the top pair jade, the four below red.\n7. Seven dots: three jade dots on a diagonal at the top, then four red dots in a square below.\n8. Eight dots in two columns of four, all cobalt.\n9. Nine dots in three rows of three: a cobalt row, a red row, a jade row." },
+    { id: "faces-bonus", kind: "faces", oneStyle: true, group: "Tile faces",
+      ids: ["flower-1", "flower-2", "flower-3", "flower-4", "season-1", "season-2", "season-3", "season-4", "-"],
+      text: "SUBJECTS (eight bonus-tile faces, in this order; leave the ninth cell empty)\n1. Plum: a short gnarled brown branch with three pink five-petal blossoms.\n2. Orchid: three long arching jade leaves and one purple-pink orchid flower.\n3. Chrysanthemum: one round gold chrysanthemum flower head with a short jade stem and leaf.\n4. Bamboo: one short jade bamboo stem with three slim leaves.\n5. Spring: a willow branch with fresh jade leaves.\n6. Summer: a pink lotus flower above a round jade lotus leaf.\n7. Autumn: a single gold ginkgo leaf.\n8. Winter: a cobalt snowflake.\n9. (empty)" },
     // the dragons (the jokers): pictures for their tile faces
     { id: "dragons-1", kind: "dragons", oneStyle: true, group: "Dragon tile pictures (jokers)", trial: true,
       ids: ["abacus", "redString", "coinString", "bambooGrove", "coinPurse", "scroll"],
@@ -179,13 +194,15 @@
 
   function assemble(subject, styleKey) {
     var S = STYLES[styleKey];
-    var icons = subject.kind === "sheet" || subject.kind === "dragons";
+    var icons = subject.kind === "sheet" || subject.kind === "dragons" || subject.kind === "faces";
     var parts = [icons ? ICON_STYLE : S.style];
     if (VIBE[subject.kind]) parts.push(VIBE[subject.kind]);
     parts.push(FORMAT(subject.kind, S));
     parts.push(subject.text);
     if (subject.kind === "sheet") {
       parts.push("FINAL REMINDER\nSix separate objects on flat #00FF00 green, 3 across and 2 down, never touching, in the STYLE's look and palette. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.");
+    } else if (subject.kind === "faces") {
+      parts.push("FINAL REMINDER\nNine tile-face pictures on flat #00FF00 green, 3 across and 3 down, one shared scale, nothing crossing between cells, no tiles or borders drawn. A thick dark edge round every shape, flat fills in the eight colours only, no shading. No text. The same hand for all nine.");
     } else if (subject.kind === "dragons") {
       parts.push("FINAL REMINDER\nSix separate objects on flat #00FF00 green, 3 across and 2 down, never touching, each compact enough for an upright tile face. No tiles, frames, faces or limbs. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.");
     } else if (subject.kind === "backdrop") {
