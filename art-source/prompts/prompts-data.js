@@ -59,7 +59,6 @@
 
   var VIBE = {
     guide: "VIBE (the guide)\nThe player's friend and teacher: the Red Dragon tile of the mahjong set, come to life, like the Joker card that hosts Balatro. A young red dragon painted on the tile leans out of it to talk. Bright, quick, a little bossy and very kind, like a teahouse regular who knows every trick at the table and can't help telling you. Small and spirited, not fearsome; gentle humour, never silly, never a sticker mascot.",
-    dragons: "VIBE (the dragon tiles: keep identical for every sheet)\nIn this game the jokers are dragon tiles: each is a mahjong tile whose face shows a little dragon with the thing its power is about. These are those little dragons: small, round-faced young Chinese dragons, each with its own personality (proud, greedy, sleepy, smug, busy), always charming, never fearsome. The same dragon design every time (short snout, big round eyes, two short antlers, whiskers, a tuft of mane), told apart by colour, pose and prop.",
     host: "VIBE (spirit hosts: keep identical for every spirit)\nThis spirit is the player's host for one wind of the year, not an enemy. It sets a score to beat and changes one rule, like a sporting rival at a teahouse table who loves a good game. Sly, playful, proud or fussy, with a personality you can read at a glance. Never menacing, never horrific, never a cute mascot either. The subject says its exact mood.",
     beast: "VIBE (the great beasts: keep identical for every beast)\nOne of the Four Symbols, the great celestial beasts of the four directions. It hosts the hardest table of its wind: majestic, ancient and a little intimidating, like meeting a mountain that wants to play mahjong. Awe rather than fear, with a glint of humour in the eye. Never monstrous, never cute.",
     sheet: "",
@@ -94,13 +93,8 @@
         "- No text, letters, characters, numbers, seal stamp, signature or watermark anywhere. No blood, no gore.";
     }
     if (kind === "dragons") {
-      return "FORMAT · DRAGON SHEET (keep identical every time)\n" +
-        "- One square image, 1:1, holding six separate little dragons, each with its prop, in a neat grid of 3 columns and 2 rows, in the order the subjects are listed: the top row left to right, then the bottom row. Each sits alone in its own invisible cell with wide empty space around it, never touching another or the edges.\n" +
-        "- Each dragon and its prop are seen from the front, centred in the cell, filling about 70% of it, in a compact pose that would fit on the face of an upright mahjong tile (a little taller than wide). The game draws the tile and its frame; do NOT draw a tile, a frame or a border.\n" +
-        "- Colour by rarity, as the subject says: a WHITE dragon is ivory white with pale blue markings; a GREEN dragon is jade green; a RED dragon is vermilion with gold. In a one-colour style, keep the style's colour and let the pose and prop carry it.\n" +
-        "- The background is a flat, solid chroma-key green (#00FF00) and nothing else: no shadow, no ground, no gradient, no grid lines, no texture. No green of that brightness in the dragons: green dragons are a deep jade, clearly darker than the background.\n" +
-        "- These will be traced into vector shapes and shown about 40 pixels wide. So: a thick, even dark edge closes every shape, every colour area is one flat fill, no detail smaller than about 1/25 of a cell, a large readable face. No hatching, texture, shine, drop shadows or glow.\n" +
-        "- No text, letters, characters, numbers, labels, seal stamps, signatures or watermarks anywhere. Books, scrolls and tiles are blank.";
+      return FORMAT("sheet", S).replace("FORMAT · OBJECT SHEET", "FORMAT · DRAGON TILE PICTURES") + "\n" +
+        "- Each picture will be printed on the face of an upright mahjong tile (a dragon, the game's joker), so each object is compact and fits an upright box a little taller than wide. The game draws the tile and its frame: do NOT draw a tile, a frame or a border, and do NOT add faces, eyes or limbs to the objects.";
     }
     if (kind === "sheet") {
       return "FORMAT · OBJECT SHEET (keep identical every time)\n" +
@@ -151,19 +145,19 @@
       text: "SUBJECT: West wind, autumn\nA garden courtyard on the Mid-Autumn night: a round moon gate in a white wall on the left, an osmanthus tree on the right, a big full moon low in the sky." },
     { id: "north-winter", kind: "backdrop", group: "Backdrops",
       text: "SUBJECT: North wind, winter\nA plum tree in snow: a gnarled plum branch with red blossom reaching in from the left, snow-covered rocks along the bottom, a far pagoda on a hill on the right." },
-    // the dragon tiles (jokers)
-    { id: "dragons-1", kind: "dragons", group: "Dragon tiles (jokers)", trial: true,
+    // the dragons (the jokers): pictures for their tile faces
+    { id: "dragons-1", kind: "dragons", group: "Dragon tile pictures (jokers)", trial: true,
       ids: ["abacus", "redString", "coinString", "bambooGrove", "coinPurse", "scroll"],
-      text: "SUBJECTS (six WHITE dragons, the common dragon tiles, one per cell, in this order)\n1. Abacus Dragon: counting busily on a small wooden abacus with one claw, tongue out in concentration.\n2. Red String Dragon: proudly holding up a red Chinese knot it has just tied.\n3. Coin String Dragon: wearing a string of square-holed bronze coins like a necklace, chest puffed out.\n4. Bamboo Dragon: curled round three bamboo stems, peeking out between them.\n5. Purse Dragon: hugging a round embroidered silk purse, looking greedy.\n6. Scroll Dragon: reading an unrolled blank hand scroll through little round spectacles." },
-    { id: "dragons-2", kind: "dragons", group: "Dragon tiles (jokers)",
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Abacus: a wooden suanpan abacus standing upright, a dark frame, one crossbar, five columns of round beads.\n2. Red String: a red Chinese knot, a diamond-shaped weave with two short tails hanging below.\n3. Coin String: a short string of square-holed bronze cash coins threaded on a red cord, hanging in a curve.\n4. Bamboo Grove: a small round pot holding three bamboo stems with a few leaves.\n5. Coin Purse: a round embroidered silk purse with a drawstring top and a simple coin shape on its side.\n6. Scroll: a hand scroll partly unrolled, blank, with wooden rollers at each end." },
+    { id: "dragons-2", kind: "dragons", group: "Dragon tile pictures (jokers)",
       ids: ["sparrowNest", "goldToad", "pongHall", "outside", "ironTeapot", "longSleeves"],
-      text: "SUBJECTS (six dragons, one per cell, in this order)\n1. Nest Dragon (WHITE): peering tenderly into a twig nest where a tiny sparrow chick sits.\n2. Toad-rider (WHITE): riding the three-legged money toad, which holds a coin in its mouth.\n3. Bell Dragon (GREEN): striking a row of three bronze bells with a little mallet.\n4. Moon Gate Dragon (GREEN): leaning through a round moon gate in a short length of white wall.\n5. Teapot Dragon (GREEN): pouring tea from a squat cast-iron teapot, steam curling.\n6. Long Sleeves (GREEN): in a robe with absurdly long sleeves trailing to the ground, very dignified." },
-    { id: "dragons-3", kind: "dragons", group: "Dragon tiles (jokers)",
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Nest: a woven twig nest holding two speckled eggs.\n2. Gold Toad: the three-legged money toad sitting on a little heap of square-holed coins, one coin in its mouth.\n3. Bell Hall: three identical bronze bells hanging in a row from a small wooden frame.\n4. Moon Gate: a round moon gate in a short length of white garden wall, seen straight on.\n5. Iron Teapot: a squat cast-iron teapot with a round lid knob and a curved spout.\n6. Long Sleeves: a folded silk robe with very long sleeves draped over a stand." },
+    { id: "dragons-3", kind: "dragons", group: "Dragon tile pictures (jokers)",
       ids: ["lantern", "mahjong", "twoSuits", "allSimples", "pureStraight", "nightOwl"],
-      text: "SUBJECTS (six dragons, one per cell, in this order)\n1. Lantern Dragon (GREEN): holding a round red silk lantern up high, peering into the dark.\n2. Mahjong! (GREEN): sitting on a neat stack of blank mahjong tiles, throwing two dice, delighted.\n3. Two Fish (GREEN): juggling two fish that curl head to tail.\n4. Rice Bowl (RED): eating from a plain rice bowl with chopsticks, cheeks full.\n5. Nine Rings (RED): tangled cheerfully in the nine linked rings puzzle.\n6. Night Owl (RED): wide awake under a crescent moon, a small owl perched on one antler." },
-    { id: "dragons-4", kind: "dragons", group: "Dragon tiles (jokers)",
+      text: "SUBJECTS (six objects, one per cell, in this order)\n1. Lantern: a round red silk lantern with gold caps top and bottom and a short gold tassel.\n2. Mahjong!: a neat stack of four blank mahjong tiles with a pair of dice in front.\n3. Two Fish: two fish curled head to tail in a circle.\n4. Rice Bowl: a plain rice bowl with a pair of chopsticks resting across its rim.\n5. Nine Rings: the nine linked rings puzzle: nine metal rings on a long bar with a loop handle.\n6. Night Owl: a small round owl figurine with big round eyes, a crescent moon behind it." },
+    { id: "dragons-4", kind: "dragons", group: "Dragon tile pictures (jokers)",
       ids: ["kongBell", "windChime", "twinCranes", "threeTreasures", "stoneLion", "-"],
-      text: "SUBJECTS (five RED dragons, one per cell, in this order; leave the sixth cell empty)\n1. Great Bell: coiled round one big bronze temple bell, ringing it with its tail.\n2. Wind Chime: blowing on a glass wind chime with a long blank paper strip.\n3. Twin Cranes: standing proudly between two red-crowned cranes.\n4. Three Treasures: balancing three identical gold ingots stacked on its head.\n5. Stone Lion: sitting on the back of a small stone guardian lion, paw on its ball.\n6. (empty)" },
+      text: "SUBJECTS (five objects, one per cell, in this order; leave the sixth cell empty)\n1. Great Bell: one large bronze temple bell with rows of round knobs and a dragon-shaped loop on top.\n2. Wind Chime: a glass wind chime with a cream bell and a long blank paper strip below.\n3. Twin Cranes: two red-crowned cranes standing side by side, necks crossing.\n4. Three Treasures: three identical gold ingots (boat-shaped sycee) stacked in a small pyramid.\n5. Stone Lion: a small stone guardian lion sitting with one paw on a ball.\n6. (empty)" },
     // objects: fortunes, almanac, packs, shop
     { id: "objects-1", kind: "sheet", group: "Object sheets",
       ids: ["rubbing", "fire", "brush", "jade", "bone", "gold"],
@@ -182,7 +176,7 @@
     if (subject.kind === "sheet") {
       parts.push("FINAL REMINDER\nSix separate objects on flat #00FF00 green, 3 across and 2 down, never touching, in the STYLE's look and palette. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.");
     } else if (subject.kind === "dragons") {
-      parts.push("FINAL REMINDER\nSix separate little dragons with their props on flat #00FF00 green, 3 across and 2 down, never touching, no tiles or frames drawn. One dragon design, coloured by rarity as the subjects say, in the STYLE's look. A thick dark edge round every shape, flat fills, large readable faces. No text. The same hand for all six.");
+      parts.push("FINAL REMINDER\nSix separate objects on flat #00FF00 green, 3 across and 2 down, never touching, each compact enough for an upright tile face. No tiles, frames, faces or limbs. A thick dark edge round every shape, flat fills only, no shading, shine, shadow or texture. No text. The same hand for all six.");
     } else if (subject.kind === "backdrop") {
       parts.push("FINAL REMINDER\nA wide 3:2 scene in the STYLE's look. Quiet middle third, interest at the sides and below. Nothing falling, no figures, no text, no border.");
     } else {

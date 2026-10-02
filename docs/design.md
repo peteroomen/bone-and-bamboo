@@ -126,27 +126,29 @@ time outside a scoring animation: in the shop, or between turns in a round).
 
 ### Dragons (the jokers, 23)
 
-Balatro's jokers are cards; ours are **dragon tiles**. Each is a mahjong tile whose face shows a
-little dragon with the thing it does, and its frame is one of the three dragon tiles, which shows
-its rarity: **White Dragon 白 = common ($4), Green Dragon 發 = uncommon ($6), Red Dragon 中 = rare
-($8)**. The game draws the tile and frame (`tiles.ts`); the dragon on the face is generated art.
+Balatro's jokers are cards; ours are tiles called **dragons**, and they do exactly the jokers' job.
+Each is a plain mahjong tile with a picture of its thing on the face (an abacus, a lantern, three
+bells), and a frame from one of the three dragon tiles shows its rarity: **White Dragon 白 =
+common ($4), Green Dragon 發 = uncommon ($6), Red Dragon 中 = rare ($8)**. No faces or limbs: only
+the guide is a character. The game draws the tile and frame (`tiles.ts`); the face picture is
+generated art, traced.
 In code the type is `Dragon` (it was "curio" in the simulators); the ids stay.
 
 | Dragon | Rarity | Effect |
 |---|---|---|
-| `abacus` Abacus Dragon | common | +2 mult per chow |
-| `redString` Red String Dragon | common | +6 mult |
-| `coinString` Coin String Dragon | common | +50 chips |
-| `bambooGrove` Bamboo Dragon | common | +12 chips per Bamboo tile on the table |
-| `coinPurse` Purse Dragon | common | +12 chips per Dots tile on the table |
-| `scroll` Scroll Dragon | common | +12 chips per Characters tile on the table |
-| `sparrowNest` Nest Dragon | common | pairs +6 mult |
-| `goldToad` Toad-rider | common | +$4 after each round |
-| `pongHall` Bell Dragon | uncommon | ×2 mult with 2+ pongs or kongs |
-| `outside` Moon Gate Dragon | uncommon | +4 mult per set with a 1, 9 or wind |
-| `ironTeapot` Teapot Dragon | uncommon | +2 discards |
+| `abacus` Abacus | common | +2 mult per chow |
+| `redString` Red String | common | +6 mult |
+| `coinString` Coin String | common | +50 chips |
+| `bambooGrove` Bamboo Grove | common | +12 chips per Bamboo tile on the table |
+| `coinPurse` Coin Purse | common | +12 chips per Dots tile on the table |
+| `scroll` Scroll | common | +12 chips per Characters tile on the table |
+| `sparrowNest` Nest | common | pairs +6 mult |
+| `goldToad` Gold Toad | common | +$4 after each round |
+| `pongHall` Bell Hall | uncommon | ×2 mult with 2+ pongs or kongs |
+| `outside` Moon Gate | uncommon | +4 mult per set with a 1, 9 or wind |
+| `ironTeapot` Iron Teapot | uncommon | +2 discards |
 | `longSleeves` Long Sleeves | uncommon | +1 hand size |
-| `lantern` Lantern Dragon | uncommon | see 1 tile deeper in every stack |
+| `lantern` Lantern | uncommon | see 1 tile deeper in every stack |
 | `mahjong` Mahjong! | uncommon | ×2 mult with 4+ sets and a pair |
 | `twoSuits` Two Fish | uncommon | ×1.5 mult if the table uses 2 suits or fewer |
 | `allSimples` Rice Bowl | rare | ×2 mult if no 1s, 9s or winds on the table |
@@ -158,7 +160,7 @@ In code the type is `Dragon` (it was "curio" in the simulators); the ids stay.
 | `threeTreasures` Three Treasures | rare | ×1.5 mult per pong *tune* |
 | `stoneLion` Stone Lion | rare | +3 mult per tile in pongs and kongs *tune* |
 
-Known from the simulator: Teapot and Bell Dragon are weak, Night Owl and Nest Dragon are strong,
+Known from the simulator: Iron Teapot and Bell Hall are weak, Night Owl and Nest are strong,
 and the original rares rewarded chows more than pongs. Three Treasures and Stone Lion are new rare
 pong builds to balance that; they are untested, so M5's simulator pass must include them.
 

@@ -39,3 +39,10 @@ Three generated takes of a dragon on a tile (`guide/unused/`) were set aside: th
 guide to literally be the Red Dragon tile. It is now drawn in code (`guide()` in `tiles.js`): the
 real tile with eyes, mouth, arms and feet, six moods and a blink, in every colourway. No image
 prompt is needed for it.
+
+## 2026-10-02 · Dragons are plain tiles
+
+Only the guide is a character. The dragons (the jokers) are plain tiles with a picture of their
+thing on the face and a White, Green or Red Dragon frame for rarity, exactly like Balatro's joker
+cards. The dragon sheets now ask for objects (no faces or limbs) compact enough for an upright tile
+face. Shadow theatre is the starting colourway.
