@@ -1,5 +1,6 @@
 import { CURIOS, CURIO_IDS, CURIO_SLOTS } from '@/content/curios';
 import { FORTUNE_SLOTS } from '@/content/fortunes';
+import { hostFor } from '@/content/hosts';
 import { PACK_IDS, type PackId } from '@/content/packs';
 import { BEAST_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
 import { GIFT, MONEY, SHOP } from '@/content/rules';
@@ -172,7 +173,7 @@ function chooseHost(s: RunState, beast: boolean): R {
   const target = targetFor(s.lantern, s.roundIndex, beast, s.targets);
   const round = dealRound(s);
   return {
-    state: { ...s, phase: 'round', beast, hostId: null, target, round },
+    state: { ...s, phase: 'round', beast, hostId: hostFor(s.roundIndex, beast).id, target, round },
     events: [{ type: 'phase', phase: 'round' }],
   };
 }

@@ -69,6 +69,9 @@ export interface TwistStep {
   readonly addMult: number;
   readonly x: number;
   readonly penalty: number;
+  readonly chips: number;
+  readonly mult: number;
+  readonly xTotal: number;
 }
 
 export type ScoreStep = SetStep | CurioStep | TwistStep;
@@ -267,7 +270,7 @@ export function scoreTable(table: readonly PlayedSet[], ctx: ScoreContext): Scor
   const tx = mods.xmult ?? 1;
   if (tx !== 1 || penalty !== 0) {
     x *= tx;
-    steps.push({ type: 'twist', addMult: 0, x: tx, penalty });
+    steps.push({ type: 'twist', addMult: 0, x: tx, penalty, chips, mult, xTotal: x });
   }
   const total = Math.max(0, Math.floor(chips * mult * x) - penalty);
   return { steps, chips, mult, x, total };

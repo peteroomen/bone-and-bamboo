@@ -79,10 +79,11 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
-- **2026-10-02:** M1 (scaffold) and M2 (engine and simulator) done on the `mvp` branch. The
-  engine (`src/engine`: tiles, sets, wall, scoring, round and run reducers, shop, fortunes, hint
-  bot, shoppers), the content (`src/content`) and `pnpm sim` reproduce the Python results
-  (`docs/balance/2026-10-02-ts-sim.md`). No UI beyond a title yet. Next: M3 (a round on screen).
-  Milestone status is in the draft "MVP" PR.
+- **2026-10-02:** M1-M3 done on the `mvp` branch. Engine (`src/engine`), content (`src/content`)
+  and `pnpm sim` reproduce the Python results (`docs/balance/2026-10-02-ts-sim.md`). The UI has
+  a title, the host choice and a playable round (the wall of stacks, hand, table, live preview,
+  Play / Discard / Auto / Ask, the score count-up) with tiles drawn from code
+  (`src/ui/art/tiles.ts`, byte-identical to the reference generator). Rounds end at a stub
+  screen: M4 builds the run flow. Milestone status is in the draft "MVP" PR.
 - The art style trial (shadow theatre, porcelain or papercut) is with the user. Until it decides,
-  the colourway is a setting.
+  the colourway is a setting (`settings.colourway`).

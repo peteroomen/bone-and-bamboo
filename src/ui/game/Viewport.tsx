@@ -1,15 +1,23 @@
 import type { ReactNode } from 'react';
+import type { ThemeId } from '@/ui/art/tiles';
 import { StageContext, useStageSize } from './stageSize';
 
 /**
  * Full-screen background plus a scaled 390-wide logical stage. On a landscape screen the stage
  * stands in the middle of the window with the table colour either side.
  */
-export function Viewport({ children }: { children: (stageH: number) => ReactNode }) {
+export function Viewport({
+  theme,
+  children,
+}: {
+  theme: ThemeId;
+  children: (stageH: number) => ReactNode;
+}) {
   const size = useStageSize();
   return (
     <div
       className="viewport"
+      data-theme={theme}
       data-landscape={size.landscape ? 'y' : undefined}
       style={{ ['--k' as string]: String(size.scale) }}
     >
