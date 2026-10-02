@@ -42,7 +42,7 @@ Set in the browser console (`localStorage`), then reload:
 ## Playing it
 
 Run `pnpm dev` and open the printed address on your phone (same network), or `pnpm build && pnpm
-preview`. Nothing is deployed; a host such as Vercel can serve `dist/` as a static site later.
+preview`. Or import the repo into Vercel (steps in the README); it builds from `main`.
 
 ## Known gaps
 

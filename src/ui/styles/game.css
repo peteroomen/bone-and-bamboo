@@ -951,7 +951,18 @@
   box-shadow: 0 3px 0 var(--line);
 }
 .stack {
-  height: calc(var(--tw) * 4 / 3 + var(--strip) * var(--peek, 1) + 4px);
+  height: calc(var(--tw) * 4 / 3 + var(--strip) * var(--peek, 1) + 10px);
+}
+/* the tiles under the top, seen edge-on: a stack reads as a pile */
+.stack-depth {
+  position: absolute;
+  left: calc(50% - var(--tw) / 2);
+  width: var(--tw);
+  aspect-ratio: 3 / 4;
+  border-radius: calc(var(--tw) * 0.1);
+  background: var(--bone-2);
+  border: 1px solid rgb(0 0 0 / 0.35);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.3);
 }
 
 .stack.locked .stack-tile {

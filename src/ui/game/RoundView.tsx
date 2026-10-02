@@ -226,6 +226,16 @@ export function RoundView({
               style={{ ['--peek' as string]: round.rules.peek }}
             >
               {v.count === 0 && <span className="stack-empty" />}
+              {Array.from({ length: stackDepth(v.count) }, (_, k) => (
+                <span
+                  key={`d${k}`}
+                  className="stack-depth"
+                  aria-hidden
+                  style={{
+                    top: `calc(var(--strip) * ${round.rules.peek} + ${(stackDepth(v.count) - k) * DEPTH_STEP}px)`,
+                  }}
+                />
+              ))}
               {v.under
                 .map((t, j) => ({ t, j }))
                 .reverse()
@@ -448,4 +458,10 @@ export function RoundView({
       )}
     </div>
   );
+}
+
+/** How many tile edges show under a stack's top: a full stack looks deep, a nearly empty one flat. */
+const DEPTH_STEP = 3;
+function stackDepth(count: number): number {
+  return Math.min(3, Math.ceil(Math.max(0, count - 1) / 3));
 }
