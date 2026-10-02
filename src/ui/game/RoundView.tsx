@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SET_TYPES } from '@/content/sets';
-import { SEASON_NAMES, WIND_NAMES } from '@/content/rules';
+import { WIND_NAMES } from '@/content/rules';
 import { type Advice, advise } from '@/engine/advice';
 import { dragonGoals } from '@/engine/goals';
 import { finishProblem, needsRefill, preview, previewUpgrade, upgrades } from '@/engine/round';
@@ -11,6 +11,8 @@ import { viewStack, visibleTiles } from '@/engine/wall';
 import { TileView } from '@/ui/art/Tile';
 import { PlayerBar } from './PlayerBar';
 import { useFlip } from './useFlip';
+import { hostFor } from '@/content/hosts';
+import { armouredIds, discardProblem, takeProblem } from '@/engine/twists';
 import { updateSettings, useStore } from '@/ui/state/store';
 import { useStage } from './stageSize';
 import { GuideBubble } from './GuideBubble';
@@ -33,6 +35,8 @@ export function RoundView({
   const [selected, setSelected] = useState<readonly number[]>([]);
   const [advice, setAdvice] = useState<Advice | null>(null);
   const [help, setHelp] = useState<'intro' | 'sets' | null>(null);
+  const [swapPick, setSwapPick] = useState<number | null | 'off'>('off');
+  const [bannerSeen, setBannerSeen] = useState(false);
   // the first round of a new browser opens the introduction
   useEffect(() => {
     if (!introSeen) setHelp('intro');
@@ -65,6 +69,12 @@ export function RoundView({
     return glow;
   }, [round, hints]);
   if (!round) return null;
+  const host = hostFor(run.roundIndex, run.storm);
+  const twistState = round.twist;
+  const burning = new Set(twistState?.burning ?? []);
+  const armoured = new Set(armouredIds(round));
+  const showBanner =
+    !bannerSeen && round.turns === 0 && round.hand.length === 0 && round.table.length === 0;
 
   const live = selected.filter((id) => round.hand.some((t) => t.id === id));
   const refill = needsRefill(round);
@@ -77,7 +87,8 @@ export function RoundView({
     !refill &&
     round.discardsLeft > 0 &&
     live.length >= 1 &&
-    live.length <= round.rules.maxDiscard;
+    live.length <= round.rules.maxDiscard &&
+    discardProblem(round, live) === null;
   const nowScore = pv.now.total;
   const gain = pv.withSelected ? pv.withSelected.total - nowScore : null;
   const ups = upgrades(round);
@@ -148,7 +159,7 @@ export function RoundView({
           <span className="hud-wind-text">
             <b>{WIND_NAMES[run.roundIndex]}</b>
             <span>
-              {SEASON_NAMES[run.roundIndex]} · {run.roundIndex + 1}/4
+              {host.title} · {run.storm ? 'Storm' : 'Calm'}
             </span>
           </span>
         </div>
@@ -179,19 +190,31 @@ export function RoundView({
       <section className="wall" style={{ ['--cols' as string]: cols }} aria-label="The wall">
         {round.stacks.map((stack, i) => {
           const v = viewStack(stack, round.rules.peek);
-          const canTake = !done && round.hand.length < round.rules.handSize && v.count > 0;
+          const locked = takeProblem(round, i) !== null;
+          const swapping = swapPick !== 'off';
+          const canTake =
+            !done && !locked && round.hand.length < round.rules.handSize && v.count > 0;
           return (
             <button
               key={i}
               type="button"
-              className={`stack${advice?.type === 'draw' && advice.stack === i ? ' advised' : ''}`}
+              className={`stack${advice?.type === 'draw' && advice.stack === i ? ' advised' : ''}${locked ? ' locked' : ''}${swapping && swapPick === i ? ' advised' : ''}`}
               data-testid={`stack-${i}`}
               data-count={v.count}
-              disabled={!canTake}
-              onClick={() => dispatch({ type: 'round', action: { type: 'take', stack: i } })}
+              disabled={swapping ? v.count === 0 : !canTake}
+              onClick={() => {
+                if (swapPick === 'off') {
+                  dispatch({ type: 'round', action: { type: 'take', stack: i } });
+                } else if (swapPick === null) {
+                  setSwapPick(i);
+                } else if (swapPick !== i) {
+                  dispatch({ type: 'round', action: { type: 'swap', a: swapPick, b: i } });
+                  setSwapPick('off');
+                } else setSwapPick(null);
+              }}
               aria-label={
                 v.top
-                  ? `Stack ${i + 1}, ${v.count} tiles, top ${kindName(v.top.kind)}`
+                  ? `Stack ${i + 1}, ${v.count} tiles, top ${kindName(v.top.kind)}${locked ? ', locked' : ''}`
                   : `Stack ${i + 1}, empty`
               }
               style={{ ['--peek' as string]: round.rules.peek }}
@@ -205,7 +228,7 @@ export function RoundView({
                     key={t.id}
                     tile={t}
                     theme={theme}
-                    className={`stack-tile under${wallGlow.has(t.id) ? ' hint-draw' : ''}`}
+                    className={`stack-tile under${wallGlow.has(t.id) ? ' hint-draw' : ''}${burning.has(t.id) ? ' burning' : ''}`}
                     style={{ top: `calc(var(--strip) * ${round.rules.peek - 1 - j})` }}
                   />
                 ))}
@@ -213,9 +236,14 @@ export function RoundView({
                 <TileView
                   tile={v.top}
                   theme={theme}
-                  className={`stack-tile top${wallGlow.has(v.top.id) ? ' hint-draw' : ''}`}
+                  className={`stack-tile top${wallGlow.has(v.top.id) ? ' hint-draw' : ''}${burning.has(v.top.id) ? ' burning' : ''}`}
                   style={{ top: `calc(var(--strip) * ${round.rules.peek})` }}
                 />
+              )}
+              {locked && (
+                <span className="stack-lock" aria-hidden>
+                  🔒
+                </span>
               )}
               {v.count > 0 && <span className="stack-count">{v.count}</span>}
             </button>
@@ -225,6 +253,16 @@ export function RoundView({
 
       <section className="table" aria-label="Your table" data-testid="table">
         {round.table.length === 0 && <p className="table-empty">Play sets here.</p>}
+        {twistState && twistState.twist.id === 'swaps' && twistState.swapsLeft > 0 && (
+          <button
+            type="button"
+            className="swap-btn"
+            data-testid="btn-swap"
+            onClick={() => setSwapPick(swapPick === 'off' ? null : 'off')}
+          >
+            {swapPick === 'off' ? 'Swap two tops' : 'Cancel swap'}
+          </button>
+        )}
         {round.table.map((set, i) => (
           <div
             className={`set${advice?.type === 'upgrade' && advice.setIndex === i ? ' advised' : ''}`}
@@ -315,7 +353,12 @@ export function RoundView({
             disabled={done}
             onClick={() => toggle(t.id)}
           >
-            <TileView tile={t} theme={theme} />
+            <TileView tile={t} theme={theme} className={burning.has(t.id) ? 'burning' : ''} />
+            {armoured.has(t.id) && (
+              <span className="badge armour" aria-label="armoured">
+                ▣
+              </span>
+            )}
           </button>
         ))}
         {Array.from({ length: Math.max(0, round.rules.handSize - hand.length) }, (_, i) => (
@@ -375,6 +418,22 @@ export function RoundView({
           Play
         </button>
       </footer>
+      {showBanner && (
+        <div className="banner" role="status" data-testid="twist-banner">
+          <b>
+            {WIND_NAMES[run.roundIndex]} · {host.title}
+          </b>
+          <span>{host.twistText}</span>
+          <button
+            type="button"
+            className="btn"
+            data-testid="btn-banner-ok"
+            onClick={() => setBannerSeen(true)}
+          >
+            Got it
+          </button>
+        </div>
+      )}
       {help && (
         <HelpSheet onClose={closeHelp} start={help} levels={run.levels} owned={run.dragons} />
       )}

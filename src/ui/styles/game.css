@@ -956,3 +956,76 @@
 .stack {
   height: calc(var(--tw) * 4 / 3 + var(--strip) * var(--peek, 1) + 4px);
 }
+
+.stack.locked .stack-tile {
+  filter: grayscale(0.7) brightness(0.8);
+}
+.stack-lock {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  z-index: 4;
+  pointer-events: none;
+}
+.tile.burning {
+  filter: drop-shadow(0 0 5px #ff7a1a) drop-shadow(0 0 2px #ffb04a);
+}
+.hand-tile {
+  position: relative;
+}
+.badge {
+  position: absolute;
+  right: 6px;
+  top: 2px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--fg);
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 3px;
+}
+.swap-btn {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  min-height: var(--touch);
+  padding: 0 10px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-solid);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 6;
+}
+.banner {
+  pointer-events: none;
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 41%;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  text-align: center;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-solid);
+  box-shadow: 0 4px 0 var(--line);
+  font-size: var(--fs-sm);
+}
+.banner b {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+}
+
+.banner .btn {
+  pointer-events: auto;
+}

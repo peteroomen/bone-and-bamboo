@@ -1,4 +1,7 @@
 import type { EnhancementId } from '@/content/enhancements';
+import type { Twist } from '@/content/hosts';
+import { Rng } from './rng';
+import { type TwistState, initTwist, twistRules } from './twists';
 import { BASE_ROUND_RULES, type RoundRules, type RoundState } from './round';
 import type { Tile } from './tiles';
 import { countKinds } from './tiles';
@@ -28,14 +31,20 @@ export interface RoundSpec {
   readonly copies?: Record<string, number>;
   readonly rng?: number;
   readonly target?: number;
+  /** A host's twist; `twistState` overrides parts of the state it starts with. */
+  readonly twist?: Twist;
+  readonly twistState?: Partial<TwistState>;
 }
 
 /** A round in a known state, for tests. */
 export function roundWith(spec: RoundSpec = {}): RoundState {
-  const rules = { ...BASE_ROUND_RULES, ...spec.rules };
+  const rules = twistRules({ ...BASE_ROUND_RULES, ...spec.rules }, spec.twist ?? null);
   const stacks = (spec.stacks ?? []).map((s) => tiles(s));
   const hand = tiles(spec.hand ?? '');
   const all = [...hand, ...stacks.flat()];
+  const twist = spec.twist
+    ? { ...initTwist(spec.twist, stacks, new Rng(spec.rng ?? 1)), ...spec.twistState }
+    : null;
   return {
     rules,
     stacks,
@@ -47,6 +56,7 @@ export function roundWith(spec: RoundSpec = {}): RoundState {
     dragons: spec.dragons ?? [],
     levels: {},
     target: spec.target ?? 0,
+    twist,
     copies: spec.copies ?? Object.fromEntries(countKinds(all)),
     rng: spec.rng ?? 1,
     phase: 'play',

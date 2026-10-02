@@ -12,6 +12,7 @@ import {
 import { type PlayedSet } from './scoring';
 import { type Candidate, findSets } from './sets';
 import { type Tile, isOutside, isSuited, isWind, rankOf, suitOf, tileChips } from './tiles';
+import { armouredIds, takeProblem } from './twists';
 import { visibleTiles } from './wall';
 
 /**
@@ -170,7 +171,7 @@ export function chooseStack(s: RoundState, policy: Policy = 'greedy'): number | 
   let best = -Infinity;
   let bi: number | null = null;
   s.stacks.forEach((stack, i) => {
-    if (stack.length === 0) return;
+    if (stack.length === 0 || takeProblem(s, i) !== null) return;
     const vis = visibleTiles(stack, s.rules.peek);
     let sc = 0;
     vis.forEach((t, d) => (sc += (DEPTH_WEIGHTS[d] ?? 0.1) * tileValue(s, t.kind, c, policy)));
@@ -228,7 +229,11 @@ function playMove(c: Candidate, reason: string): Move {
 }
 
 function discardMove(s: RoundState, policy: Policy, reason: string): Move {
-  const ranked = s.hand.map((t) => ({ t, v: keepValue(s, t, policy) })).sort((a, b) => a.v - b.v);
+  const held = new Set(armouredIds(s));
+  const ranked = s.hand
+    .filter((t) => !held.has(t.id))
+    .map((t) => ({ t, v: keepValue(s, t, policy) }))
+    .sort((a, b) => a.v - b.v);
   let junk = ranked.filter((x) => x.v <= 1).slice(0, s.rules.maxDiscard);
   if (junk.length === 0) junk = ranked.slice(0, 2);
   return { type: 'discard', ids: junk.map((x) => x.t.id), reason };
@@ -242,7 +247,8 @@ export function chooseMove(s: RoundState, policy: Policy = 'greedy'): Move | nul
   if (s.hand.length === 0) return null;
   const all = findSets(s.hand);
   const sets = keptSets(s, all);
-  const canDiscard = s.discardsLeft > 0;
+  const held = new Set(armouredIds(s));
+  const canDiscard = s.discardsLeft > 0 && s.hand.some((t) => !held.has(t.id));
   if (policy === 'pongs') {
     const big = sets.filter((c) => ['kong', 'pong', 'winds'].includes(c.kind));
     if (big.length) return playMove(best(s, big), 'A big set: play it.');

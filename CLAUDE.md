@@ -82,7 +82,7 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 - **2026-10-02:** M1-M4 and the "complete run and teaching slice" are done on the `mvp` branch,
   rebuilt around the new design (`docs/design.md`): the jokers are **dragons** (23, drawn as tiles
   with a rarity frame; `src/content/dragons.ts`), winds are the only honours, each round is hosted
-  by its wind tile (Calm or Storm; twists are still "coming soon", M5), traced tile faces and
+  by its wind tile (Calm or Storm), the eight twists run as data (`src/engine/twists.ts`, M5; per-wind results in `docs/balance/2026-10-02-hosts.md`), traced tile faces and
   dragon icons come from `art-source/icons/icons.json` split by `scripts/build-icons.ts`, and the
   tile generator port includes the guide and dragon tiles (byte-identical, tested). Engine: tabled
   pong to kong upgrade (one play), optional early finish once the target is beaten, live dragon
@@ -90,5 +90,5 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
   visible tiles only), hint levels, an introduction sheet and an illustrated set book. Sim results:
   `docs/balance/2026-10-02-dragons-and-policies.md`. Bamboo Hook is rejected.
 - `localStorage` key `bb.dev.v1` sets a fixed seed or targets for the next run (used by e2e).
-- Next: M5 (twists and the per-wind sim table), M6, M7, M8. Milestone status is in the PR.
+- Next: M6, M7, M8. Milestone status is in the PR.
 - The art style trial: three colourways exist; colourways become unlocks in M7.

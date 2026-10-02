@@ -1,6 +1,6 @@
 import { DRAGONS, DRAGON_IDS, DRAGON_SLOTS } from '@/content/dragons';
 import { FORTUNE_SLOTS } from '@/content/fortunes';
-import { hostFor } from '@/content/hosts';
+import { type Twist, hostFor } from '@/content/hosts';
 import { PACK_IDS, type PackId } from '@/content/packs';
 import { STORM_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
 import { GIFT, MONEY, SHOP } from '@/content/rules';
@@ -107,13 +107,19 @@ export function interestFor(run: Pick<RunState, 'money' | 'lantern'>): number {
   return Math.min(Math.floor(run.money / MONEY.interestPer), MONEY.interestCap);
 }
 
-export function roundSetup(run: RunState, rngState: number, target = run.target) {
+export function roundSetup(
+  run: RunState,
+  rngState: number,
+  target = run.target,
+  twist: Twist | null = null,
+) {
   return {
     tiles: run.tiles,
     rules: roundRulesFor(run),
     dragons: run.dragons,
     levels: run.levels,
     target,
+    twist,
     rng: rngState,
   };
 }
@@ -123,8 +129,9 @@ export function dealRound(
   run: RunState,
   rngState = deriveSeed(run.seed, `round${run.roundIndex}`),
   target = run.target,
+  twist: Twist | null = null,
 ): RoundState {
-  return startRound(roundSetup(run, rngState, target));
+  return startRound(roundSetup(run, rngState, target, twist));
 }
 
 // ---- the reducer -------------------------------------------------------------------------------
@@ -173,7 +180,8 @@ export function runReduce(s: RunState, a: RunAction): R {
 function chooseHost(s: RunState, storm: boolean): R {
   if (s.phase !== 'host') return illegal(s, 'Not choosing a host.');
   const target = targetFor(s.lantern, s.roundIndex, storm, s.targets);
-  const round = dealRound(s, undefined, target);
+  const host = hostFor(s.roundIndex, storm);
+  const round = dealRound(s, undefined, target, host.twist);
   return {
     state: { ...s, phase: 'round', storm, hostId: hostFor(s.roundIndex, storm).id, target, round },
     events: [{ type: 'phase', phase: 'round' }],

@@ -19,6 +19,8 @@ export interface SimRunOptions {
   readonly tileSet?: string;
   /** Reproduce the Python prototype's shop: no almanac pack. */
   readonly pythonShop?: boolean;
+  /** Which rounds the bot calls the storm (the great beast's harder twist); calm otherwise. */
+  readonly storm?: readonly boolean[];
   /** How the bot plays its rounds. */
   readonly play?: PlayOptions;
   /** Rounds per shop evaluation. */
@@ -32,6 +34,8 @@ export interface SimRunResult {
   readonly bought: readonly string[];
   readonly dragons: readonly string[];
   readonly policy: Policy;
+  /** Each round's score and target, for the per-host tables. */
+  readonly rounds: readonly { score: number; target: number }[];
   readonly tiles: number;
   /** Money left at the end of the run. */
   readonly money: number;
@@ -112,13 +116,15 @@ export function playRunSim(o: SimRunOptions): SimRunResult {
   const scores: number[] = [];
   const bought: string[] = [];
   let lostAt: number | null = null;
+  const rounds: { score: number; target: number }[] = [];
   let banked = 0;
   let kongs = 0;
   const shopperOpts = { ...DEFAULT_SHOPPER, fire: o.fire, evalSeeds: o.evalSeeds ?? 12 };
   for (let r = 0; r < 4; r++) {
-    run = runReduce(run, { type: 'chooseHost', storm: false }).state;
+    run = runReduce(run, { type: 'chooseHost', storm: o.storm?.[r] ?? false }).state;
     run = driveRound(run, policy, o.play ?? {});
     scores.push(run.scores[run.scores.length - 1] ?? 0);
+    rounds.push({ score: run.scores[run.scores.length - 1] ?? 0, target: run.target });
     if (
       run.round &&
       run.round.playsLeft > 0 &&
@@ -161,6 +167,7 @@ export function playRunSim(o: SimRunOptions): SimRunResult {
     bought,
     dragons: run.dragons,
     policy,
+    rounds,
     tiles: run.tiles.length,
     money: run.money,
     banked,

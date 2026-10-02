@@ -2,6 +2,7 @@ import { cpus } from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { DRAGON_IDS } from '@/content/dragons';
+import { HOSTS } from '@/content/hosts';
 import { SET_ORDER } from '@/content/sets';
 import { chooseMove, moveAction, type Policy } from '@/engine/ai';
 import { newRun, runReduce } from '@/engine/run';
@@ -17,6 +18,9 @@ const HELP = `pnpm sim: the headless simulator (reproduces tools/sim-py).
                  [--no-gift] [--fire 6] [--python-shop] [--bank] [--upgrade] [--lantern 1] [--tileset boneBamboo]
       Win rates against the targets. --python-shop leaves the almanac pack out, as the Python
       prototype's teahouse did (the parity check).
+  pnpm sim hosts [--runs 400]
+      Each host's round against the same builds under the calm wind: win rate of that round and
+      median score against target.
   pnpm sim policies [--runs 400]
       Compares the round policies (never bank / bank when the target is beaten, with and
       without pong upgrades) on the same seeds.
@@ -177,6 +181,44 @@ function summarise(res: SimRunResult[], shopper: string, mode: 'free' | 'run') {
   }
 }
 
+async function hostsMode(args: string[], jobs: number, from: number, shopper: 'smart' | 'casual') {
+  const runs = Number(flag(args, 'runs', '400'));
+  const base = { shopper, gift: true, fire: 6, targets: [1000, 4000, 9000, 18000] };
+  const calm = await runMany({ ...base, storm: [false, false, false, false] }, from, runs, jobs);
+  console.log(
+    `| Wind | Host | Round win rate | Median score ÷ target | Runs reaching it | (${shopper}, ${runs} runs) |`,
+  );
+  console.log('|---|---|---|---|---|---|');
+  const row = (label: string, host: string, rs: { score: number; target: number }[]) => {
+    const wins = rs.filter((r) => r.score >= r.target).length;
+    const ratio = median(rs.map((r) => (100 * r.score) / r.target));
+    console.log(
+      `| ${label} | ${host} | ${((100 * wins) / Math.max(1, rs.length)).toFixed(0)}% | ${(ratio / 100).toFixed(2)} | ${rs.length} | |`,
+    );
+  };
+  for (let w = 0; w < 4; w++) {
+    const storm = await runMany(
+      { ...base, storm: [0, 1, 2, 3].map((r) => r === w) },
+      from,
+      runs,
+      jobs,
+    );
+    const names = HOSTS.filter((h) => h.wind === w);
+    const calmRounds = calm
+      .map((x) => x.rounds[w])
+      .filter((x): x is { score: number; target: number } => !!x);
+    const stormRounds = storm
+      .map((x) => x.rounds[w])
+      .filter((x): x is { score: number; target: number } => !!x);
+    row(['East', 'South', 'West', 'North'][w] as string, `${names[0]?.title} (calm)`, calmRounds);
+    row(
+      ['East', 'South', 'West', 'North'][w] as string,
+      `${names[1]?.title} (storm, target ×1.5)`,
+      stormRounds,
+    );
+  }
+}
+
 async function policiesMode(
   args: string[],
   jobs: number,
@@ -226,6 +268,7 @@ async function main() {
   const from = Number(flag(args, 'seed', '0'));
   const shopper = (flag(args, 'shopper', 'smart') ?? 'smart') as 'smart' | 'casual';
   if (mode === 'round') return roundMode(args);
+  if (mode === 'hosts') return hostsMode(args, jobs, from, shopper);
   if (mode === 'policies') return policiesMode(args, jobs, from, shopper);
   if (mode === 'trace') return trace(args);
   if (mode === 'free' || mode === 'run') {
