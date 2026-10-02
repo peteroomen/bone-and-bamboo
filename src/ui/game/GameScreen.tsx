@@ -24,7 +24,7 @@ export function GameScreen({ onExit }: { onExit: () => void }) {
             <>
               <div className="screen-body">
                 {run.phase === 'host' && (
-                  <HostView run={run} choose={(beast) => dispatch({ type: 'chooseHost', beast })} />
+                  <HostView run={run} choose={(storm) => dispatch({ type: 'chooseHost', storm })} />
                 )}
                 {run.phase === 'payout' && (
                   <PayoutView run={run} onContinue={() => dispatch({ type: 'continue' })} />

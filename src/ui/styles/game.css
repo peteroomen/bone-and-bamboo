@@ -69,8 +69,7 @@
   display: grid;
   grid-template-columns: repeat(var(--cols, 4), 1fr);
   gap: 6px 6px;
-  --tw: 56px;
-  --strip: 15px;
+  --tw: var(--tw-round, 56px);
 }
 .stack {
   position: relative;
@@ -125,6 +124,7 @@
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 6px 10px;
+  position: relative;
   min-height: 84px;
   padding: 6px 8px;
   border-radius: 12px;
@@ -198,7 +198,7 @@
   display: grid;
   grid-template-columns: repeat(var(--hc, 4), 1fr);
   gap: 6px;
-  --tw: 56px;
+  --tw: var(--tw-round, 56px);
   min-height: calc(var(--tw) * 4 / 3 * 2 + 6px + 12px);
   align-content: end;
 }
@@ -542,7 +542,7 @@
   gap: 10px;
   font-size: var(--fs-sm);
 }
-.sheet-list li > span {
+.sheet-list li > span:not(.example) {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -613,7 +613,7 @@
   font-size: var(--fs-sm);
 }
 
-/* offers: curios, pages, fortunes, packs */
+/* offers: dragons, pages, fortunes, packs */
 .offers {
   display: grid;
   gap: 8px;
@@ -777,4 +777,182 @@
 }
 .payout-rows b {
   color: var(--gold);
+}
+
+.host-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.host-tile {
+  flex: none;
+  --tw: 64px;
+}
+.host-card.storm {
+  border-color: var(--mult);
+}
+.host-twist {
+  font-weight: 700;
+  color: var(--fg);
+}
+.dragon-tile,
+.icon-glyph {
+  flex: none;
+  display: inline-block;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.35));
+}
+.dragon-tile svg,
+.icon-glyph svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.help-btn {
+  flex: none;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel-solid);
+  color: var(--fg);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  cursor: pointer;
+}
+.hud-wind {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.hud-wind-text {
+  display: flex;
+  flex-direction: column;
+}
+.hud-wind-text b {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  color: var(--fg);
+  line-height: 1;
+}
+.goals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: var(--fs-xs);
+}
+.goals li {
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg-2);
+}
+.goals li.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.goals li.off {
+  border-color: var(--bad);
+}
+.warn {
+  margin: 0;
+  color: var(--bad);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.extras {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+}
+.extras .btn {
+  font-size: var(--fs-sm);
+  padding: 0 8px;
+}
+.advised {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.hand-tile.glow .tile,
+.stack-tile.hint-draw {
+  filter: drop-shadow(0 0 4px var(--accent)) drop-shadow(0 2px 0 rgb(0 0 0 / 0.35));
+}
+.guide {
+  flex: none;
+  display: inline-block;
+}
+.guide svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.guide-bubble {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-solid);
+  font-size: var(--fs-sm);
+}
+.guide-bubble p {
+  margin: 0;
+}
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: var(--fs-sm);
+}
+.help h4 {
+  margin: 0 0 4px;
+  font-size: var(--fs-base);
+  font-family: var(--font-display);
+}
+.help p {
+  margin: 4px 0 0;
+}
+.help-guide {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.example {
+  display: inline-flex;
+  gap: 2px;
+  --tw: 30px;
+  flex: none;
+}
+.help-sets li {
+  align-items: flex-start;
+}
+
+.bank {
+  min-height: var(--touch);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  cursor: pointer;
+}
+.table .guide-bubble {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: 0 3px 0 var(--line);
+}
+.stack {
+  height: calc(var(--tw) * 4 / 3 + var(--strip) * var(--peek, 1) + 4px);
 }

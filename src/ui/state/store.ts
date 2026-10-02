@@ -17,6 +17,8 @@ export interface Settings {
   /** The tile colourway, until the art style trial decides. */
   colourway: ThemeId;
   hints: HintLevel;
+  /** The introduction has been shown once (it can always be replayed from Help). */
+  introSeen: boolean;
 }
 
 export interface AppState {
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: Settings = {
   speed: 'normal',
   colourway: 'theatre',
   hints: 'sets',
+  introSeen: false,
 };
 
 export const KEYS = { settings: 'bb.settings.v1', run: 'bb.run.v1', dev: 'bb.dev.v1' };

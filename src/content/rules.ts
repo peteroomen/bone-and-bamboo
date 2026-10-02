@@ -20,20 +20,20 @@ export const MONEY = {
 } as const;
 
 export const SHOP = {
-  curios: 3,
+  dragons: 3,
   almanac: 2,
   fortunes: 2,
   rerollBase: 2,
   rerollStep: 1,
   burnPrice: 5,
-  /** A sold curio fetches this fraction of its price, rounded down. */
+  /** A sold dragon fetches this fraction of its price, rounded down. */
   sellFraction: 0.5,
 } as const;
 
 export const GIFT = {
-  folkOffers: 2,
-  beastOffers: 3,
-  beastMoney: 5,
+  calmOffers: 2,
+  stormOffers: 3,
+  stormMoney: 5,
 } as const;
 
 /** The four winds of a run. */

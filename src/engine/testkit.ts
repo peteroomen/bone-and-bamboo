@@ -24,9 +24,10 @@ export interface RoundSpec {
   /** Each stack bottom to top, as a spec string. */
   readonly stacks?: readonly string[];
   readonly rules?: Partial<RoundRules>;
-  readonly curios?: readonly string[];
+  readonly dragons?: readonly string[];
   readonly copies?: Record<string, number>;
   readonly rng?: number;
+  readonly target?: number;
 }
 
 /** A round in a known state, for tests. */
@@ -43,8 +44,9 @@ export function roundWith(spec: RoundSpec = {}): RoundState {
     discarded: [],
     playsLeft: rules.plays,
     discardsLeft: rules.discards,
-    curios: spec.curios ?? [],
+    dragons: spec.dragons ?? [],
     levels: {},
+    target: spec.target ?? 0,
     copies: spec.copies ?? Object.fromEntries(countKinds(all)),
     rng: spec.rng ?? 1,
     phase: 'play',

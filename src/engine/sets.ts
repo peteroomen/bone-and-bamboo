@@ -1,5 +1,5 @@
 import type { SetKind } from '@/content/sets';
-import { DRAGONS, WINDS } from '@/content/tiles';
+import { WINDS } from '@/content/tiles';
 import { type Tile, isSuited, rankOf, suitOf } from './tiles';
 
 export interface Candidate {
@@ -18,7 +18,6 @@ export function classify(tiles: readonly Tile[]): SetKind | null {
       return same ? 'pair' : null;
     case 3: {
       if (same) return 'pong';
-      if (DRAGONS.every((d) => kinds.includes(d))) return 'dragons';
       if (kinds.every(isSuited)) {
         const suit = suitOf(kinds[0] as string);
         if (kinds.every((k) => suitOf(k) === suit)) {
@@ -74,8 +73,6 @@ export function findSets(hand: readonly Tile[]): Candidate[] {
         out.push({ kind: 'chow', tiles: [list[0] as Tile, a[0] as Tile, b[0] as Tile] });
     }
   }
-  if (DRAGONS.every((d) => by.has(d)))
-    out.push({ kind: 'dragons', tiles: DRAGONS.map((d) => (by.get(d) as Tile[])[0] as Tile) });
   if (WINDS.every((w) => by.has(w)))
     out.push({ kind: 'winds', tiles: WINDS.map((w) => (by.get(w) as Tile[])[0] as Tile) });
   return out;

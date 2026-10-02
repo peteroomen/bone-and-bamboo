@@ -1,7 +1,7 @@
 import { cpus } from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { CURIO_IDS } from '@/content/curios';
+import { DRAGON_IDS } from '@/content/dragons';
 import { SET_ORDER } from '@/content/sets';
 import { chooseMove, moveAction, type Policy } from '@/engine/ai';
 import { newRun, runReduce } from '@/engine/run';
@@ -10,13 +10,16 @@ import { type SimRunOptions, type SimRunResult, driveRound, playRunSim } from '.
 const HELP = `pnpm sim: the headless simulator (reproduces tools/sim-py).
 
   pnpm sim round [--n 2000] [--policy greedy|pongs]
-      The base round: 81 tiles, hand 8, 8 stacks, see 1 under, 8 plays, 3 discards, no curios.
+      The base round: 81 tiles, hand 8, 8 stacks, see 1 under, 8 plays, 3 discards, no dragons.
   pnpm sim free  [--runs 200] [--shopper smart|casual]
       Score distributions per round (nobody can lose).
   pnpm sim run   [--runs 400] [--shopper smart|casual] [--targets 1000,4000,9000,18000]
-                 [--no-gift] [--fire 6] [--python-shop] [--lantern 1] [--tileset boneBamboo]
+                 [--no-gift] [--fire 6] [--python-shop] [--bank] [--upgrade] [--lantern 1] [--tileset boneBamboo]
       Win rates against the targets. --python-shop leaves the almanac pack out, as the Python
       prototype's teahouse did (the parity check).
+  pnpm sim policies [--runs 400]
+      Compares the round policies (never bank / bank when the target is beaten, with and
+      without pong upgrades) on the same seeds.
   pnpm sim trace [seed] [--shopper smart|casual]
       One run, round by round.
 
@@ -90,7 +93,7 @@ function roundMode(args: string[]) {
   let drawn = 0;
   for (let i = 0; i < n; i++) {
     let run = newRun({ seed: 50_000 + from + i, targets: [0, 0, 0, 0] });
-    run = runReduce(run, { type: 'chooseHost', beast: false }).state;
+    run = runReduce(run, { type: 'chooseHost', storm: false }).state;
     run = driveRound(run, policy);
     const r = run.round;
     if (!r?.result) continue;
@@ -151,26 +154,58 @@ function summarise(res: SimRunResult[], shopper: string, mode: 'free' | 'run') {
   if (mode === 'free') {
     const last = median(res.map((x) => x.scores[3] ?? 0));
     const rows: [number, string, number][] = [];
-    for (const c of CURIO_IDS) {
-      const w = res.filter((x) => x.curios.includes(c)).map((x) => x.scores[3] ?? 0);
+    for (const c of DRAGON_IDS) {
+      const w = res.filter((x) => x.dragons.includes(c)).map((x) => x.scores[3] ?? 0);
       if (w.length >= 5) rows.push([median(w) / last, c, w.length]);
     }
-    console.log('round 4 median with each curio, against all runs:');
+    console.log('round 4 median with each dragon, against all runs:');
     for (const [ratio, c, n] of rows.sort((a, b) => b[0] - a[0]))
       console.log(
         `  ${c.padEnd(16)} x${ratio.toFixed(2)}  (in ${((100 * n) / res.length).toFixed(0)}% of runs)`,
       );
   } else {
     const rows: [number, string, number][] = [];
-    for (const c of CURIO_IDS) {
-      const w = res.filter((x) => x.curios.includes(c));
+    for (const c of DRAGON_IDS) {
+      const w = res.filter((x) => x.dragons.includes(c));
       if (w.length >= 5) rows.push([w.filter((x) => x.won).length / w.length, c, w.length]);
     }
-    console.log('win rate with each curio at the end:');
+    console.log('win rate with each dragon at the end:');
     for (const [wr, c, n] of rows.sort((a, b) => b[0] - a[0]))
       console.log(
         `  ${c.padEnd(16)} ${(100 * wr).toFixed(0)}%  (in ${((100 * n) / res.length).toFixed(0)}% of finished builds)`,
       );
+  }
+}
+
+async function policiesMode(
+  args: string[],
+  jobs: number,
+  from: number,
+  shopper: 'smart' | 'casual',
+) {
+  const runs = Number(flag(args, 'runs', '400'));
+  const base = {
+    shopper,
+    gift: true,
+    fire: 6,
+    targets: [1000, 4000, 9000, 18000],
+  };
+  console.log(
+    `| Policy | Won | Money at the end | Rounds banked early | Kongs on tables | (${shopper}, ${runs} runs) |`,
+  );
+  console.log('|---|---|---|---|---|---|');
+  for (const [label, play] of [
+    ['Play every round out', {}],
+    ['Bank when the target is beaten', { bank: true }],
+    ['Upgrade pongs to kongs', { upgrade: true }],
+    ['Bank and upgrade', { bank: true, upgrade: true }],
+  ] as const) {
+    const res = await runMany({ ...base, play }, from, runs, jobs);
+    const won = res.filter((x) => x.won).length;
+    const mean = (f: (x: SimRunResult) => number) => res.reduce((a, x) => a + f(x), 0) / res.length;
+    console.log(
+      `| ${label} | ${((100 * won) / res.length).toFixed(0)}% | $${mean((x) => x.money).toFixed(1)} | ${mean((x) => x.banked).toFixed(2)} | ${mean((x) => x.kongs).toFixed(2)} | |`,
+    );
   }
 }
 
@@ -191,6 +226,7 @@ async function main() {
   const from = Number(flag(args, 'seed', '0'));
   const shopper = (flag(args, 'shopper', 'smart') ?? 'smart') as 'smart' | 'casual';
   if (mode === 'round') return roundMode(args);
+  if (mode === 'policies') return policiesMode(args, jobs, from, shopper);
   if (mode === 'trace') return trace(args);
   if (mode === 'free' || mode === 'run') {
     const runs = Number(flag(args, 'runs', mode === 'free' ? '200' : '400'));
@@ -199,6 +235,7 @@ async function main() {
       shopper,
       gift: !has(args, 'no-gift'),
       pythonShop: has(args, 'python-shop'),
+      play: { bank: has(args, 'bank'), upgrade: has(args, 'upgrade') },
       fire: Number(flag(args, 'fire', '6')),
       ...(mode === 'run' && targetArg ? { targets: targetArg.split(',').map(Number) } : {}),
       ...(flag(args, 'lantern') ? { lantern: Number(flag(args, 'lantern')) } : {}),

@@ -29,10 +29,10 @@ export const TILE_SETS: readonly TileSetDef[] = [
   {
     id: 'twoRivers',
     name: 'Two Rivers',
-    text: 'Dots and Bamboo only, four copies, and two of each dragon.',
+    text: 'Dots and Bamboo only, four copies, and one of each wind.',
     suits: ['p', 's'],
     copies: 4,
-    honours: { d1: 2, d2: 2, d3: 2 },
+    honours: { w1: 1, w2: 1, w3: 1, w4: 1 },
     unlock: { kind: 'win' },
   },
   {

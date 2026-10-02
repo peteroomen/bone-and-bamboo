@@ -9,11 +9,12 @@ import {
   scoreTable,
   type Levels,
 } from './scoring';
+import { brokenDragons } from './goals';
 import { classify, orderSet, playProblem } from './sets';
 import { type Tile, countKinds } from './tiles';
 import { type Stacks, deal, wallCount } from './wall';
 
-/** The numbers a round is played with, after curios, tile set and lantern. */
+/** The numbers a round is played with, after dragons, tile set and lantern. */
 export interface RoundRules {
   readonly handSize: number;
   readonly plays: number;
@@ -49,8 +50,10 @@ export interface RoundState {
   readonly discarded: readonly Tile[];
   readonly playsLeft: number;
   readonly discardsLeft: number;
-  readonly curios: readonly string[];
+  readonly dragons: readonly string[];
   readonly levels: Levels;
+  /** The score to beat this round: banking early needs the table to reach it. */
+  readonly target: number;
   /** Copies of each tile kind in the whole set (the bot's reading of what can still come). */
   readonly copies: Readonly<Record<TileKind, number>>;
   readonly rng: number;
@@ -62,12 +65,23 @@ export interface RoundState {
 export type RoundAction =
   | { readonly type: 'take'; readonly stack: number }
   | { readonly type: 'play'; readonly ids: readonly number[] }
-  | { readonly type: 'discard'; readonly ids: readonly number[] };
+  | { readonly type: 'discard'; readonly ids: readonly number[] }
+  /** Upgrade the pong at table index `setIndex` to a kong with its fourth tile from the hand. */
+  | { readonly type: 'upgrade'; readonly setIndex: number; readonly tileId: number }
+  /** Bank the table now: allowed once it beats the target. */
+  | { readonly type: 'finish' };
 
 export type RoundEvent =
   | { readonly type: 'take'; readonly tile: Tile; readonly stack: number }
   | { readonly type: 'play'; readonly kind: PlayedSet['kind']; readonly tiles: readonly Tile[] }
   | { readonly type: 'discard'; readonly tiles: readonly Tile[] }
+  | {
+      readonly type: 'upgrade';
+      readonly setIndex: number;
+      readonly tile: Tile;
+      readonly tiles: readonly Tile[];
+    }
+  | { readonly type: 'finish' }
   | { readonly type: 'score'; readonly result: ScoreResult }
   | { readonly type: 'crack'; readonly tile: Tile }
   | { readonly type: 'end'; readonly result: RoundResult }
@@ -81,8 +95,9 @@ export interface Reduced<S, E> {
 export interface RoundSetup {
   readonly tiles: readonly Tile[];
   readonly rules: RoundRules;
-  readonly curios: readonly string[];
+  readonly dragons: readonly string[];
   readonly levels: Levels;
+  readonly target: number;
   /** The RNG state to shuffle and play the round from. */
   readonly rng: number;
 }
@@ -99,8 +114,9 @@ export function startRound(setup: RoundSetup): RoundState {
     discarded: [],
     playsLeft: setup.rules.plays,
     discardsLeft: setup.rules.discards,
-    curios: setup.curios,
+    dragons: setup.dragons,
     levels: setup.levels,
+    target: setup.target,
     copies: Object.fromEntries(countKinds(setup.tiles)),
     rng: rng.state,
     phase: 'play',
@@ -114,24 +130,26 @@ export function needsRefill(s: RoundState): boolean {
 }
 
 export function scoreContext(s: RoundState): ScoreContext {
-  return { curios: s.curios, levels: s.levels };
+  return { dragons: s.dragons, levels: s.levels };
 }
 
 /** What the table scores now, and with the selected tiles played as one more set. */
 export function preview(
   s: RoundState,
   selectedIds: readonly number[] = [],
-): { now: ScoreResult; withSelected: ScoreResult | null } {
+): { now: ScoreResult; withSelected: ScoreResult | null; warnings: string[] } {
   const ctx = scoreContext(s);
   const now = scoreTable(s.table, ctx);
   const picked = selectedIds
     .map((id) => s.hand.find((t) => t.id === id))
     .filter((t): t is Tile => t !== undefined);
   const kind = picked.length === selectedIds.length && picked.length > 0 ? classify(picked) : null;
-  if (!kind) return { now, withSelected: null };
+  if (!kind) return { now, withSelected: null, warnings: [] };
+  const table = [...s.table, { kind, tiles: orderSet(picked) }];
   return {
     now,
-    withSelected: scoreTable([...s.table, { kind, tiles: orderSet(picked) }], ctx),
+    withSelected: scoreTable(table, ctx),
+    warnings: brokenDragons(s.table, table, s.dragons),
   };
 }
 
@@ -144,6 +162,11 @@ function finishIfOver(s: RoundState, events: RoundEvent[]): RoundState {
   if (s.phase === 'done') return s;
   const stuck = s.hand.length === 0 && wallCount(s.stacks) === 0;
   if (s.playsLeft > 0 && !stuck) return s;
+  return settle(s, events);
+}
+
+/** Score the table and close the round (once). */
+function settle(s: RoundState, events: RoundEvent[]): RoundState {
   const ctx = scoreContext(s);
   const score = scoreTable(s.table, ctx);
   const rng = new Rng(s.rng);
@@ -165,6 +188,58 @@ function finishIfOver(s: RoundState, events: RoundEvent[]): RoundState {
   }
   events.push({ type: 'end', result });
   return { ...s, rng: rng.state, phase: 'done', result };
+}
+
+/** Why a tabled pong can't be upgraded with this hand tile, or null. */
+export function upgradeProblem(s: RoundState, setIndex: number, tileId: number): string | null {
+  const set = s.table[setIndex];
+  if (!set) return 'No such set.';
+  if (set.kind !== 'pong') return 'Only a pong can be upgraded to a kong.';
+  const tile = s.hand.find((t) => t.id === tileId);
+  if (!tile) return 'That tile is not in your hand.';
+  if (tile.kind !== (set.tiles[0] as Tile).kind) return "That is not the pong's fourth tile.";
+  if (s.playsLeft <= 0) return 'No plays left.';
+  return null;
+}
+
+/** The tabled pongs your hand can upgrade now: [table index, hand tile id]. */
+export function upgrades(s: RoundState): { setIndex: number; tileId: number }[] {
+  const out: { setIndex: number; tileId: number }[] = [];
+  s.table.forEach((set, setIndex) => {
+    if (set.kind !== 'pong') return;
+    const tile = s.hand.find((t) => t.kind === (set.tiles[0] as Tile).kind);
+    if (tile) out.push({ setIndex, tileId: tile.id });
+  });
+  return out;
+}
+
+/** What upgrading would score, and the multipliers it would break. */
+export function previewUpgrade(
+  s: RoundState,
+  setIndex: number,
+  tileId: number,
+): { now: ScoreResult; after: ScoreResult; warnings: string[] } | null {
+  if (upgradeProblem(s, setIndex, tileId) !== null) return null;
+  const set = s.table[setIndex] as PlayedSet;
+  const tile = s.hand.find((t) => t.id === tileId) as Tile;
+  const table = s.table.map((x, i) =>
+    i === setIndex ? { kind: 'kong' as const, tiles: orderSet([...set.tiles, tile]) } : x,
+  );
+  const ctx = scoreContext(s);
+  return {
+    now: scoreTable(s.table, ctx),
+    after: scoreTable(table, ctx),
+    warnings: brokenDragons(s.table, table, s.dragons),
+  };
+}
+
+/** Why you can't bank the table yet, or null. */
+export function finishProblem(s: RoundState): string | null {
+  if (s.phase === 'done') return 'The round is over.';
+  if (s.table.length === 0) return 'Play a set first.';
+  const total = scoreTable(s.table, scoreContext(s)).total;
+  if (total < s.target) return 'The table has not beaten the target yet.';
+  return null;
 }
 
 export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, RoundEvent> {
@@ -202,6 +277,32 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
         events,
       );
       return { state: next, events };
+    }
+    case 'upgrade': {
+      if (needsRefill(s)) return illegal(s, 'Refill your hand first.');
+      const problem = upgradeProblem(s, a.setIndex, a.tileId);
+      if (problem) return illegal(s, problem);
+      const set = s.table[a.setIndex] as PlayedSet;
+      const tile = s.hand.find((t) => t.id === a.tileId) as Tile;
+      const tiles = orderSet([...set.tiles, tile]);
+      events.push({ type: 'upgrade', setIndex: a.setIndex, tile, tiles });
+      const next = finishIfOver(
+        {
+          ...s,
+          hand: s.hand.filter((t) => t.id !== a.tileId),
+          table: s.table.map((x, i) => (i === a.setIndex ? { kind: 'kong' as const, tiles } : x)),
+          playsLeft: s.playsLeft - 1,
+          turns: s.turns + 1,
+        },
+        events,
+      );
+      return { state: next, events };
+    }
+    case 'finish': {
+      const problem = finishProblem(s);
+      if (problem) return illegal(s, problem);
+      events.push({ type: 'finish' });
+      return { state: settle(s, events), events };
     }
     case 'discard': {
       if (needsRefill(s)) return illegal(s, 'Refill your hand first.');

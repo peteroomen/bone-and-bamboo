@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { CURIOS, type Rarity } from '@/content/curios';
-import { CURIO_GLYPH } from '@/ui/art/glyphs';
+import type { Rarity } from '@/content/dragons';
+import { dragonTileSvg, iconSvg } from '@/ui/art/icons';
+import { useStore } from '@/ui/state/store';
 
-/** The picture of a curio, fortune, page or pack: a rounded square with a glyph (a placeholder). */
+/** The picture of a dragon, fortune, page or pack: a rounded square with a glyph (a placeholder). */
 export function Glyph({
   char,
   rarity,
@@ -23,13 +24,30 @@ export function Glyph({
   );
 }
 
-export function CurioGlyph({ id, size }: { id: string; size?: number }) {
-  const c = CURIOS[id];
+/** A dragon: a plain tile with a picture and a White, Green or Red Dragon frame for its rarity. */
+export function DragonGlyph({ id, size = 40 }: { id: string; size?: number }) {
+  const theme = useStore((st) => st.settings.colourway);
   return (
-    <Glyph
-      char={CURIO_GLYPH[id] ?? '?'}
-      {...(c ? { rarity: c.rarity } : {})}
-      {...(size ? { size } : {})}
+    <span
+      className="dragon-tile"
+      aria-hidden
+      style={{ width: size * 0.75, height: size }}
+      dangerouslySetInnerHTML={{ __html: dragonTileSvg(id, theme) }}
+    />
+  );
+}
+
+/** A fortune, pack or page: its traced icon when there is one, else a glyph square. */
+export function IconGlyph({ id, char, size = 40 }: { id: string; char: string; size?: number }) {
+  const theme = useStore((st) => st.settings.colourway);
+  const svg = iconSvg(id, theme);
+  if (!svg) return <Glyph char={char} size={size} />;
+  return (
+    <span
+      className="icon-glyph"
+      aria-hidden
+      style={{ width: size, height: size }}
+      dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
 }

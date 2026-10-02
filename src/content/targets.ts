@@ -23,5 +23,5 @@ export const LANTERNS: readonly Lantern[] = [
   },
 ];
 
-/** The great beast's target, against the folk spirit's. */
-export const BEAST_TARGET_MULT = 1.5;
+/** The great storm's target, against the folk spirit's. */
+export const STORM_TARGET_MULT = 1.5;

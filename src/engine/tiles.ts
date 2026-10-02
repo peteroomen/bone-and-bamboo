@@ -33,8 +33,8 @@ export function isHonour(kind: TileKind): boolean {
   return !isSuited(kind);
 }
 
-export function isDragon(kind: TileKind): boolean {
-  return suitOf(kind) === 'd';
+export function isWind(kind: TileKind): boolean {
+  return suitOf(kind) === 'w';
 }
 
 /** A 1, a 9 or an honour. */
@@ -50,12 +50,12 @@ export function tileChips(kind: TileKind): number {
 
 export function kindName(kind: TileKind): string {
   const honour = HONOUR_NAMES[kind];
-  if (honour) return suitOf(kind) === 'd' ? `${honour} Dragon` : `${honour} Wind`;
+  if (honour) return `${honour} Wind`;
   return `${rankOf(kind)} ${SUIT_NAMES[suitOf(kind)]}`;
 }
 
 /** Sort key: suit order p s m w d, then rank. */
-const SUIT_ORDER = 'psmwd';
+const SUIT_ORDER = 'psmw';
 export function compareKinds(a: TileKind, b: TileKind): number {
   const d = SUIT_ORDER.indexOf(suitOf(a)) - SUIT_ORDER.indexOf(suitOf(b));
   return d !== 0 ? d : rankOf(a) - rankOf(b);

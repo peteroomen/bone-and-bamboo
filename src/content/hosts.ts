@@ -1,5 +1,5 @@
 /**
- * The eight hosts: each wind has a folk spirit and a great beast, and each changes one rule for its
+ * The eight hosts: each round is hosted by its wind tile, which blows calm or storm, and each changes one rule for its
  * round. A twist is data here; the engine interprets it (src/engine/twists.ts), with no host
  * special-cased in the rules. All numbers are *tune* (docs/design.md).
  */
@@ -53,13 +53,16 @@ export type Twist =
     };
 
 export interface Host {
+  /** The twist's id (the old spirit names, kept as ids only). */
   readonly id: string;
   /** 0-3: East, South, West, North. */
   readonly wind: number;
-  readonly beast: boolean;
-  readonly name: string;
+  /** Calm (a gentle twist) or storm (a sharper one, a harder target, a bigger gift). */
+  readonly storm: boolean;
+  /** The wind tile that hosts the round: w1-w4. */
+  readonly tile: string;
+  /** The twist's name. */
   readonly title: string;
-  readonly colour: string;
   readonly twistText: string;
   readonly twist: Twist;
 }
@@ -68,42 +71,38 @@ export const HOSTS: readonly Host[] = [
   {
     id: 'fox',
     wind: 0,
-    beast: false,
-    name: 'Fox spirit',
+    storm: false,
+    tile: 'w1',
     title: 'Masked',
-    colour: '#d9843a',
     twistText:
       'The tile under each stack top is hidden. Each tile you play that you took while it was hidden gives +2 mult.',
     twist: { id: 'masked', mult: 2 },
   },
   {
-    id: 'azure',
+    id: 'azureDragon',
     wind: 0,
-    beast: true,
-    name: 'Azure Dragon',
+    storm: true,
+    tile: 'w1',
     title: 'The coil',
-    colour: '#3a78b8',
     twistText: 'One stack is locked until you play a chow. Chows score double chips.',
     twist: { id: 'coil', lockedStacks: 1, chowChipsX: 2 },
   },
   {
     id: 'monkey',
     wind: 1,
-    beast: false,
-    name: 'Monkey spirit',
+    storm: false,
+    tile: 'w2',
     title: 'Swaps',
-    colour: '#c9a23a',
     twistText:
       'After every 2nd play two stack tops swap. Once a round you may swap two stack tops yourself.',
     twist: { id: 'swaps', every: 2, playerSwaps: 1 },
   },
   {
-    id: 'vermilion',
+    id: 'vermilionBird',
     wind: 1,
-    beast: true,
-    name: 'Vermilion Bird',
+    storm: true,
+    tile: 'w2',
     title: 'Embers',
-    colour: '#d2391f',
     twistText:
       '3 tiles in the wall are burning. Play a set with one for +3 mult, or it burns away after 2 turns on a stack top.',
     twist: { id: 'embers', burning: 3, mult: 3, turns: 2 },
@@ -111,48 +110,44 @@ export const HOSTS: readonly Host[] = [
   {
     id: 'rabbit',
     wind: 2,
-    beast: false,
-    name: 'Jade Rabbit',
+    storm: false,
+    tile: 'w3',
     title: 'Moon tide',
-    colour: '#7fbfa0',
     twistText: 'Hand size +1, but discarded tiles go back to the bottom of a random stack.',
     twist: { id: 'moonTide', hand: 1 },
   },
   {
-    id: 'tiger',
+    id: 'whiteTiger',
     wind: 2,
-    beast: true,
-    name: 'White Tiger',
+    storm: true,
+    tile: 'w3',
     title: 'Claws',
-    colour: '#d8d2c4',
     twistText: 'Pongs and kongs score double chips. Chows score half.',
     twist: { id: 'claws', bigChipsX: 2, chowChipsX: 0.5 },
   },
   {
-    id: 'kitchen',
+    id: 'kitchenGod',
     wind: 3,
-    beast: false,
-    name: 'Kitchen God',
+    storm: false,
+    tile: 'w4',
     title: 'The report',
-    colour: '#a8461c',
     twistText: 'Each discard costs 25 points at the end. Finish with no discards used for ×2 mult.',
     twist: { id: 'report', discardCost: 25, noDiscardX: 2 },
   },
   {
-    id: 'tortoise',
+    id: 'blackTortoise',
     wind: 3,
-    beast: true,
-    name: 'Black Tortoise',
+    storm: true,
+    tile: 'w4',
     title: 'The shell',
-    colour: '#3d4a5a',
     twistText:
       '6 stacks instead of 8. The top tile of each stack is armoured until you play a pong or kong. Kongs +4 mult.',
     twist: { id: 'shell', stacks: 6, kongMult: 4 },
   },
 ];
 
-export function hostFor(wind: number, beast: boolean): Host {
-  const h = HOSTS.find((x) => x.wind === wind && x.beast === beast);
+export function hostFor(wind: number, storm: boolean): Host {
+  const h = HOSTS.find((x) => x.wind === wind && x.storm === storm);
   if (!h) throw new Error(`No host for wind ${wind}`);
   return h;
 }

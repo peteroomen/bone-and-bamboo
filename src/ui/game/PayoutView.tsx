@@ -12,7 +12,7 @@ export function PayoutView({ run, onContinue }: { run: RunState; onContinue: () 
     ['Reward', p.reward],
     ['Unused discards', p.discards],
     ['Interest', p.interest],
-    ['Curios', p.income],
+    ['Dragons', p.income],
     ['Gold tiles', p.gold],
   ];
   return (

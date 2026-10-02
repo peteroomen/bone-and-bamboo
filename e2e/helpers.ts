@@ -32,7 +32,7 @@ export async function freshStart(
 ): Promise<void> {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
-  await setSettings(page, { speed: 'instant', ...settings });
+  await setSettings(page, { speed: 'instant', introSeen: true, ...settings });
   await page.reload();
   await page.getByTestId('title').waitFor();
 }
@@ -131,7 +131,7 @@ export async function shopVisit(page: Page, visit: number): Promise<void> {
     await page.getByTestId('btn-picker-confirm').click(T);
     await page.getByTestId('sheet-use').waitFor({ state: 'detached', ...T });
   }
-  await tap('buy-curio-0');
+  await tap('buy-dragon-0');
   if (visit === 1) await tap('btn-reroll');
   if (await tap('buy-pack')) {
     await page.getByTestId('sheet-pack').waitFor(T);
@@ -142,9 +142,16 @@ export async function shopVisit(page: Page, visit: number): Promise<void> {
     await page.locator('[data-testid^="burn-"]').first().click(T);
   }
   if (visit === 2) {
-    await page.getByTestId('pb-curios').click(T);
+    await page.getByTestId('pb-dragons').click(T);
     if (await page.getByTestId('sell-0').count()) await page.getByTestId('sell-0').click(T);
     await page.getByTestId('sheet-close').click(T);
   }
   await page.getByTestId('btn-leave').click(T);
+}
+
+/** Starts a run from a prepared state: saves it and presses Continue. */
+export async function resumeFrom(page: Page, run: RunState): Promise<void> {
+  await page.evaluate((r) => localStorage.setItem('bb.run.v1', JSON.stringify(r)), run);
+  await page.reload();
+  await page.getByTestId('btn-continue').click();
 }

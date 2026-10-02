@@ -1,8 +1,8 @@
-import { CURIOS, CURIO_IDS, CURIO_SLOTS } from '@/content/curios';
+import { DRAGONS, DRAGON_IDS, DRAGON_SLOTS } from '@/content/dragons';
 import { FORTUNE_SLOTS } from '@/content/fortunes';
 import { hostFor } from '@/content/hosts';
 import { PACK_IDS, type PackId } from '@/content/packs';
-import { BEAST_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
+import { STORM_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
 import { GIFT, MONEY, SHOP } from '@/content/rules';
 import { tileSetDef } from '@/content/tilesets';
 import { autoRefill } from './ai';
@@ -17,7 +17,7 @@ import {
   startRound,
 } from './round';
 import type { FortuneArgs, GiftState, Payout, RunAction, RunEvent, RunState } from './runTypes';
-import { openPack, rerollPrice, rollCurios, rollShop, sellPrice } from './shop';
+import { openPack, rerollPrice, rollDragons, rollShop, sellPrice } from './shop';
 import { type Tile, buildTiles, countKinds } from './tiles';
 import type { Reduced } from './round';
 
@@ -44,13 +44,13 @@ export function newRun(opts: NewRunOptions): RunState {
     tiles,
     nextTileId: tiles.length + 1,
     money: MONEY.start,
-    curios: [],
+    dragons: [],
     fortunes: [],
     levels: {},
     roundIndex: 0,
     phase: 'host',
     hostId: null,
-    beast: false,
+    storm: false,
     target: targetFor(opts.lantern ?? 1, 0, false, opts.targets ?? TARGETS),
     round: null,
     payout: null,
@@ -65,16 +65,16 @@ export function newRun(opts: NewRunOptions): RunState {
 export function targetFor(
   lantern: number,
   roundIndex: number,
-  beast: boolean,
+  storm: boolean,
   targets: readonly number[] = TARGETS,
 ): number {
   const l = LANTERNS[Math.max(0, Math.min(LANTERNS.length - 1, lantern - 1))];
-  const base = (targets[roundIndex] ?? 0) * (l?.targetMult ?? 1) * (beast ? BEAST_TARGET_MULT : 1);
+  const base = (targets[roundIndex] ?? 0) * (l?.targetMult ?? 1) * (storm ? STORM_TARGET_MULT : 1);
   return Math.round(base / 50) * 50;
 }
 
-/** The round's numbers: the base rules, the tile set, the lantern and your curios. */
-export function roundRulesFor(run: Pick<RunState, 'curios' | 'tileSet' | 'lantern'>): RoundRules {
+/** The round's numbers: the base rules, the tile set, the lantern and your dragons. */
+export function roundRulesFor(run: Pick<RunState, 'dragons' | 'tileSet' | 'lantern'>): RoundRules {
   const set = tileSetDef(run.tileSet);
   const lantern = LANTERNS[run.lantern - 1];
   let hand = set.hand ?? BASE_ROUND_RULES.handSize;
@@ -82,8 +82,8 @@ export function roundRulesFor(run: Pick<RunState, 'curios' | 'tileSet' | 'lanter
   if (lantern?.discards !== undefined) discards = Math.min(discards, lantern.discards);
   let plays = BASE_ROUND_RULES.plays;
   let peek = BASE_ROUND_RULES.peek;
-  for (const id of run.curios) {
-    for (const e of CURIOS[id]?.effects ?? []) {
+  for (const id of run.dragons) {
+    for (const e of DRAGONS[id]?.effects ?? []) {
       if (e.type !== 'mod') continue;
       hand += e.hand ?? 0;
       discards += e.discards ?? 0;
@@ -94,10 +94,10 @@ export function roundRulesFor(run: Pick<RunState, 'curios' | 'tileSet' | 'lanter
   return { ...BASE_ROUND_RULES, handSize: hand, discards, plays, peek };
 }
 
-export function curioIncome(curios: readonly string[]): number {
+export function dragonIncome(dragons: readonly string[]): number {
   let n = 0;
-  for (const id of curios)
-    for (const e of CURIOS[id]?.effects ?? []) if (e.type === 'income') n += e.money;
+  for (const id of dragons)
+    for (const e of DRAGONS[id]?.effects ?? []) if (e.type === 'income') n += e.money;
   return n;
 }
 
@@ -107,22 +107,24 @@ export function interestFor(run: Pick<RunState, 'money' | 'lantern'>): number {
   return Math.min(Math.floor(run.money / MONEY.interestPer), MONEY.interestCap);
 }
 
-export function roundSetup(run: RunState, rngState: number) {
+export function roundSetup(run: RunState, rngState: number, target = run.target) {
   return {
     tiles: run.tiles,
     rules: roundRulesFor(run),
-    curios: run.curios,
+    dragons: run.dragons,
     levels: run.levels,
+    target,
     rng: rngState,
   };
 }
 
-/** A new round for this run's current set, curios and levels (also used by the simulator). */
+/** A new round for this run's current set, dragons and levels (also used by the simulator). */
 export function dealRound(
   run: RunState,
   rngState = deriveSeed(run.seed, `round${run.roundIndex}`),
+  target = run.target,
 ): RoundState {
-  return startRound(roundSetup(run, rngState));
+  return startRound(roundSetup(run, rngState, target));
 }
 
 // ---- the reducer -------------------------------------------------------------------------------
@@ -139,7 +141,7 @@ function wrap(events: RoundEvent[]): RunEvent[] {
 export function runReduce(s: RunState, a: RunAction): R {
   switch (a.type) {
     case 'chooseHost':
-      return chooseHost(s, a.beast);
+      return chooseHost(s, a.storm);
     case 'round':
       return roundAction(s, a.action);
     case 'auto': {
@@ -168,12 +170,12 @@ export function runReduce(s: RunState, a: RunAction): R {
   }
 }
 
-function chooseHost(s: RunState, beast: boolean): R {
+function chooseHost(s: RunState, storm: boolean): R {
   if (s.phase !== 'host') return illegal(s, 'Not choosing a host.');
-  const target = targetFor(s.lantern, s.roundIndex, beast, s.targets);
-  const round = dealRound(s);
+  const target = targetFor(s.lantern, s.roundIndex, storm, s.targets);
+  const round = dealRound(s, undefined, target);
   return {
-    state: { ...s, phase: 'round', beast, hostId: hostFor(s.roundIndex, beast).id, target, round },
+    state: { ...s, phase: 'round', storm, hostId: hostFor(s.roundIndex, storm).id, target, round },
     events: [{ type: 'phase', phase: 'round' }],
   };
 }
@@ -211,7 +213,7 @@ function afterRound(s: RunState, round: RoundState, events: RoundEvent[]): R {
   const reward = MONEY.rewards[s.roundIndex] ?? 0;
   const discards = result.unusedDiscards * MONEY.perUnusedDiscard;
   const interest = interestFor(s);
-  const income = curioIncome(s.curios);
+  const income = dragonIncome(s.dragons);
   const total = reward + discards + interest + income + result.gold;
   const payout: Payout = { reward, discards, interest, income, gold: result.gold, total };
   out.push({ type: 'phase', phase: 'payout' }, { type: 'money', delta: total });
@@ -221,12 +223,12 @@ function afterRound(s: RunState, round: RoundState, events: RoundEvent[]): R {
 /** payout -> gift (or straight to the shop when there is nothing to give). */
 function proceed(s: RunState): R {
   if (s.phase !== 'payout') return illegal(s, 'Nothing to continue.');
-  const pool = CURIO_IDS.filter((id) => CURIOS[id]?.rarity === 'rare' && !s.curios.includes(id));
+  const pool = DRAGON_IDS.filter((id) => DRAGONS[id]?.rarity === 'rare' && !s.dragons.includes(id));
   if (pool.length === 0) return enterShop({ ...s, payout: null });
   const rng = new Rng(s.rng);
-  const n = s.beast ? GIFT.beastOffers : GIFT.folkOffers;
+  const n = s.storm ? GIFT.stormOffers : GIFT.calmOffers;
   const offers = rng.shuffle(pool).slice(0, n);
-  const bonus = s.beast ? GIFT.beastMoney : 0;
+  const bonus = s.storm ? GIFT.stormMoney : 0;
   const gift: GiftState = { offers, bonus };
   return {
     state: { ...s, rng: rng.state, phase: 'gift', gift, payout: null, money: s.money + bonus },
@@ -248,37 +250,37 @@ function enterShop(s: RunState): R {
 
 function takeGift(s: RunState, pick: number | null, replace?: number): R {
   if (s.phase !== 'gift' || !s.gift) return illegal(s, 'No gift to take.');
-  let curios = s.curios;
+  let dragons = s.dragons;
   if (pick !== null) {
     const id = s.gift.offers[pick];
     if (id === undefined) return illegal(s, 'No such gift.');
-    if (curios.length >= CURIO_SLOTS) {
-      if (replace === undefined || replace < 0 || replace >= curios.length)
-        return illegal(s, 'Your curios are full: swap one out or decline.');
-      curios = curios.map((c, i) => (i === replace ? id : c));
-    } else curios = [...curios, id];
+    if (dragons.length >= DRAGON_SLOTS) {
+      if (replace === undefined || replace < 0 || replace >= dragons.length)
+        return illegal(s, 'Your dragons are full: swap one out or decline.');
+      dragons = dragons.map((c, i) => (i === replace ? id : c));
+    } else dragons = [...dragons, id];
   }
-  return enterShop({ ...s, curios });
+  return enterShop({ ...s, dragons });
 }
 
 // ---- the teahouse ------------------------------------------------------------------------------
-function buy(s: RunState, what: 'curio' | 'almanac' | 'fortune' | 'pack', index: number): R {
+function buy(s: RunState, what: 'dragon' | 'almanac' | 'fortune' | 'pack', index: number): R {
   const shop = s.shop;
   if (s.phase !== 'shop' || !shop) return illegal(s, 'The teahouse is closed.');
   if (shop.open) return illegal(s, 'Finish opening the pack first.');
   switch (what) {
-    case 'curio': {
-      const o = shop.curios[index];
+    case 'dragon': {
+      const o = shop.dragons[index];
       if (!o || o.sold) return illegal(s, 'Sold.');
       if (s.money < o.price) return illegal(s, 'Not enough money.');
-      if (s.curios.length >= CURIO_SLOTS) return illegal(s, 'Your curio row is full.');
-      const curios = shop.curios.map((x, i) => (i === index ? { ...x, sold: true } : x));
+      if (s.dragons.length >= DRAGON_SLOTS) return illegal(s, 'Your dragon row is full.');
+      const dragons = shop.dragons.map((x, i) => (i === index ? { ...x, sold: true } : x));
       return ok(
         {
           ...s,
           money: s.money - o.price,
-          curios: [...s.curios, o.item],
-          shop: { ...shop, curios },
+          dragons: [...s.dragons, o.item],
+          shop: { ...shop, dragons },
         },
         -o.price,
       );
@@ -358,13 +360,13 @@ function reroll(s: RunState): R {
   const price = rerollPrice(shop);
   if (s.money < price) return illegal(s, 'Not enough money.');
   const rng = new Rng(s.rng);
-  const curios = rollCurios(s.curios, rng);
+  const dragons = rollDragons(s.dragons, rng);
   return ok(
     {
       ...s,
       rng: rng.state,
       money: s.money - price,
-      shop: { ...shop, curios, rerolls: shop.rerolls + 1 },
+      shop: { ...shop, dragons, rerolls: shop.rerolls + 1 },
     },
     -price,
   );
@@ -389,11 +391,11 @@ function burn(s: RunState, kind: string): R {
 
 function sell(s: RunState, index: number): R {
   if (s.phase !== 'shop' && s.phase !== 'gift') return illegal(s, 'Nothing to sell to.');
-  const id = s.curios[index];
-  if (id === undefined) return illegal(s, 'No such curio.');
+  const id = s.dragons[index];
+  if (id === undefined) return illegal(s, 'No such dragon.');
   const price = sellPrice(id);
   return ok(
-    { ...s, money: s.money + price, curios: s.curios.filter((_, i) => i !== index) },
+    { ...s, money: s.money + price, dragons: s.dragons.filter((_, i) => i !== index) },
     price,
   );
 }
@@ -409,7 +411,7 @@ function leave(s: RunState): R {
       shop: null,
       round: null,
       hostId: null,
-      beast: false,
+      storm: false,
       target: targetFor(s.lantern, s.roundIndex + 1, false, s.targets),
     },
     events: [{ type: 'phase', phase: 'host' }],

@@ -10,8 +10,9 @@ describe('the hint bot', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: BASE_ROUND_RULES,
-      curios: [],
+      dragons: [],
       levels: {},
+      target: 0,
       rng: 3,
     });
     const r = autoRefill(s);
@@ -33,7 +34,7 @@ describe('the hint bot', () => {
     expect(m && m.type === 'play' && m.kind).toBe('pong');
   });
   it('discards junk when it has no set and discards left', () => {
-    const s = roundWith({ hand: 'p1 p5 s9 m3 d1 w2 m7 s4', rules: { handSize: 8 } });
+    const s = roundWith({ hand: 'p1 p5 s9 m3 w1 w2 m7 s4', rules: { handSize: 8 } });
     const m = chooseMove(s);
     expect(m?.type).toBe('discard');
   });
@@ -48,8 +49,9 @@ describe('the hint bot', () => {
         let s = startRound({
           tiles: buildTiles('boneBamboo'),
           rules: BASE_ROUND_RULES,
-          curios: seed % 3 === 0 ? ['allSimples', 'abacus'] : [],
+          dragons: seed % 3 === 0 ? ['allSimples', 'abacus'] : [],
           levels: {},
+          target: 0,
           rng: seed,
         });
         for (let n = 0; n < 200 && s.phase === 'play'; n++) {
@@ -70,8 +72,9 @@ describe('the hint bot', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: BASE_ROUND_RULES,
-      curios: [],
+      dragons: [],
       levels: {},
+      target: 0,
       rng: 11,
     });
     const done = playOut(s);
@@ -84,8 +87,9 @@ describe('the hint bot', () => {
       const s = startRound({
         tiles: buildTiles('boneBamboo'),
         rules: BASE_ROUND_RULES,
-        curios: [],
+        dragons: [],
         levels: {},
+        target: 0,
         rng: seed * 7 + 1,
       });
       scores.push(playOut(s).result?.score.total ?? 0);

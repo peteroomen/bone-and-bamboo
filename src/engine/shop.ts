@@ -1,9 +1,9 @@
-import { CURIO_IDS, CURIO_WEIGHT, CURIOS, curioPrice } from '@/content/curios';
+import { DRAGON_IDS, DRAGON_WEIGHT, DRAGONS, dragonPrice } from '@/content/dragons';
 import { FORTUNE_IDS, FORTUNE_PRICE } from '@/content/fortunes';
 import { PACKS, PACK_CHOICES, type PackId } from '@/content/packs';
 import { ALMANAC_POOL, ALMANAC_PRICE } from '@/content/sets';
 import { SHOP } from '@/content/rules';
-import { DRAGONS, HONOURS, WINDS, type TileKind } from '@/content/tiles';
+import { HONOURS, WINDS, type TileKind } from '@/content/tiles';
 import type { Rng } from './rng';
 import type { OpenPack, PackOffer, RunState, ShopItem, ShopState } from './runTypes';
 import { countKinds } from './tiles';
@@ -12,17 +12,17 @@ function item<T>(it: T, price: number): ShopItem<T> {
   return { item: it, price, sold: false };
 }
 
-/** Roll the curio offers: weighted by rarity, never one you own, no repeats. */
-export function rollCurios(owned: readonly string[], rng: Rng): ShopItem<string>[] {
-  const pool = CURIO_IDS.filter((id) => !owned.includes(id));
+/** Roll the dragon offers: weighted by rarity, never one you own, no repeats. */
+export function rollDragons(owned: readonly string[], rng: Rng): ShopItem<string>[] {
+  const pool = DRAGON_IDS.filter((id) => !owned.includes(id));
   const out: ShopItem<string>[] = [];
-  while (out.length < SHOP.curios && pool.length > 0) {
+  while (out.length < SHOP.dragons && pool.length > 0) {
     const id = rng.weighted(
       pool,
-      (c) => CURIO_WEIGHT[(CURIOS[c] as { rarity: 'common' | 'uncommon' | 'rare' }).rarity],
+      (c) => DRAGON_WEIGHT[(DRAGONS[c] as { rarity: 'common' | 'uncommon' | 'rare' }).rarity],
     );
     pool.splice(pool.indexOf(id), 1);
-    out.push(item(id, curioPrice(id)));
+    out.push(item(id, dragonPrice(id)));
   }
   return out;
 }
@@ -42,11 +42,6 @@ export function packOffers(pack: PackId, run: RunState, rng: Rng): PackOffer[] {
       }
       return picks.map((k) => ({ type: 'tiles', kinds: [k] }));
     }
-    case 'dragons':
-      return [
-        { type: 'tiles', kinds: DRAGONS },
-        ...DRAGONS.map((d): PackOffer => ({ type: 'tiles', kinds: [d, d] })),
-      ];
     case 'winds':
       return [
         { type: 'tiles', kinds: WINDS },
@@ -100,7 +95,7 @@ export function rollShop(run: RunState, rng: Rng): ShopState {
     .map((f) => item(f, FORTUNE_PRICE));
   const pack = rollPack(run, rng);
   return {
-    curios: rollCurios(run.curios, rng),
+    dragons: rollDragons(run.dragons, rng),
     almanac,
     fortunes,
     pack: item(pack, PACKS[pack].price),
@@ -113,6 +108,6 @@ export function rerollPrice(shop: ShopState): number {
   return SHOP.rerollBase + SHOP.rerollStep * shop.rerolls;
 }
 
-export function sellPrice(curioId: string): number {
-  return Math.floor(curioPrice(curioId) * SHOP.sellFraction);
+export function sellPrice(dragonId: string): number {
+  return Math.floor(dragonPrice(dragonId) * SHOP.sellFraction);
 }

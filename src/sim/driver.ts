@@ -1,5 +1,8 @@
 import { PACK_IDS } from '@/content/packs';
+import { legalPlays } from '@/engine/advice';
 import { type Policy, chooseMove, moveAction } from '@/engine/ai';
+import { finishProblem, needsRefill, previewUpgrade, scoreContext, upgrades } from '@/engine/round';
+import { scoreTable } from '@/engine/scoring';
 import { Rng, deriveSeed } from '@/engine/rng';
 import { newRun, runReduce } from '@/engine/run';
 import type { RunState } from '@/engine/runTypes';
@@ -16,6 +19,8 @@ export interface SimRunOptions {
   readonly tileSet?: string;
   /** Reproduce the Python prototype's shop: no almanac pack. */
   readonly pythonShop?: boolean;
+  /** How the bot plays its rounds. */
+  readonly play?: PlayOptions;
   /** Rounds per shop evaluation. */
   readonly evalSeeds?: number;
 }
@@ -25,17 +30,41 @@ export interface SimRunResult {
   readonly won: boolean;
   readonly lostAt: number | null;
   readonly bought: readonly string[];
-  readonly curios: readonly string[];
+  readonly dragons: readonly string[];
   readonly policy: Policy;
   readonly tiles: number;
+  /** Money left at the end of the run. */
+  readonly money: number;
+  /** Rounds that ended early because the table was banked. */
+  readonly banked: number;
+  /** Kongs on the table at the end of each round, summed. */
+  readonly kongs: number;
+}
+
+/** How the bot plays the round beyond choosing sets (the experiments in docs/balance). */
+export interface PlayOptions {
+  /** Bank the table as soon as it beats the target. */
+  readonly bank?: boolean;
+  /** Upgrade a tabled pong to a kong when its fourth tile is in hand and it gains. */
+  readonly upgrade?: boolean;
 }
 
 /** Plays the current round to its end with the bot. */
-export function driveRound(start: RunState, policy: Policy): RunState {
+export function driveRound(start: RunState, policy: Policy, opts: PlayOptions = {}): RunState {
   let run = start;
   for (let guard = 0; guard < 500 && run.phase === 'round' && run.round; guard++) {
-    run = runReduce(run, { type: 'auto', policy }).state;
+    if (opts.bank && finishProblem(run.round) === null) {
+      return runReduce(run, { type: 'round', action: { type: 'finish' } }).state;
+    }
+    if (needsRefill(run.round)) run = runReduce(run, { type: 'auto', policy }).state;
     if (run.phase !== 'round' || !run.round) break;
+    if (opts.upgrade) {
+      const up = bestUpgrade(run.round);
+      if (up) {
+        run = runReduce(run, { type: 'round', action: { type: 'upgrade', ...up } }).state;
+        continue;
+      }
+    }
     const m = chooseMove(run.round, policy);
     if (!m) break;
     const next = runReduce(run, { type: 'round', action: moveAction(m) }).state;
@@ -43,6 +72,29 @@ export function driveRound(start: RunState, policy: Policy): RunState {
     run = next;
   }
   return run;
+}
+
+/** An upgrade the bot likes: it gains at least as much as the best new set would. */
+function bestUpgrade(
+  round: NonNullable<RunState['round']>,
+): { setIndex: number; tileId: number } | null {
+  if (needsRefill(round)) return null;
+  const ctx = scoreContext(round);
+  const now = scoreTable(round.table, ctx).total;
+  let best: { setIndex: number; tileId: number; total: number } | null = null;
+  for (const u of upgrades(round)) {
+    const pv = previewUpgrade(round, u.setIndex, u.tileId);
+    if (pv && pv.after.total > now && (!best || pv.after.total > best.total))
+      best = { ...u, total: pv.after.total };
+  }
+  if (!best) return null;
+  let play = 0;
+  for (const p of legalPlays(round.hand, round.discardsLeft))
+    play = Math.max(
+      play,
+      scoreTable([...round.table, { kind: p.kind, tiles: p.tiles }], ctx).total,
+    );
+  return best.total >= play ? { setIndex: best.setIndex, tileId: best.tileId } : null;
 }
 
 /** One whole run, headless: four rounds, three teahouses. */
@@ -60,11 +112,20 @@ export function playRunSim(o: SimRunOptions): SimRunResult {
   const scores: number[] = [];
   const bought: string[] = [];
   let lostAt: number | null = null;
+  let banked = 0;
+  let kongs = 0;
   const shopperOpts = { ...DEFAULT_SHOPPER, fire: o.fire, evalSeeds: o.evalSeeds ?? 12 };
   for (let r = 0; r < 4; r++) {
-    run = runReduce(run, { type: 'chooseHost', beast: false }).state;
-    run = driveRound(run, policy);
+    run = runReduce(run, { type: 'chooseHost', storm: false }).state;
+    run = driveRound(run, policy, o.play ?? {});
     scores.push(run.scores[run.scores.length - 1] ?? 0);
+    if (
+      run.round &&
+      run.round.playsLeft > 0 &&
+      run.round.hand.length + run.round.stacks.flat().length > 0
+    )
+      banked++;
+    kongs += run.round?.table.filter((t) => t.kind === 'kong').length ?? 0;
     if (run.phase === 'over') {
       lostAt = r;
       break;
@@ -98,8 +159,11 @@ export function playRunSim(o: SimRunOptions): SimRunResult {
     won: lostAt === null,
     lostAt,
     bought,
-    curios: run.curios,
+    dragons: run.dragons,
     policy,
     tiles: run.tiles.length,
+    money: run.money,
+    banked,
+    kongs,
   };
 }

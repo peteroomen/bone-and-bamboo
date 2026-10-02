@@ -28,9 +28,9 @@ from roundsim import SUIT_NAME, find_sets, tile_chips, tname
 
 # ---- prices and levels (the "cheap chows" pricing) -----------------------------------------
 PRICES = {"single": (5, 0), "pair": (5, 1), "chow": (10, 1), "pong": (40, 4), "kong": (100, 8),
-          "dragons": (60, 6), "winds": (100, 10)}
+          "winds": (100, 10)}
 LEVEL_UP = {"single": (0, 0), "pair": (5, 1), "chow": (10, 1), "pong": (15, 2), "kong": (30, 3),
-            "dragons": (20, 2), "winds": (30, 3)}
+            "winds": (30, 3)}
 
 ROUND = dict(hand=8, stacks=8, peek=1, plays=8, discards=3, max_discard=5)
 REWARD = [10, 12, 14]   # paid after rounds 1-3
@@ -139,10 +139,16 @@ CURIOS = {c.name: c for c in [
     Curio("kong_bell", 8, "x2 mult per kong",
           score=lambda t, c, m, b: (c, m, 2.0 ** sum(k == "kong" for k, _ in t)),
           set_bonus=lambda k, ts, t, b: 250 if k == "kong" else 0),
-    Curio("dragon_lantern", 8, "+12 mult per dragon set",
-          score=lambda t, c, m, b: (c, m + 12 * sum(k == "dragons" or (is_big(k) and ts[0][0] == "d") for k, ts in t), 1.0),
-          set_bonus=lambda k, ts, t, b: 144 if k == "dragons" or (is_big(k) and ts[0][0] == "d") else 0,
-          tile_bonus=lambda t, b: 2.0 if t[0] == "d" else 1.0),
+    Curio("wind_chime", 8, "+12 mult per wind set",
+          score=lambda t, c, m, b: (c, m + 12 * sum(k == "winds" or (is_big(k) and ts[0][0] == "w") for k, ts in t), 1.0),
+          set_bonus=lambda k, ts, t, b: 144 if k == "winds" or (is_big(k) and ts[0][0] == "w") else 0,
+          tile_bonus=lambda t, b: 2.0 if t[0] == "w" else 1.0),
+    Curio("three_treasures", 8, "x1.5 mult per pong",
+          score=lambda t, c, m, b: (c, m, 1.5 ** sum(k == "pong" for k, _ in t)),
+          set_bonus=lambda k, ts, t, b: 120 if k == "pong" else 0),
+    Curio("stone_lion", 8, "+3 mult per tile in pongs and kongs",
+          score=lambda t, c, m, b: (c, m + 3 * sum(len(ts) for k, ts in t if is_big(k)), 1.0),
+          set_bonus=lambda k, ts, t, b: 108 if k == "pong" else 144 if k == "kong" else 0),
     Curio("twin_cranes", 8, "x1.5 mult per pair of identical sets",
           score=lambda t, c, m, b: (c, m, 1.5 ** identical_pairs(t)),
           set_bonus=lambda k, ts, t, b: 100 if (k, tuple(ts)) in {(x, tuple(y)) for x, y in t} else 0),
@@ -271,7 +277,7 @@ class RunRound:
         sets = find_sets(self.hand)
         sets = [s for s in sets if self.set_value(*s) > -50 or self.plays <= 2]
         if self.policy == "pongs":
-            big = [s for s in sets if s[0] in ("kong", "pong", "dragons", "winds")]
+            big = [s for s in sets if s[0] in ("kong", "pong", "winds")]
             if big:
                 return self.play(*max(big, key=lambda s: self.set_value(*s)))
             if self.discards and self.plays > 1:
@@ -362,7 +368,7 @@ class Offer:
 
 
 FORTUNES = ["rubbing", "fire", "brush", "jade", "bone"]
-PACKS = ["fourth", "dragons", "winds", "honour"]
+PACKS = ["fourth", "winds", "honour"]  # the design also has an Almanac pack (not modelled here)
 ALMANAC = ["chow", "pong", "pair", "kong"]
 
 
@@ -382,12 +388,10 @@ def roll_shop(rng, build):
         nums = [t for t, k in Counter(build.tiles).items() if t[0] in SUIT_NAME and k == 3]
         picks = rng.sample(nums, min(3, len(nums)))
         tiles = [Offer("tile", ("copy", t), 4) for t in picks]  # one pack, choose one
-    elif pack == "dragons":
-        tiles = [Offer("tile", ("dragons",), 4)]
     elif pack == "winds":
         tiles = [Offer("tile", ("winds",), 4)]
     else:
-        h = rng.choice([("d", 1), ("d", 2), ("d", 3), ("w", 1), ("w", 2), ("w", 3), ("w", 4)])
+        h = rng.choice([("w", 1), ("w", 2), ("w", 3), ("w", 4)])
         tiles = [Offer("tile", ("honour", h), 5)]
     return curios + alm + fort + tiles
 
@@ -449,8 +453,6 @@ def apply(build, offer):
     elif k == "tile":
         if w[0] == "copy":
             b.tiles.append(w[1])
-        elif w[0] == "dragons":
-            b.tiles += [("d", 1), ("d", 2), ("d", 3)]
         elif w[0] == "winds":
             b.tiles += [("w", 1), ("w", 2), ("w", 3), ("w", 4)]
         else:

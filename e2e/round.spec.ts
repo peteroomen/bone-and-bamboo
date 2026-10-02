@@ -32,7 +32,7 @@ test('a whole round through the UI: start, mid-round and the score count', async
   await freshStart(page, { speed: 'instant' });
   await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await expect(page.getByTestId('round')).toBeVisible();
 
   // The start: an empty hand, eight stacks, nothing on the table.
@@ -47,8 +47,12 @@ test('a whole round through the UI: start, mid-round and the score count', async
   await page.screenshot({ path: shot('round-1-start', project) });
 
   // Fill the hand by tapping stacks: the hint bot picks which.
-  await botTurn(page);
-  await botTurn(page);
+  // A legal opening can spend all three discards before placing a set, so advance by observed
+  // plays rather than assuming a turn always means a play.
+  for (let turn = 0; turn < 5; turn++) {
+    if (((await hook(page))?.run.round?.table.length ?? 0) >= 2) break;
+    await botTurn(page);
+  }
   await expect(page.locator('[data-testid^="set-"]').first()).toBeVisible();
   await page.screenshot({ path: shot('round-2-mid', project) });
   const h = await hook(page);
@@ -80,7 +84,7 @@ test('the count-up plays at normal speed and can be skipped', async ({ page }) =
   await freshStart(page, { speed: 'normal' });
   await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await playRound(page, { auto: true });
   await expect(page.getByTestId('score-overlay')).toBeVisible();
   await expect(page.getByTestId('score-total')).toHaveCount(0);
@@ -92,7 +96,7 @@ test('play and discard enable only when legal', async ({ page }) => {
   await freshStart(page);
   await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await expect(page.getByTestId('btn-play')).toBeDisabled();
   await expect(page.getByTestId('btn-discard')).toBeDisabled();
   await page.getByTestId('btn-auto').click();

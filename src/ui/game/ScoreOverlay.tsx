@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CURIOS } from '@/content/curios';
+import { DRAGONS } from '@/content/dragons';
 import { SET_TYPES } from '@/content/sets';
 import type { PlayedSet, ScoreResult, ScoreStep } from '@/engine/scoring';
 import { kindName } from '@/engine/tiles';
@@ -8,11 +8,11 @@ import { speedFactor } from '@/ui/state/store';
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 const STEP_MS = 520;
 
-/** A set in a few words: "Chow 2-4 Bamboo", "Pong 9 Characters", "Three Dragons". */
+/** A set in a few words: "Chow 2-4 Bamboo", "Pong 9 Characters". */
 function setLabel(set: PlayedSet): string {
   const name = SET_TYPES[set.kind].name;
   const first = set.tiles[0];
-  if (!first || set.kind === 'dragons' || set.kind === 'winds') return name;
+  if (!first || set.kind === 'winds') return name;
   const kind = (k: string) => kindName(k).replace(/^\d /, '');
   if (set.kind === 'chow') {
     const ranks = set.tiles.map((t) => Number(t.kind.slice(1)));
@@ -31,7 +31,7 @@ function stepLabel(step: ScoreStep, table: readonly PlayedSet[]): string {
     const set = table[step.index];
     return set ? setLabel(set) : SET_TYPES[step.kind].name;
   }
-  if (step.type === 'curio') return CURIOS[step.id]?.name ?? step.id;
+  if (step.type === 'dragon') return DRAGONS[step.id]?.name ?? step.id;
   return 'The host';
 }
 
@@ -44,7 +44,7 @@ function stepDetail(step: ScoreStep): string {
     if (step.enhX !== 1) bits.push(`×${step.enhX}`);
     return bits.join('  ');
   }
-  if (step.type === 'curio') {
+  if (step.type === 'dragon') {
     const bits: string[] = [];
     if (step.addChips) bits.push(`+${fmt(step.addChips)} chips`);
     if (step.addMult) bits.push(`+${fmt(step.addMult)} mult`);
@@ -58,7 +58,7 @@ function stepDetail(step: ScoreStep): string {
 }
 
 /**
- * The scoring count-up: the table's sets then the curios, one step at a time, chips × mult
+ * The scoring count-up: the table's sets then the dragons, one step at a time, chips × mult
  * building up to the score. Everything shown comes from the engine's score steps.
  */
 export function ScoreOverlay({

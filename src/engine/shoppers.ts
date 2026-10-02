@@ -1,4 +1,4 @@
-import { CURIO_SLOTS } from '@/content/curios';
+import { DRAGON_SLOTS } from '@/content/dragons';
 import type { FortuneId } from '@/content/fortunes';
 import { FORTUNE_SLOTS } from '@/content/fortunes';
 import type { SuitedSuit } from '@/content/tiles';
@@ -22,7 +22,7 @@ export interface ShopperOptions {
 
 export const DEFAULT_SHOPPER: ShopperOptions = { fire: 6, evalSeeds: 12 };
 
-const SUIT_CURIOS = ['bambooGrove', 'coinPurse', 'scroll', 'twoSuits'];
+const SUIT_DRAGONS = ['bambooGrove', 'coinPurse', 'scroll', 'twoSuits'];
 
 /** The mean score of the bot over seeded rounds with this build. */
 export function estimate(run: RunState, seeds: readonly number[], policy: Policy): number {
@@ -40,7 +40,7 @@ function prefSuit(run: RunState): SuitedSuit {
     ['coinPurse', 'p'],
     ['scroll', 'm'],
   ] as const)
-    if (run.curios.includes(c)) return s;
+    if (run.dragons.includes(c)) return s;
   const n = new Map<string, number>();
   for (const t of run.tiles)
     if (isSuited(t.kind)) n.set(suitOf(t.kind), (n.get(suitOf(t.kind)) ?? 0) + 1);
@@ -65,7 +65,7 @@ export function fortuneArgsFor(
   const byKind = (kind: string): Tile | undefined =>
     run.tiles.find((t) => t.kind === kind && !t.enh);
   const suited = run.tiles.filter((t) => isSuited(t.kind));
-  const hasSuitCurio = SUIT_CURIOS.some((c) => run.curios.includes(c));
+  const hasSuitDragon = SUIT_DRAGONS.some((c) => run.dragons.includes(c));
   switch (f) {
     case 'rubbing': {
       for (const n of [5, 4, 6, 3, 7, 2, 8]) {
@@ -79,8 +79,8 @@ export function fortuneArgsFor(
     }
     case 'fire': {
       let out: Tile[];
-      if (run.curios.includes('allSimples')) out = run.tiles.filter((t) => isOutside(t.kind));
-      else if (hasSuitCurio)
+      if (run.dragons.includes('allSimples')) out = run.tiles.filter((t) => isOutside(t.kind));
+      else if (hasSuitDragon)
         out = suited
           .filter((t) => suitOf(t.kind) !== pref)
           .sort((a, b) => Math.abs(rankOf(b.kind) - 5) - Math.abs(rankOf(a.kind) - 5));
@@ -89,7 +89,7 @@ export function fortuneArgsFor(
       return ids.length ? { tileIds: ids } : null;
     }
     case 'brush': {
-      if (!hasSuitCurio) return null;
+      if (!hasSuitDragon) return null;
       const ids = suited
         .filter((t) => suitOf(t.kind) !== pref && rankOf(t.kind) >= 3 && rankOf(t.kind) <= 7)
         .slice(0, 3)
@@ -111,15 +111,15 @@ export function fortuneArgsFor(
 /** Every way to spend on one shop item: the resulting runs (a pack gives one per offer). */
 function purchases(
   run: RunState,
-  what: 'curio' | 'almanac' | 'fortune' | 'pack',
+  what: 'dragon' | 'almanac' | 'fortune' | 'pack',
   index: number,
   opts: ShopperOptions,
 ): { price: number; label: string; state: RunState }[] {
   const shop = run.shop;
   if (!shop) return [];
   const price = (
-    what === 'curio'
-      ? shop.curios[index]
+    what === 'dragon'
+      ? shop.dragons[index]
       : what === 'almanac'
         ? shop.almanac[index]
         : what === 'fortune'
@@ -131,8 +131,8 @@ function purchases(
   if (bought.state === run) return [];
   const s = bought.state;
   const label = (
-    what === 'curio'
-      ? `curio:${shop.curios[index]?.item}`
+    what === 'dragon'
+      ? `dragon:${shop.dragons[index]?.item}`
       : what === 'almanac'
         ? `almanac:${shop.almanac[index]?.item}`
         : what === 'fortune'
@@ -157,19 +157,19 @@ function purchases(
   return [{ price, label, state: s }];
 }
 
-function canBuy(run: RunState, what: 'curio' | 'almanac' | 'fortune' | 'pack'): boolean {
-  if (what === 'curio' && run.curios.length >= CURIO_SLOTS) return false;
+function canBuy(run: RunState, what: 'dragon' | 'almanac' | 'fortune' | 'pack'): boolean {
+  if (what === 'dragon' && run.dragons.length >= DRAGON_SLOTS) return false;
   if (what === 'fortune' && run.fortunes.length >= FORTUNE_SLOTS) return false;
   return true;
 }
 
 const ITEMS = (
   run: RunState,
-): { what: 'curio' | 'almanac' | 'fortune' | 'pack'; index: number }[] => {
+): { what: 'dragon' | 'almanac' | 'fortune' | 'pack'; index: number }[] => {
   const shop = run.shop;
   if (!shop) return [];
   return [
-    ...shop.curios.map((_, index) => ({ what: 'curio' as const, index })),
+    ...shop.dragons.map((_, index) => ({ what: 'dragon' as const, index })),
     ...shop.almanac.map((_, index) => ({ what: 'almanac' as const, index })),
     ...shop.fortunes.map((_, index) => ({ what: 'fortune' as const, index })),
     { what: 'pack' as const, index: 0 },
@@ -178,14 +178,14 @@ const ITEMS = (
 
 function isSold(
   run: RunState,
-  what: 'curio' | 'almanac' | 'fortune' | 'pack',
+  what: 'dragon' | 'almanac' | 'fortune' | 'pack',
   index: number,
 ): boolean {
   const shop = run.shop;
   if (!shop) return true;
   const o =
-    what === 'curio'
-      ? shop.curios[index]
+    what === 'dragon'
+      ? shop.dragons[index]
       : what === 'almanac'
         ? shop.almanac[index]
         : what === 'fortune'
@@ -204,7 +204,7 @@ export interface ShopResult {
 export function giftSmart(run: RunState, seeds: readonly number[], policy: Policy): RunState {
   const gift = run.gift;
   if (!gift) return run;
-  if (run.curios.length >= CURIO_SLOTS) return runReduce(run, { type: 'gift', pick: null }).state;
+  if (run.dragons.length >= DRAGON_SLOTS) return runReduce(run, { type: 'gift', pick: null }).state;
   let bestI = 0;
   let bestE = -Infinity;
   gift.offers.forEach((_, i) => {
@@ -221,7 +221,7 @@ export function giftSmart(run: RunState, seeds: readonly number[], policy: Polic
 export function giftCasual(run: RunState, rng: Rng): RunState {
   const gift = run.gift;
   if (!gift) return run;
-  if (run.curios.length >= CURIO_SLOTS) return runReduce(run, { type: 'gift', pick: null }).state;
+  if (run.dragons.length >= DRAGON_SLOTS) return runReduce(run, { type: 'gift', pick: null }).state;
   return runReduce(run, { type: 'gift', pick: rng.int(gift.offers.length) }).state;
 }
 

@@ -14,7 +14,6 @@ describe('set detection', () => {
     expect(kind('m9 m9 m9')).toBe('pong');
     expect(kind('d1 d1 d1')).toBe('pong');
     expect(kind('p3 p3 p3 p3')).toBe('kong');
-    expect(kind('d1 d2 d3')).toBe('dragons');
     expect(kind('w1 w2 w3 w4')).toBe('winds');
   });
   it('rejects things that are not sets', () => {
@@ -22,22 +21,21 @@ describe('set detection', () => {
     expect(kind('p1 p2 p4')).toBeNull();
     expect(kind('p1 p2 s3')).toBeNull();
     expect(kind('p8 p9 p1')).toBeNull();
-    expect(kind('d1 d2 d2')).toBeNull();
+    expect(kind('d1 d2 d3')).toBeNull();
     expect(kind('w1 w2 w3')).toBeNull();
     expect(kind('p1 p1 p1 p2')).toBeNull();
     expect(kind('p1 p2 p3 p4 p5')).toBeNull();
   });
   it('never puts honours in a run', () => {
     expect(kind('w1 w2 w3')).toBeNull();
-    expect(kind('d1 d2 d3')).toBe('dragons');
-    expect(findSets(tiles('w1 w2 w3 d1 d2')).map((c) => c.kind)).toEqual([]);
+    expect(findSets(tiles('w1 w2 w3 w1')).map((c) => c.kind)).toEqual(['pair']);
   });
   it('finds every playable set in a hand', () => {
-    const kinds = findSets(tiles('p1 p2 p3 p3 p3 s5 s5 d1 d2 d3 w1')).map((c) => c.kind);
+    const kinds = findSets(tiles('p1 p2 p3 p3 p3 s5 s5 w1 w2 w3 w4')).map((c) => c.kind);
     expect(kinds.filter((k) => k === 'chow')).toHaveLength(1);
     expect(kinds).toContain('pong');
     expect(kinds.filter((k) => k === 'pair')).toHaveLength(2);
-    expect(kinds).toContain('dragons');
+    expect(kinds).toContain('winds');
     expect(findSets(tiles('p4 p4 p4 p4')).map((c) => c.kind)).toEqual(['kong', 'pong', 'pair']);
   });
   it('prefers enhanced tiles when it picks a set from the hand', () => {

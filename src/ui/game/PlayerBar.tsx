@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { CURIOS, CURIO_SLOTS } from '@/content/curios';
+import { DRAGONS, DRAGON_SLOTS } from '@/content/dragons';
 import { FORTUNES, FORTUNE_SLOTS } from '@/content/fortunes';
 import { fortunePool } from '@/engine/run';
 import type { FortuneArgs, RunAction, RunEvent, RunState } from '@/engine/runTypes';
 import { sellPrice } from '@/engine/shop';
-import { Glyph, CurioGlyph } from './Cards';
+import { Glyph, DragonGlyph } from './Cards';
 import { FORTUNE_GLYPH } from '@/ui/art/glyphs';
 import { Sheet } from './Sheet';
 import { TilePicker } from './TilePicker';
 
 type Open =
   | null
-  | { kind: 'curios' }
+  | { kind: 'dragons' }
   | { kind: 'fortunes' }
   | { kind: 'set' }
   | { kind: 'use'; index: number };
 
 /**
- * The player bar, docked at the foot of every run screen: your money, your curio row, your fortune
+ * The player bar, docked at the foot of every run screen: your money, your dragon row, your fortune
  * pocket and your set. Each opens a sheet. Each is one big touch target, not five small ones.
  */
 export function PlayerBar({
@@ -56,15 +56,15 @@ export function PlayerBar({
         </span>
         <button
           type="button"
-          className="pb-slot pb-curios"
-          data-testid="pb-curios"
-          aria-label={`Curios, ${run.curios.length} of ${CURIO_SLOTS}`}
-          onClick={() => setOpen({ kind: 'curios' })}
+          className="pb-slot pb-dragons"
+          data-testid="pb-dragons"
+          aria-label={`Dragons, ${run.dragons.length} of ${DRAGON_SLOTS}`}
+          onClick={() => setOpen({ kind: 'dragons' })}
         >
-          {Array.from({ length: CURIO_SLOTS }, (_, i) => {
-            const id = run.curios[i];
+          {Array.from({ length: DRAGON_SLOTS }, (_, i) => {
+            const id = run.dragons[i];
             return id ? (
-              <CurioGlyph key={i} id={id} size={28} />
+              <DragonGlyph key={i} id={id} size={28} />
             ) : (
               <span key={i} className="glyph empty" aria-hidden style={{ width: 28, height: 28 }} />
             );
@@ -98,20 +98,20 @@ export function PlayerBar({
         </button>
       </div>
 
-      {open?.kind === 'curios' && (
+      {open?.kind === 'dragons' && (
         <Sheet
-          title={`Curios ${run.curios.length}/${CURIO_SLOTS}`}
+          title={`Dragons ${run.dragons.length}/${DRAGON_SLOTS}`}
           onClose={close}
-          testId="sheet-curios"
+          testId="sheet-dragons"
         >
-          {run.curios.length === 0 && <p className="muted">No curios yet.</p>}
+          {run.dragons.length === 0 && <p className="muted">No dragons yet.</p>}
           <ul className="sheet-list">
-            {run.curios.map((id, i) => (
+            {run.dragons.map((id, i) => (
               <li key={id}>
-                <CurioGlyph id={id} />
+                <DragonGlyph id={id} />
                 <span>
-                  <b>{CURIOS[id]?.name}</b>
-                  <span>{CURIOS[id]?.text}</span>
+                  <b>{DRAGONS[id]?.name}</b>
+                  <span>{DRAGONS[id]?.text}</span>
                 </span>
                 {canSell && (
                   <button

@@ -1,39 +1,49 @@
-import { SEASON_NAMES, WIND_NAMES } from '@/content/rules';
 import { hostFor } from '@/content/hosts';
+import { SEASON_NAMES, WIND_NAMES } from '@/content/rules';
 import { targetFor } from '@/engine/run';
 import type { RunState } from '@/engine/runTypes';
-import { Portrait } from './Portrait';
+import { TileView } from '@/ui/art/Tile';
+import { useStore } from '@/ui/state/store';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 
-/** Before each round: choose the wind's folk spirit or its great beast. */
-export function HostView({ run, choose }: { run: RunState; choose: (beast: boolean) => void }) {
+/** Before each round: the wind tile hosts it. Choose how it blows, calm or storm. */
+export function HostView({ run, choose }: { run: RunState; choose: (storm: boolean) => void }) {
+  const theme = useStore((s) => s.settings.colourway);
+  const tile = hostFor(run.roundIndex, false).tile;
   return (
     <div className="host" data-testid="host">
-      <h2>
-        {WIND_NAMES[run.roundIndex]} <span>{SEASON_NAMES[run.roundIndex]}</span>
-      </h2>
-      <p className="host-sub">Choose your host for round {run.roundIndex + 1} of 4.</p>
-      {[false, true].map((beast) => {
-        const h = hostFor(run.roundIndex, beast);
+      <div className="host-head">
+        <span className="host-tile" aria-hidden>
+          <TileView tile={{ id: -100 - run.roundIndex, kind: tile }} theme={theme} />
+        </span>
+        <div>
+          <h2>{WIND_NAMES[run.roundIndex]} wind</h2>
+          <p className="host-sub">
+            {SEASON_NAMES[run.roundIndex]} · round {run.roundIndex + 1} of 4. How will it blow?
+          </p>
+        </div>
+      </div>
+      {[false, true].map((storm) => {
+        const h = hostFor(run.roundIndex, storm);
         return (
           <button
             key={h.id}
             type="button"
-            className="host-card"
-            data-testid={beast ? 'host-beast' : 'host-folk'}
-            onClick={() => choose(beast)}
+            className={`host-card${storm ? ' storm' : ''}`}
+            data-testid={storm ? 'host-storm' : 'host-calm'}
+            onClick={() => choose(storm)}
           >
-            <Portrait name={h.name} colour={h.colour} size={64} />
             <span className="host-text">
-              <b>
-                {h.name}: {h.title}
-              </b>
-              <span>{h.twistText}</span>
+              <b>{storm ? 'Storm' : 'Calm'}</b>
               <i>
-                Target {fmt(targetFor(run.lantern, run.roundIndex, beast, run.targets))}
-                {beast ? ' · bigger gift' : ''}
+                Target {fmt(targetFor(run.lantern, run.roundIndex, storm, run.targets))}
+                {storm ? ' · a bigger gift' : ''}
               </i>
+              <span className="host-twist">{h.title}</span>
+              <span className="muted" data-testid="twist-text">
+                {h.twistText}
+              </span>
             </span>
           </button>
         );

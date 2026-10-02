@@ -1,4 +1,4 @@
-export type SetKind = 'single' | 'pair' | 'chow' | 'pong' | 'kong' | 'dragons' | 'winds';
+export type SetKind = 'single' | 'pair' | 'chow' | 'pong' | 'kong' | 'winds';
 
 export interface SetType {
   readonly id: SetKind;
@@ -63,16 +63,6 @@ export const SET_TYPES: Record<SetKind, SetType> = {
     tiles: 4,
     blurb: 'Four alike.',
   },
-  dragons: {
-    id: 'dragons',
-    name: 'Three Dragons',
-    chips: 60,
-    mult: 6,
-    levelChips: 20,
-    levelMult: 2,
-    tiles: 3,
-    blurb: 'One of each dragon.',
-  },
   winds: {
     id: 'winds',
     name: 'Four Winds',
@@ -85,18 +75,10 @@ export const SET_TYPES: Record<SetKind, SetType> = {
   },
 };
 
-export const SET_ORDER: readonly SetKind[] = [
-  'kong',
-  'winds',
-  'dragons',
-  'pong',
-  'chow',
-  'pair',
-  'single',
-];
+export const SET_ORDER: readonly SetKind[] = ['kong', 'winds', 'pong', 'chow', 'pair', 'single'];
 
-/** Sets an almanac page can level up. The simulator's pool: Three Dragons and Four Winds are
- *  levelled by the same pages in the design but are left out of the shop until the planner decides. */
+/** Sets an almanac page can level up. The simulator's pool: Four Winds has a level-up in the
+ *  design but no page rolls it until the planner decides. */
 export const ALMANAC_POOL: readonly SetKind[] = ['chow', 'pong', 'pair', 'kong'];
 
 export const ALMANAC_PRICE = 3;

@@ -11,7 +11,7 @@ import {
 } from './round';
 import { type PlayedSet } from './scoring';
 import { type Candidate, findSets } from './sets';
-import { type Tile, isDragon, isOutside, isSuited, rankOf, suitOf, tileChips } from './tiles';
+import { type Tile, isOutside, isSuited, isWind, rankOf, suitOf, tileChips } from './tiles';
 import { visibleTiles } from './wall';
 
 /**
@@ -41,7 +41,7 @@ function counts(hand: readonly Tile[]): Map<TileKind, number> {
 
 const get = (c: Counts, k: TileKind): number => c.get(k) ?? 0;
 
-// ---- curio-aware heuristics (the Python set_bonus and tile_bonus) -------------------------------
+// ---- dragon-aware heuristics (the Python set_bonus and tile_bonus) -------------------------------
 type SetBonus = (kind: SetKind, tiles: readonly Tile[], table: readonly PlayedSet[]) => number;
 type TileBonus = (kind: TileKind) => number;
 
@@ -78,8 +78,10 @@ const SET_BONUS: Record<string, SetBonus> = {
   pureStraight: (k, tiles) =>
     k === 'chow' && [1, 4, 7].includes(Math.min(...tiles.map((t) => rankOf(t.kind)))) ? 40 : 0,
   kongBell: (k) => (k === 'kong' ? 250 : 0),
-  dragonLantern: (k, tiles) =>
-    k === 'dragons' || (isBigKind(k) && isDragon((tiles[0] as Tile).kind)) ? 144 : 0,
+  windChime: (k, tiles) =>
+    k === 'winds' || (isBigKind(k) && isWind((tiles[0] as Tile).kind)) ? 144 : 0,
+  threeTreasures: (k) => (k === 'pong' ? 120 : 0),
+  stoneLion: (k) => (k === 'pong' ? 108 : k === 'kong' ? 144 : 0),
   twinCranes: (k, tiles, table) => {
     const key = tiles.map((t) => t.kind).join(',');
     return table.some((s) => s.kind === k && s.tiles.map((t) => t.kind).join(',') === key)
@@ -94,7 +96,7 @@ const TILE_BONUS: Record<string, TileBonus> = {
   scroll: suitTile('m'),
   outside: (k) => (isOutside(k) ? 1.4 : 1),
   allSimples: (k) => (isOutside(k) ? 0.1 : 1),
-  dragonLantern: (k) => (isDragon(k) ? 2 : 1),
+  windChime: (k) => (isWind(k) ? 2 : 1),
 };
 
 // ---- values ------------------------------------------------------------------------------------
@@ -109,7 +111,7 @@ export function setValue(s: RoundState, kind: SetKind, tiles: readonly Tile[]): 
     const en = ENHANCEMENTS[x.enh];
     v += 12 * en.mult + en.chips + (en.xmult > 1 ? 60 : 0);
   }
-  for (const id of s.curios) {
+  for (const id of s.dragons) {
     const sb = SET_BONUS[id];
     if (sb) v += sb(kind, tiles, s.table);
   }
@@ -131,8 +133,6 @@ function tileValue(s: RoundState, kind: TileKind, c: Counts, policy: Policy): nu
       if ((has(r - 2) && has(r - 1)) || (has(r - 1) && has(r + 1)) || (has(r + 1) && has(r + 2)))
         v = hunter ? 3 : 8;
     }
-    if (!v && isDragon(kind) && [1, 2, 3].filter((x) => get(c, `d${x}`) > 0).length === 2 && !n)
-      v = 8;
     if (
       !v &&
       kind.startsWith('w') &&
@@ -148,7 +148,7 @@ function tileValue(s: RoundState, kind: TileKind, c: Counts, policy: Policy): nu
       else if (get(c, `${su}${r - 2}`) || get(c, `${su}${r + 2}`)) v = 2;
     }
   }
-  for (const id of s.curios) {
+  for (const id of s.dragons) {
     const tb = TILE_BONUS[id];
     if (tb) v *= tb(kind);
   }
@@ -244,7 +244,7 @@ export function chooseMove(s: RoundState, policy: Policy = 'greedy'): Move | nul
   const sets = keptSets(s, all);
   const canDiscard = s.discardsLeft > 0;
   if (policy === 'pongs') {
-    const big = sets.filter((c) => ['kong', 'pong', 'dragons', 'winds'].includes(c.kind));
+    const big = sets.filter((c) => ['kong', 'pong', 'winds'].includes(c.kind));
     if (big.length) return playMove(best(s, big), 'A big set: play it.');
     if (canDiscard && s.playsLeft > 1)
       return discardMove(s, policy, 'No big set yet: discard to dig for one.');

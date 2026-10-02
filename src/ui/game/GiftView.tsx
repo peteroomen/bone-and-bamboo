@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { CURIO_SLOTS } from '@/content/curios';
+import { DRAGON_SLOTS } from '@/content/dragons';
 import { hostFor } from '@/content/hosts';
+import { WIND_NAMES } from '@/content/rules';
+import { TileView } from '@/ui/art/Tile';
+import { useStore } from '@/ui/state/store';
 import type { RunAction, RunEvent, RunState } from '@/engine/runTypes';
-import { Portrait } from './Portrait';
-import { CurioGlyph, OfferCard } from './Cards';
-import { curioCard } from './cardProps';
-import { CURIOS } from '@/content/curios';
+import { DragonGlyph, OfferCard } from './Cards';
+import { dragonCard } from './cardProps';
+import { DRAGONS } from '@/content/dragons';
 
-/** After a round is won, the host leaves a gift: one of the rare curios, free. */
+/** After a round is won, the host leaves a gift: one of the rare dragons, free. */
 export function GiftView({
   run,
   dispatch,
@@ -16,10 +18,11 @@ export function GiftView({
   dispatch: (a: RunAction) => RunEvent[];
 }) {
   const gift = run.gift;
+  const theme = useStore((st) => st.settings.colourway);
   const [chosen, setChosen] = useState<number | null>(null);
   if (!gift) return null;
-  const host = hostFor(run.roundIndex, run.beast);
-  const full = run.curios.length >= CURIO_SLOTS;
+  const host = hostFor(run.roundIndex, run.storm);
+  const full = run.dragons.length >= DRAGON_SLOTS;
 
   const take = (i: number) => {
     if (full) setChosen(i);
@@ -28,15 +31,17 @@ export function GiftView({
 
   return (
     <div className="gift" data-testid="gift">
-      <Portrait name={host.name} colour={host.colour} size={72} />
-      <h2>{host.name} leaves a gift</h2>
+      <span className="host-tile" aria-hidden>
+        <TileView tile={{ id: -200, kind: host.tile }} theme={theme} />
+      </span>
+      <h2>The {WIND_NAMES[run.roundIndex]} wind leaves a gift</h2>
       <p className="muted">Choose one.{gift.bonus ? ` And $${gift.bonus} for the road.` : ''}</p>
       {chosen === null ? (
         <div className="offers gift-offers">
           {gift.offers.map((id, i) => (
             <OfferCard
               key={id}
-              {...curioCard(id)}
+              {...dragonCard(id)}
               price="Take"
               testId={`gift-${i}`}
               onClick={() => take(i)}
@@ -46,16 +51,16 @@ export function GiftView({
       ) : (
         <div className="swap" data-testid="gift-swap">
           <p>
-            Your curios are full. Swap one out for{' '}
-            <b>{CURIOS[gift.offers[chosen] as string]?.name}</b>:
+            Your dragons are full. Swap one out for{' '}
+            <b>{DRAGONS[gift.offers[chosen] as string]?.name}</b>:
           </p>
           <ul className="sheet-list">
-            {run.curios.map((id, i) => (
+            {run.dragons.map((id, i) => (
               <li key={id}>
-                <CurioGlyph id={id} />
+                <DragonGlyph id={id} />
                 <span>
-                  <b>{CURIOS[id]?.name}</b>
-                  <span>{CURIOS[id]?.text}</span>
+                  <b>{DRAGONS[id]?.name}</b>
+                  <span>{DRAGONS[id]?.text}</span>
                 </span>
                 <button
                   type="button"

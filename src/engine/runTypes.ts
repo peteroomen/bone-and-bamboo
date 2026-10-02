@@ -25,7 +25,7 @@ export interface OpenPack {
 }
 
 export interface ShopState {
-  readonly curios: readonly ShopItem<string>[];
+  readonly dragons: readonly ShopItem<string>[];
   readonly almanac: readonly ShopItem<SetKind>[];
   readonly fortunes: readonly ShopItem<FortuneId>[];
   readonly pack: ShopItem<PackId>;
@@ -37,7 +37,7 @@ export interface ShopState {
 
 export interface GiftState {
   readonly offers: readonly string[];
-  /** Money the gift came with (the great beast's $5), already paid. */
+  /** Money the gift came with (the great storm's $5), already paid. */
   readonly bonus: number;
 }
 
@@ -72,7 +72,7 @@ export interface RunState {
   readonly tiles: readonly Tile[];
   readonly nextTileId: number;
   readonly money: number;
-  readonly curios: readonly string[];
+  readonly dragons: readonly string[];
   readonly fortunes: readonly FortuneId[];
   readonly levels: Levels;
   /** 0-3: East, South, West, North. */
@@ -80,7 +80,7 @@ export interface RunState {
   readonly phase: RunPhase;
   /** The host chosen for the current round. */
   readonly hostId: string | null;
-  readonly beast: boolean;
+  readonly storm: boolean;
   readonly target: number;
   readonly round: RoundState | null;
   readonly payout: Payout | null;
@@ -97,14 +97,14 @@ export interface FortuneArgs {
 }
 
 export type RunAction =
-  | { readonly type: 'chooseHost'; readonly beast: boolean }
+  | { readonly type: 'chooseHost'; readonly storm: boolean }
   | { readonly type: 'round'; readonly action: RoundAction }
   | { readonly type: 'auto'; readonly policy?: Policy }
   | { readonly type: 'continue' }
   | { readonly type: 'gift'; readonly pick: number | null; readonly replace?: number }
   | {
       readonly type: 'buy';
-      readonly what: 'curio' | 'almanac' | 'fortune' | 'pack';
+      readonly what: 'dragon' | 'almanac' | 'fortune' | 'pack';
       readonly index: number;
     }
   | { readonly type: 'pack'; readonly pick: number | null }

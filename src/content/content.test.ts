@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { CURIOS, CURIO_IDS, CURIO_PRICE, CURIO_SLOTS, CURIO_WEIGHT, curioPrice } from './curios';
+import {
+  DRAGONS,
+  DRAGON_IDS,
+  DRAGON_PRICE,
+  DRAGON_SLOTS,
+  DRAGON_WEIGHT,
+  dragonPrice,
+} from './dragons';
 import { ENHANCEMENTS } from './enhancements';
 import { FORTUNES, FORTUNE_IDS, FORTUNE_PRICE, FORTUNE_SLOTS } from './fortunes';
 import { HOSTS, hostFor } from './hosts';
 import { PACKS } from './packs';
 import { GIFT, MONEY, ROUND, SHOP } from './rules';
 import { SET_TYPES } from './sets';
-import { BEAST_TARGET_MULT, LANTERNS, TARGETS } from './targets';
+import { STORM_TARGET_MULT, LANTERNS, TARGETS } from './targets';
 import { TILE_SETS } from './tilesets';
 
 describe('content matches docs/design.md', () => {
@@ -20,7 +27,6 @@ describe('content matches docs/design.md', () => {
     expect(row('chow')).toEqual([10, 1, 10, 1]);
     expect(row('pong')).toEqual([40, 4, 15, 2]);
     expect(row('kong')).toEqual([100, 8, 30, 3]);
-    expect(row('dragons')).toEqual([60, 6, 20, 2]);
     expect(row('winds')).toEqual([100, 10, 30, 3]);
   });
   it('the round and the money', () => {
@@ -36,31 +42,31 @@ describe('content matches docs/design.md', () => {
     expect(MONEY.rewards).toEqual([10, 12, 14]);
     expect([MONEY.interestPer, MONEY.interestCap, MONEY.perUnusedDiscard]).toEqual([5, 5, 1]);
     expect(TARGETS).toEqual([1000, 4000, 9000, 18000]);
-    expect(BEAST_TARGET_MULT).toBe(1.5);
-    expect(GIFT).toEqual({ folkOffers: 2, beastOffers: 3, beastMoney: 5 });
+    expect(STORM_TARGET_MULT).toBe(1.5);
+    expect(GIFT).toEqual({ calmOffers: 2, stormOffers: 3, stormMoney: 5 });
   });
   it('the teahouse', () => {
     expect(SHOP).toMatchObject({
-      curios: 3,
+      dragons: 3,
       almanac: 2,
       fortunes: 2,
       rerollBase: 2,
       rerollStep: 1,
       burnPrice: 5,
     });
-    expect([CURIO_SLOTS, FORTUNE_SLOTS, FORTUNE_PRICE]).toEqual([5, 2, 3]);
-    expect(CURIO_PRICE).toEqual({ common: 4, uncommon: 6, rare: 8 });
-    expect(CURIO_WEIGHT).toEqual({ common: 6, uncommon: 3, rare: 1 });
+    expect([DRAGON_SLOTS, FORTUNE_SLOTS, FORTUNE_PRICE]).toEqual([5, 2, 3]);
+    expect(DRAGON_PRICE).toEqual({ common: 4, uncommon: 6, rare: 8 });
+    expect(DRAGON_WEIGHT).toEqual({ common: 6, uncommon: 3, rare: 1 });
     expect(PACKS.honour.price).toBe(5);
     expect(PACKS.fourth.price).toBe(4);
   });
-  it('21 curios: 8 common, 7 uncommon, 6 rare', () => {
-    expect(CURIO_IDS).toHaveLength(21);
-    const by = (r: string) => CURIO_IDS.filter((id) => CURIOS[id]?.rarity === r).length;
-    expect([by('common'), by('uncommon'), by('rare')]).toEqual([8, 7, 6]);
-    expect(curioPrice('abacus')).toBe(4);
-    expect(curioPrice('nightOwl')).toBe(8);
-    for (const id of CURIO_IDS) expect(CURIOS[id]?.id).toBe(id);
+  it('23 dragons: 8 common, 7 uncommon, 8 rare', () => {
+    expect(DRAGON_IDS).toHaveLength(23);
+    const by = (r: string) => DRAGON_IDS.filter((id) => DRAGONS[id]?.rarity === r).length;
+    expect([by('common'), by('uncommon'), by('rare')]).toEqual([8, 7, 8]);
+    expect(dragonPrice('abacus')).toBe(4);
+    expect(dragonPrice('nightOwl')).toBe(8);
+    for (const id of DRAGON_IDS) expect(DRAGONS[id]?.id).toBe(id);
   });
   it('6 fortunes and 4 enhancements', () => {
     expect(FORTUNE_IDS).toHaveLength(6);
@@ -76,8 +82,8 @@ describe('content matches docs/design.md', () => {
     expect(TILE_SETS.map((t) => t.id)).toEqual(['boneBamboo', 'twoRivers', 'jadeCourt']);
     expect(HOSTS).toHaveLength(8);
     for (let w = 0; w < 4; w++) {
-      expect(hostFor(w, false).beast).toBe(false);
-      expect(hostFor(w, true).beast).toBe(true);
+      expect(hostFor(w, false).storm).toBe(false);
+      expect(hostFor(w, true).storm).toBe(true);
     }
   });
 });

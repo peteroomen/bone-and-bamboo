@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CURIO_SLOTS } from '@/content/curios';
+import { DRAGON_SLOTS } from '@/content/dragons';
 import { FORTUNE_SLOTS } from '@/content/fortunes';
 import { PACKS } from '@/content/packs';
 import { SHOP } from '@/content/rules';
@@ -10,7 +10,7 @@ import { type Tile, compareKinds, kindName } from '@/engine/tiles';
 import { TileView } from '@/ui/art/Tile';
 import { useStore } from '@/ui/state/store';
 import { Glyph, OfferCard } from './Cards';
-import { curioCard, fortuneCard, packCard, pageCard } from './cardProps';
+import { dragonCard, fortuneCard, packCard, pageCard } from './cardProps';
 import { SET_GLYPH } from '@/ui/art/glyphs';
 import { Sheet } from './Sheet';
 
@@ -45,7 +45,7 @@ export function ShopView({
   const [burning, setBurning] = useState(false);
   if (!shop) return null;
   const money = run.money;
-  const curiosFull = run.curios.length >= CURIO_SLOTS;
+  const dragonsFull = run.dragons.length >= DRAGON_SLOTS;
   const pocketFull = run.fortunes.length >= FORTUNE_SLOTS;
   const reroll = rerollPrice(shop);
   const kinds = new Map<string, { tile: Tile; n: number }>();
@@ -62,19 +62,19 @@ export function ShopView({
         Teahouse <span>after round {run.roundIndex + 1}</span>
       </h2>
 
-      <section aria-label="Curios">
-        <h3>Curios</h3>
+      <section aria-label="Dragons">
+        <h3>Dragons</h3>
         <div className="offers three">
-          {shop.curios.map((o, i) => (
+          {shop.dragons.map((o, i) => (
             <OfferCard
               key={`${o.item}${i}`}
-              {...curioCard(o.item)}
+              {...dragonCard(o.item)}
               price={o.price}
               sold={o.sold}
-              disabled={money < o.price || curiosFull}
-              {...(curiosFull && !o.sold ? { note: 'Row full' } : {})}
-              testId={`buy-curio-${i}`}
-              onClick={() => dispatch({ type: 'buy', what: 'curio', index: i })}
+              disabled={money < o.price || dragonsFull}
+              {...(dragonsFull && !o.sold ? { note: 'Row full' } : {})}
+              testId={`buy-dragon-${i}`}
+              onClick={() => dispatch({ type: 'buy', what: 'dragon', index: i })}
             />
           ))}
         </div>
@@ -126,7 +126,7 @@ export function ShopView({
             disabled={money < reroll}
             onClick={() => dispatch({ type: 'reroll' })}
           >
-            Reroll curios ${reroll}
+            Reroll dragons ${reroll}
           </button>
           <button
             type="button"

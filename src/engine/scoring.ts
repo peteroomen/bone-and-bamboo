@@ -1,7 +1,7 @@
-import { CURIOS, type CurioEffect, type TableCondition } from '@/content/curios';
+import { DRAGONS, type DragonEffect, type TableCondition } from '@/content/dragons';
 import { ENHANCEMENTS } from '@/content/enhancements';
 import { SET_TYPES, type SetKind } from '@/content/sets';
-import { type Tile, isDragon, isOutside, isSuited, rankOf, suitOf, tileChips } from './tiles';
+import { type Tile, isOutside, isSuited, isWind, rankOf, suitOf, tileChips } from './tiles';
 
 /** A set on the table. */
 export interface PlayedSet {
@@ -13,7 +13,7 @@ export type Levels = Partial<Record<SetKind, number>>;
 
 /** Everything scoring needs to know besides the table. */
 export interface ScoreContext {
-  readonly curios: readonly string[];
+  readonly dragons: readonly string[];
   readonly levels: Levels;
   /** Extra rules from a host's twist, as data the engine understands. */
   readonly modifiers?: ScoreModifiers;
@@ -53,8 +53,8 @@ export interface SetStep {
   readonly x: number;
 }
 
-export interface CurioStep {
-  readonly type: 'curio';
+export interface DragonStep {
+  readonly type: 'dragon';
   readonly id: string;
   readonly addChips: number;
   readonly addMult: number;
@@ -74,7 +74,7 @@ export interface TwistStep {
   readonly xTotal: number;
 }
 
-export type ScoreStep = SetStep | CurioStep | TwistStep;
+export type ScoreStep = SetStep | DragonStep | TwistStep;
 
 export interface ScoreResult {
   readonly steps: readonly ScoreStep[];
@@ -84,7 +84,7 @@ export interface ScoreResult {
   readonly total: number;
 }
 
-/** The number a curio's condition is asked about. */
+/** The number a dragon's condition is asked about. */
 function suitsOn(table: readonly PlayedSet[]): number {
   const s = new Set<string>();
   for (const set of table) for (const t of set.tiles) if (isSuited(t.kind)) s.add(suitOf(t.kind));
@@ -142,9 +142,9 @@ export function conditionHolds(c: TableCondition, table: readonly PlayedSet[]): 
   }
 }
 
-/** A curio effect's contribution to a table: chips, mult and a ×mult. */
+/** A dragon effect's contribution to a table: chips, mult and a ×mult. */
 export function effectValue(
-  e: CurioEffect,
+  e: DragonEffect,
   table: readonly PlayedSet[],
 ): { chips: number; mult: number; x: number } {
   let chips = 0;
@@ -171,12 +171,15 @@ export function effectValue(
         e.mult *
         table.filter((s) => s.kind !== 'single' && s.tiles.some((t) => isOutside(t.kind))).length;
       break;
-    case 'perDragonSet':
+    case 'perWindSet':
       mult =
         e.mult *
         table.filter(
-          (s) => s.kind === 'dragons' || (isBig(s.kind) && isDragon((s.tiles[0] as Tile).kind)),
+          (s) => s.kind === 'winds' || (isBig(s.kind) && isWind((s.tiles[0] as Tile).kind)),
         ).length;
+      break;
+    case 'perSetTile':
+      mult = e.mult * table.reduce((n, s) => n + (e.sets.includes(s.kind) ? s.tiles.length : 0), 0);
       break;
     case 'xIf':
       if (conditionHolds(e.when, table)) x = e.x;
@@ -195,7 +198,7 @@ export function effectValue(
 }
 
 /**
- * Score a table: each set adds its chips and mult, then the curios apply left to right, then
+ * Score a table: each set adds its chips and mult, then the dragons apply left to right, then
  * score = floor(chips × mult × product of the ×mult effects). Every step is returned so the UI can
  * count it up.
  */
@@ -248,13 +251,13 @@ export function scoreTable(table: readonly PlayedSet[], ctx: ScoreContext): Scor
       x,
     });
   });
-  for (const id of ctx.curios) {
-    const curio = CURIOS[id];
-    if (!curio) continue;
+  for (const id of ctx.dragons) {
+    const dragon = DRAGONS[id];
+    if (!dragon) continue;
     let addChips = 0;
     let addMult = 0;
     let cx = 1;
-    for (const e of curio.effects) {
+    for (const e of dragon.effects) {
       const v = effectValue(e, table);
       addChips += v.chips;
       addMult += v.mult;
@@ -264,7 +267,7 @@ export function scoreTable(table: readonly PlayedSet[], ctx: ScoreContext): Scor
     chips += addChips;
     mult += addMult;
     x *= cx;
-    steps.push({ type: 'curio', id, addChips, addMult, x: cx, chips, mult, xTotal: x });
+    steps.push({ type: 'dragon', id, addChips, addMult, x: cx, chips, mult, xTotal: x });
   }
   const penalty = mods.penalty ?? 0;
   const tx = mods.xmult ?? 1;

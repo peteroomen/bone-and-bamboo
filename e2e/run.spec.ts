@@ -40,7 +40,7 @@ test('a full four-round run through the UI, with every part of the teahouse', as
   await startRun(page, [300, 400, 500, 600]);
   for (let r = 0; r < 4; r++) {
     await expect(page.getByTestId('host')).toBeVisible();
-    await page.getByTestId(r % 2 ? 'host-beast' : 'host-folk').click();
+    await page.getByTestId(r % 2 ? 'host-storm' : 'host-calm').click();
     await playRound(page);
     if (r === 3) break;
     await toShop(page, project, r === 1 ? 'run-r2' : '');
@@ -59,7 +59,7 @@ test('a full four-round run through the UI, with every part of the teahouse', as
 
 test('a missed target ends the run', async ({ page }, info) => {
   await startRun(page, [1e9, 1, 1, 1]);
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await playRound(page);
   await page.getByTestId('btn-score-continue').click();
   await expect(page.getByTestId('phase-over')).toBeVisible();
@@ -68,7 +68,7 @@ test('a missed target ends the run', async ({ page }, info) => {
 
 test('reloading mid-round resumes exactly', async ({ page }) => {
   await startRun(page, [300, 400, 500, 600]);
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await page.getByTestId('btn-auto').click();
   const before = (await hook(page))?.run;
   expect(before?.round?.hand).toHaveLength(8);
@@ -86,7 +86,7 @@ test('reloading mid-round resumes exactly', async ({ page }) => {
 test('reloading in the teahouse, with a pack open, resumes exactly', async ({ page }, info) => {
   const project = info.project.name;
   await startRun(page, [300, 400, 500, 600]);
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await playRound(page);
   await toShop(page, project, '');
   await page.getByTestId('buy-almanac-0').click();
@@ -111,10 +111,10 @@ test('reloading in the teahouse, with a pack open, resumes exactly', async ({ pa
 test('the player bar is on the run screens and fits at this size', async ({ page }) => {
   await startRun(page, [300, 400, 500, 600]);
   await expect(page.getByTestId('playerbar')).toBeVisible();
-  await page.getByTestId('host-folk').click();
+  await page.getByTestId('host-calm').click();
   await expect(page.getByTestId('playerbar')).toBeVisible();
   const vp = page.viewportSize() as { width: number; height: number };
-  for (const id of ['pb-curios', 'pb-fortunes', 'pb-set']) {
+  for (const id of ['pb-dragons', 'pb-fortunes', 'pb-set']) {
     const box = await page.getByTestId(id).boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.5);
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(43.5);

@@ -12,8 +12,9 @@ describe('a round', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: roundWith().rules,
-      curios: [],
+      dragons: [],
       levels: {},
+      target: 0,
       rng: 5,
     });
     expect(s.hand).toHaveLength(0);

@@ -3,7 +3,7 @@ import type { SuitedSuit } from './tiles';
 
 export type Rarity = 'common' | 'uncommon' | 'rare';
 
-/** A condition on the table, for the ×mult curios. */
+/** A condition on the table, for the ×mult dragons. */
 export type TableCondition =
   | { readonly kind: 'bigSets'; readonly min: number }
   | { readonly kind: 'setsAndPair'; readonly sets: number }
@@ -11,8 +11,8 @@ export type TableCondition =
   | { readonly kind: 'noOutside' }
   | { readonly kind: 'pureStraight' };
 
-/** What a curio does. The engine interprets these; the numbers live here. */
-export type CurioEffect =
+/** What a dragon does. The engine interprets these; the numbers live here. */
+export type DragonEffect =
   | { readonly type: 'flat'; readonly chips?: number; readonly mult?: number }
   | {
       readonly type: 'perSet';
@@ -23,8 +23,14 @@ export type CurioEffect =
   | { readonly type: 'perTileSuit'; readonly suit: SuitedSuit; readonly chips: number }
   /** per set (not a single) with a 1, 9 or honour */
   | { readonly type: 'perOutsideSet'; readonly mult: number }
-  /** per Three Dragons, or pong or kong of a dragon */
-  | { readonly type: 'perDragonSet'; readonly mult: number }
+  /** per Four Winds, or pong or kong of a wind */
+  | { readonly type: 'perWindSet'; readonly mult: number }
+  /** per tile in the listed sets */
+  | {
+      readonly type: 'perSetTile';
+      readonly sets: readonly SetKind[];
+      readonly mult: number;
+    }
   | { readonly type: 'xIf'; readonly x: number; readonly when: TableCondition }
   | { readonly type: 'xPerSet'; readonly sets: readonly SetKind[]; readonly x: number }
   | { readonly type: 'xPerIdenticalPair'; readonly x: number }
@@ -37,20 +43,20 @@ export type CurioEffect =
     }
   | { readonly type: 'income'; readonly money: number };
 
-export interface Curio {
+export interface Dragon {
   readonly id: string;
   readonly name: string;
   readonly rarity: Rarity;
   readonly text: string;
-  readonly effects: readonly CurioEffect[];
+  readonly effects: readonly DragonEffect[];
 }
 
-export const CURIO_PRICE: Record<Rarity, number> = { common: 4, uncommon: 6, rare: 8 };
+export const DRAGON_PRICE: Record<Rarity, number> = { common: 4, uncommon: 6, rare: 8 };
 /** How often each rarity comes up in the teahouse. */
-export const CURIO_WEIGHT: Record<Rarity, number> = { common: 6, uncommon: 3, rare: 1 };
-export const CURIO_SLOTS = 5;
+export const DRAGON_WEIGHT: Record<Rarity, number> = { common: 6, uncommon: 3, rare: 1 };
+export const DRAGON_SLOTS = 5;
 
-const list: Curio[] = [
+const list: Dragon[] = [
   // common
   {
     id: 'abacus',
@@ -96,7 +102,7 @@ const list: Curio[] = [
   },
   {
     id: 'sparrowNest',
-    name: "Sparrow's Nest",
+    name: 'Nest',
     rarity: 'common',
     text: 'Pairs +6 mult',
     effects: [{ type: 'perSet', sets: ['pair'], mult: 6 }],
@@ -111,7 +117,7 @@ const list: Curio[] = [
   // uncommon
   {
     id: 'pongHall',
-    name: 'Pong Hall',
+    name: 'Bell Hall',
     rarity: 'uncommon',
     text: '×2 mult with 2+ pongs or kongs',
     effects: [{ type: 'xIf', x: 2, when: { kind: 'bigSets', min: 2 } }],
@@ -182,17 +188,17 @@ const list: Curio[] = [
   },
   {
     id: 'kongBell',
-    name: 'Kong Bell',
+    name: 'Great Bell',
     rarity: 'rare',
     text: '×2 mult per kong',
     effects: [{ type: 'xPerSet', sets: ['kong'], x: 2 }],
   },
   {
-    id: 'dragonLantern',
-    name: 'Dragon Lantern',
+    id: 'windChime',
+    name: 'Wind Chime',
     rarity: 'rare',
-    text: '+12 mult per dragon set',
-    effects: [{ type: 'perDragonSet', mult: 12 }],
+    text: '+12 mult per wind set',
+    effects: [{ type: 'perWindSet', mult: 12 }],
   },
   {
     id: 'twinCranes',
@@ -201,12 +207,26 @@ const list: Curio[] = [
     text: '×1.5 mult per pair of identical sets',
     effects: [{ type: 'xPerIdenticalPair', x: 1.5 }],
   },
+  {
+    id: 'threeTreasures',
+    name: 'Three Treasures',
+    rarity: 'rare',
+    text: '×1.5 mult per pong',
+    effects: [{ type: 'xPerSet', sets: ['pong'], x: 1.5 }],
+  },
+  {
+    id: 'stoneLion',
+    name: 'Stone Lion',
+    rarity: 'rare',
+    text: '+3 mult per tile in pongs and kongs',
+    effects: [{ type: 'perSetTile', sets: ['pong', 'kong'], mult: 3 }],
+  },
 ];
 
-export const CURIOS: Record<string, Curio> = Object.fromEntries(list.map((c) => [c.id, c]));
-export const CURIO_IDS: readonly string[] = list.map((c) => c.id);
+export const DRAGONS: Record<string, Dragon> = Object.fromEntries(list.map((c) => [c.id, c]));
+export const DRAGON_IDS: readonly string[] = list.map((c) => c.id);
 
-export function curioPrice(id: string): number {
-  const c = CURIOS[id];
-  return c ? CURIO_PRICE[c.rarity] : 0;
+export function dragonPrice(id: string): number {
+  const c = DRAGONS[id];
+  return c ? DRAGON_PRICE[c.rarity] : 0;
 }
