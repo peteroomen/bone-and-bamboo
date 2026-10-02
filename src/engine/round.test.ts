@@ -1,53 +1,54 @@
 import { describe, expect, it } from 'vitest';
-import { type RoundState, needsRefill, preview, roundReduce, startRound } from './round';
+import { type RoundState, nextTiles, preview, roundReduce, startRound } from './round';
 import { roundWith, tiles } from './testkit';
+import type { RoundEvent } from './round';
 import { buildTiles } from './tiles';
 
-const take = (s: RoundState, stack: number) => roundReduce(s, { type: 'take', stack });
 const ids = (s: RoundState, ...kinds: string[]) =>
   kinds.map((k) => s.hand.find((t) => t.kind === k)?.id as number);
 
 describe('a round', () => {
-  it('starts with an empty hand and the whole set in 8 stacks', () => {
-    const s = startRound({
-      tiles: buildTiles('boneBamboo'),
-      rules: roundWith().rules,
-      dragons: [],
-      levels: {},
-      target: 0,
-      rng: 5,
-    });
-    expect(s.hand).toHaveLength(0);
-    expect(s.stacks.flat()).toHaveLength(81);
+  it('starts with a full hand drawn from the pile', () => {
+    const events: RoundEvent[] = [];
+    const s = startRound(
+      {
+        tiles: buildTiles('boneBamboo'),
+        rules: roundWith().rules,
+        dragons: [],
+        levels: {},
+        target: 0,
+        rng: 5,
+      },
+      events,
+    );
+    expect(s.hand).toHaveLength(12);
+    expect(s.stacks).toHaveLength(1);
+    expect(s.stacks.flat()).toHaveLength(81 - 12);
     expect(s.playsLeft).toBe(8);
-    expect(s.discardsLeft).toBe(3);
-    expect(needsRefill(s)).toBe(true);
+    expect(s.discardsLeft).toBe(4);
+    expect(events.filter((e) => e.type === 'draw')).toHaveLength(12);
   });
 
-  it('takes only the top tile of a stack, one at a time', () => {
-    let s = roundWith({ stacks: ['p1 p2 p3', 's1 s2'] });
-    const r = take(s, 0);
-    expect(r.events).toEqual([
-      { type: 'take', tile: expect.objectContaining({ kind: 'p3' }), stack: 0 },
-    ]);
-    s = r.state;
-    expect(s.hand.map((t) => t.kind)).toEqual(['p3']);
-    expect(s.stacks[0]?.map((t) => t.kind)).toEqual(['p1', 'p2']);
-    expect(take(s, 5).events[0]).toMatchObject({ type: 'illegal' });
+  it('refills the hand from the top of the pile after a play', () => {
+    const s = roundWith({ hand: 'p1 p2 p3 s5', stacks: ['m1 m2 m3 m4'], rules: { handSize: 4 } });
+    const r = roundReduce(s, { type: 'play', ids: ids(s, 'p1', 'p2', 'p3') });
+    expect(r.state.hand.map((t) => t.kind)).toEqual(['s5', 'm4', 'm3', 'm2']);
+    expect(r.state.stacks[0]?.map((t) => t.kind)).toEqual(['m1']);
+    expect(r.events.map((e) => e.type)).toEqual(['play', 'draw', 'draw', 'draw']);
   });
 
-  it('refuses a take when the hand is full, and a play or discard until it is refilled', () => {
-    const full = roundWith({ hand: 'p1 p2 p3', rules: { handSize: 3 }, stacks: ['s1'] });
-    expect(take(full, 0).events[0]).toMatchObject({ type: 'illegal' });
-    const short = roundWith({ hand: 'p1 p2 p3', rules: { handSize: 4 }, stacks: ['s1'] });
-    expect(
-      roundReduce(short, { type: 'play', ids: ids(short, 'p1', 'p2', 'p3') }).events[0],
-    ).toMatchObject({
-      type: 'illegal',
-    });
-    expect(roundReduce(short, { type: 'discard', ids: ids(short, 'p1') }).events[0]).toMatchObject({
-      type: 'illegal',
-    });
+  it('refills after a discard, and stops when the pile runs dry', () => {
+    const s = roundWith({ hand: 'p1 p2 s5 s9', stacks: ['m1'], rules: { handSize: 4 } });
+    const r = roundReduce(s, { type: 'discard', ids: ids(s, 'p1', 'p2') });
+    expect(r.state.hand.map((t) => t.kind)).toEqual(['s5', 's9', 'm1']);
+    expect(r.state.stacks[0]).toHaveLength(0);
+  });
+
+  it('shows the next tiles of the pile only with peek (the Lantern)', () => {
+    const s = roundWith({ stacks: ['m1 m2 m3 m4'], rules: { peek: 0 } });
+    expect(nextTiles(s)).toEqual([]);
+    const lit = roundWith({ stacks: ['m1 m2 m3 m4'], rules: { peek: 3 } });
+    expect(nextTiles(lit).map((t) => t.kind)).toEqual(['m4', 'm3', 'm2']);
   });
 
   it('plays a set onto the table, using a play', () => {
@@ -56,7 +57,7 @@ describe('a round', () => {
     expect(r.state.table).toHaveLength(1);
     expect(r.state.table[0]?.kind).toBe('chow');
     expect(r.state.playsLeft).toBe(7);
-    expect(r.state.hand.map((t) => t.kind)).toEqual(['s5']);
+    expect(r.state.hand.map((t) => t.kind)).toEqual(['s5', 'm1']);
     expect(r.events[0]).toMatchObject({ type: 'play', kind: 'chow' });
   });
 
@@ -70,7 +71,7 @@ describe('a round', () => {
   it('discards 1 to 5 tiles, using a discard', () => {
     const s = roundWith({ hand: 'p1 p2 p3 s5 s9 m1', rules: { handSize: 6 } });
     const r = roundReduce(s, { type: 'discard', ids: ids(s, 'p1', 'p2') });
-    expect(r.state.discardsLeft).toBe(2);
+    expect(r.state.discardsLeft).toBe(3);
     expect(r.state.discarded).toHaveLength(2);
     expect(r.state.hand).toHaveLength(4);
     expect(roundReduce(s, { type: 'discard', ids: [] }).events[0]).toMatchObject({
@@ -123,7 +124,7 @@ describe('a round', () => {
   it('refuses everything once the round is over', () => {
     const s = roundWith({ hand: 'p1 p2 p3', rules: { handSize: 3 } });
     const done = roundReduce(s, { type: 'play', ids: ids(s, 'p1', 'p2', 'p3') }).state;
-    expect(roundReduce(done, { type: 'take', stack: 0 }).events[0]).toMatchObject({
+    expect(roundReduce(done, { type: 'discard', ids: [] }).events[0]).toMatchObject({
       type: 'illegal',
     });
   });
@@ -162,9 +163,8 @@ describe('a round', () => {
     s = roundReduce(s, { type: 'play', ids: ids(s, 'p1', 'p2', 'p3') }).state;
     const copy = JSON.parse(JSON.stringify(s)) as RoundState;
     expect(copy).toEqual(s);
-    expect(roundReduce(copy, { type: 'take', stack: 0 }).state).toEqual(
-      roundReduce(s, { type: 'take', stack: 0 }).state,
-    );
+    const discard = { type: 'discard', ids: [s.hand[0]?.id as number] } as const;
+    expect(roundReduce(copy, discard).state).toEqual(roundReduce(s, discard).state);
   });
 
   it('never mutates its input', () => {

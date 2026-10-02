@@ -15,14 +15,14 @@ import { classify, orderSet, playProblem } from './sets';
 import { type Tile, countKinds } from './tiles';
 import {
   type TwistState,
+  afterDeal,
   afterDiscard,
   afterSetPlayed,
   discardProblem,
   endTurn,
   initTwist,
+  intoPile,
   swapProblem,
-  swapTops,
-  takeProblem,
   twistModifiers,
   twistRules,
 } from './twists';
@@ -79,18 +79,17 @@ export interface RoundState {
 }
 
 export type RoundAction =
-  | { readonly type: 'take'; readonly stack: number }
   | { readonly type: 'play'; readonly ids: readonly number[] }
   | { readonly type: 'discard'; readonly ids: readonly number[] }
   /** Upgrade the pong at table index `setIndex` to a kong with its fourth tile from the hand. */
   | { readonly type: 'upgrade'; readonly setIndex: number; readonly tileId: number }
   /** Bank the table now: allowed once it beats the target. */
   | { readonly type: 'finish' }
-  /** The monkey's gift: swap two stack tops yourself. */
-  | { readonly type: 'swap'; readonly a: number; readonly b: number };
+  /** The monkey's gift: put a hand tile back into the pile and draw another. */
+  | { readonly type: 'swap'; readonly id: number };
 
 export type RoundEvent =
-  | { readonly type: 'take'; readonly tile: Tile; readonly stack: number }
+  | { readonly type: 'draw'; readonly tile: Tile }
   | { readonly type: 'play'; readonly kind: PlayedSet['kind']; readonly tiles: readonly Tile[] }
   | { readonly type: 'discard'; readonly tiles: readonly Tile[] }
   | {
@@ -100,9 +99,9 @@ export type RoundEvent =
       readonly tiles: readonly Tile[];
     }
   | { readonly type: 'finish' }
-  | { readonly type: 'swap'; readonly a: number; readonly b: number; readonly auto: boolean }
-  | { readonly type: 'burn'; readonly tile: Tile; readonly stack: number }
-  | { readonly type: 'tide'; readonly tile: Tile; readonly stack: number }
+  | { readonly type: 'swap'; readonly tile: Tile; readonly auto: boolean }
+  | { readonly type: 'burn'; readonly tile: Tile }
+  | { readonly type: 'tide'; readonly tile: Tile }
   | { readonly type: 'score'; readonly result: ScoreResult }
   | { readonly type: 'crack'; readonly tile: Tile }
   | { readonly type: 'end'; readonly result: RoundResult }
@@ -124,34 +123,58 @@ export interface RoundSetup {
   readonly rng: number;
 }
 
-/** Deal a new round: the whole set shuffled into stacks. */
-export function startRound(setup: RoundSetup): RoundState {
+/** Deal a new round: the whole set shuffled into the pile, and the first hand drawn. */
+export function startRound(setup: RoundSetup, events: RoundEvent[] = []): RoundState {
   const rng = new Rng(setup.rng);
   const rules = twistRules(setup.rules, setup.twist ?? null);
   const stacks = deal(setup.tiles, rules.stacks, rng);
   const twist = setup.twist ? initTwist(setup.twist, stacks, rng) : null;
-  return {
-    rules,
-    twist,
-    stacks,
-    hand: [],
-    table: [],
-    discarded: [],
-    playsLeft: rules.plays,
-    discardsLeft: rules.discards,
-    dragons: setup.dragons,
-    levels: setup.levels,
-    target: setup.target,
-    copies: Object.fromEntries(countKinds(setup.tiles)),
-    rng: rng.state,
-    phase: 'play',
-    turns: 0,
-  };
+  const s = refill(
+    {
+      rules,
+      twist,
+      stacks,
+      hand: [],
+      table: [],
+      discarded: [],
+      playsLeft: rules.plays,
+      discardsLeft: rules.discards,
+      dragons: setup.dragons,
+      levels: setup.levels,
+      target: setup.target,
+      copies: Object.fromEntries(countKinds(setup.tiles)),
+      rng: rng.state,
+      phase: 'play',
+      turns: 0,
+    },
+    events,
+  );
+  return s.twist ? { ...s, twist: afterDeal(s.twist, s.hand) } : s;
 }
 
-/** The hand must be refilled from the wall before the next play or discard. */
-export function needsRefill(s: RoundState): boolean {
-  return s.hand.length < s.rules.handSize && wallCount(s.stacks) > 0;
+/** Draw from the top of the pile until the hand is full or the pile is empty. */
+export function refill(s: RoundState, events: RoundEvent[]): RoundState {
+  if (s.phase === 'done') return s;
+  const pile = (s.stacks[0] ?? []).slice();
+  const hand = s.hand.slice();
+  while (hand.length < s.rules.handSize && pile.length > 0) {
+    const tile = pile.pop() as Tile;
+    hand.push(tile);
+    events.push({ type: 'draw', tile });
+  }
+  return { ...s, hand, stacks: [pile, ...s.stacks.slice(1)] };
+}
+
+/** Discards you can actually use now: none while a twist blocks every tile in the hand. */
+export function usableDiscards(s: RoundState): number {
+  if (s.discardsLeft <= 0) return 0;
+  return s.hand.some((t) => discardProblem(s, [t.id]) === null) ? s.discardsLeft : 0;
+}
+
+/** The tiles of the pile shown face up (the Lantern), next first. */
+export function nextTiles(s: RoundState): readonly Tile[] {
+  const pile = s.stacks[0] ?? [];
+  return pile.slice(Math.max(0, pile.length - s.rules.peek)).reverse();
 }
 
 export function scoreContext(s: RoundState): ScoreContext {
@@ -191,13 +214,13 @@ function finishIfOver(s: RoundState, events: RoundEvent[]): RoundState {
   return settle(s, events);
 }
 
-/** A turn has ended: the twist's own moves (chows unlock, embers burn, swaps fall due). */
+/** A turn has ended: the twist's own moves (chows uncoil, embers burn, swaps fall due), then the refill. */
 function withTurnEnd(s: RoundState, events: RoundEvent[], kind: string | null): RoundState {
-  if (!s.twist) return s;
+  if (!s.twist) return refill(s, events);
   const rng = new Rng(s.rng);
   const twist = kind ? afterSetPlayed(s.twist, kind) : s.twist;
-  const r = endTurn(twist, s.stacks, rng, events, kind !== null);
-  return { ...s, twist: r.twist, stacks: r.stacks, rng: rng.state };
+  const r = endTurn(twist, s.hand, s.stacks, rng, events, kind !== null);
+  return refill({ ...s, twist: r.twist, hand: r.hand, stacks: r.stacks, rng: rng.state }, events);
 }
 
 /** Score the table and close the round (once). */
@@ -281,21 +304,8 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
   if (s.phase === 'done') return illegal(s, 'The round is over.');
   const events: RoundEvent[] = [];
   switch (a.type) {
-    case 'take': {
-      if (s.hand.length >= s.rules.handSize) return illegal(s, 'Your hand is full.');
-      const stack = s.stacks[a.stack];
-      if (!stack || stack.length === 0) return illegal(s, 'That stack is empty.');
-      const locked = takeProblem(s, a.stack);
-      if (locked) return illegal(s, locked);
-      const tile = stack[stack.length - 1] as Tile;
-      const stacks = s.stacks.map((st, i) => (i === a.stack ? st.slice(0, -1) : st));
-      events.push({ type: 'take', tile, stack: a.stack });
-      const next = finishIfOver({ ...s, stacks, hand: [...s.hand, tile] }, events);
-      return { state: next, events };
-    }
     case 'play': {
-      if (needsRefill(s)) return illegal(s, 'Refill your hand first.');
-      const problem = playProblem(s.hand, a.ids, s.discardsLeft);
+      const problem = playProblem(s.hand, a.ids, usableDiscards(s));
       if (problem) return illegal(s, problem);
       const ids = new Set(a.ids);
       const picked = s.hand.filter((t) => ids.has(t.id));
@@ -320,7 +330,6 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
       return { state: next, events };
     }
     case 'upgrade': {
-      if (needsRefill(s)) return illegal(s, 'Refill your hand first.');
       const problem = upgradeProblem(s, a.setIndex, a.tileId);
       if (problem) return illegal(s, problem);
       const set = s.table[a.setIndex] as PlayedSet;
@@ -350,21 +359,25 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
       return { state: settle(s, events), events };
     }
     case 'swap': {
-      const problem = swapProblem(s, a.a, a.b);
+      const problem = swapProblem(s, a.id);
       if (problem) return illegal(s, problem);
-      events.push({ type: 'swap', a: a.a, b: a.b, auto: false });
+      const tile = s.hand.find((t) => t.id === a.id) as Tile;
+      events.push({ type: 'swap', tile, auto: false });
+      const rng = new Rng(s.rng);
       const twist = s.twist as TwistState;
-      return {
-        state: {
+      const next = refill(
+        {
           ...s,
-          stacks: swapTops(s.stacks, a.a, a.b),
+          hand: s.hand.filter((t) => t.id !== a.id),
+          stacks: intoPile(s.stacks, tile, rng),
           twist: { ...twist, swapsLeft: twist.swapsLeft - 1 },
+          rng: rng.state,
         },
         events,
-      };
+      );
+      return { state: next, events };
     }
     case 'discard': {
-      if (needsRefill(s)) return illegal(s, 'Refill your hand first.');
       if (s.discardsLeft <= 0) return illegal(s, 'No discards left.');
       if (a.ids.length < 1 || a.ids.length > s.rules.maxDiscard)
         return illegal(s, `Discard 1 to ${s.rules.maxDiscard} tiles.`);

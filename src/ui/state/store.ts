@@ -19,7 +19,7 @@ export type { Profile };
 
 export type Screen = 'title' | 'setup' | 'game' | 'collection' | 'settings';
 export type Speed = 'normal' | 'fast' | 'instant';
-/** Help drawn on tiles: off; tiles that make a set glow; also wall tiles that would complete one. */
+/** Help drawn on tiles: off; tiles that make a set glow; also the guide's pick outlined. */
 export type HintLevel = 'off' | 'sets' | 'full';
 
 export interface Settings {

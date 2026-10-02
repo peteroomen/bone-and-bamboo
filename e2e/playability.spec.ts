@@ -61,12 +61,6 @@ test('Ask the dragon selects a legal move with a reason, every turn of a round',
   for (let turn = 0; turn < 40; turn++) {
     const round = (await hook(page))?.run.round;
     if (!round || round.phase !== 'play') break;
-    if (round.hand.length < round.rules.handSize && round.stacks.some((s) => s.length)) {
-      await page.getByTestId('btn-ask').click();
-      await expect(page.getByTestId('advice')).toContainText('.');
-      await page.getByTestId('btn-auto').click();
-      continue;
-    }
     await page.getByTestId('btn-ask').click();
     await expect(page.getByTestId('advice')).toBeVisible();
     const sel = page.locator('[data-testid^="tile-"][aria-pressed="true"]');
@@ -88,7 +82,7 @@ test('upgrade a tabled pong to a kong, then bank the table; it settles once and 
 }, info) => {
   const project = info.project.name;
   await freshStart(page);
-  const run = prepared({ hand: 'p5 p5 p5 p5 s1 s2 s3 m9', stacks: ['m1 m2', 'm3 m4'] });
+  const run = prepared({ hand: 'p5 p5 p5 p5 s1 s2 s3 m9', stacks: ['m1 m2 m3 m4'] });
   await resumeFrom(page, run);
   // play the pong from the hand
   const hand = (await hook(page))?.run.round?.hand ?? [];
@@ -96,8 +90,6 @@ test('upgrade a tabled pong to a kong, then bank the table; it settles once and 
   for (const t of fives.slice(0, 3)) await page.getByTestId(`tile-${t.id}`).click();
   await page.getByTestId('btn-play').click();
   await expect(page.getByTestId('set-0')).toBeVisible();
-  // refill to full first
-  await page.getByTestId('btn-auto').click();
   await expect(page.getByTestId('btn-upgrade')).toBeVisible();
   await expect(page.getByTestId('btn-upgrade')).toContainText('+');
   await page.screenshot({ path: shot('upgrade-offer', project) });
@@ -119,7 +111,7 @@ test('upgrade a tabled pong to a kong, then bank the table; it settles once and 
   await expect(page.getByTestId('payout')).toBeVisible();
   const settled = (await hook(page))?.run;
   expect(settled?.scores).toHaveLength(1);
-  expect(settled?.round?.result?.unusedDiscards).toBe(3);
+  expect(settled?.round?.result?.unusedDiscards).toBe(4);
   expect(settled?.money).toBe(money + (settled?.payout?.total ?? 0));
   await page.reload();
   await page.getByTestId('btn-continue').click();
@@ -144,7 +136,6 @@ test('dragon goals show progress, and a play that breaks a multiplier is warned 
   await page.getByTestId('btn-play').click();
   await expect(page.getByTestId('goals')).toContainText('Rice Bowl no 1s, 9s or winds yet');
   await expect(page.getByTestId('goals')).toContainText('Bell Hall 0/2 pongs or kongs');
-  await page.getByTestId('btn-auto').click();
   const hand2 = (await hook(page))?.run.round?.hand ?? [];
   const winds = hand2.filter((t) => t.kind === 'w1').map((t) => t.id);
   for (const w of winds) await page.getByTestId(`tile-${w}`).click();

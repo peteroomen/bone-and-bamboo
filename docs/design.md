@@ -8,9 +8,8 @@ first guesses the simulator should check.
 
 A Balatro-style roguelike with mahjong tiles, for phones. You hold a hand of tiles and play sets
 (pairs, runs, pongs, kongs) onto your table. When your plays run out, the whole table scores at
-once: chips × mult. You refill your hand from **the wall**: face-up stacks where you can see the
-top tile and the corner of the tile under it, so digging for the tile you want costs you the tiles
-on top of it. A run is four rounds, one per wind, each hosted by a friendly spirit who sets the
+once: chips × mult. Your tiles are shuffled into a face-down **pile**, and your hand refills from
+it on its own after every play and discard, as in Balatro: a round is just *plays* and *discards*. A run is four rounds, one per wind, each hosted by a friendly spirit who sets the
 score to beat and changes one rule. Between rounds the spirit leaves a gift and the teahouse sells
 **dragons** (the jokers: dragon tiles with a passive power each), fortunes (single use, they change
 your tiles), almanac pages (level up a set type) and tiles. The guide is the Red Dragon tile
@@ -33,24 +32,27 @@ set. Every physical tile has a unique id and may carry an enhancement.
 
 Tile chips: a suited tile is worth its rank; a wind is worth 10.
 
-## The wall
+## The pile
 
-- At the start of each round your whole set is shuffled (seeded) and dealt round-robin into
-  **8 stacks**, face up. The top of each stack is the last tile dealt to it.
-- You see the top tile of each stack fully and the **top strip of the 1 tile under it** (the corner
-  index shows there). A dragon can raise this to 2. Deeper tiles are hidden; each stack shows how
+*Changed 2 Oct after playtesting: the wall of stacks was confusing. Plan and sim results:
+`docs/work/2026-10-02-draw-pile.md`.*
+
+- At the start of each round your whole set is shuffled (seeded) into one face-down pile, and
+  your hand is dealt from its top.
+- After every play, upgrade and discard, the hand refills from the top of the pile on its own.
+- You cannot see into the pile (the Lantern dragon shows its next 3 tiles). The pile shows how
   many tiles it holds.
-- You take tiles only from the top of a stack, one at a time.
 
 ## A round
 
-- **Hand 8 tiles. 8 plays. 3 discards** (each discard up to 5 tiles).
-- Start: fill your hand to 8 by taking from stack tops, in any order you choose.
+- **Hand 12 tiles. 8 plays. 4 discards** (each discard up to 5 tiles). Drawing blind loses the
+  choice the wall gave, so the hand is bigger: at 12 and 4 the sim matches the wall's win rates.
+- Start: your hand is dealt full.
 - Each turn, either:
   - **Play** one set from your hand onto your table (uses a play), or
   - **Discard** 1-5 tiles from your hand (uses a discard). Discarded tiles leave the round.
-- Then refill your hand to 8 from the stack tops, one tap per tile. An **Auto** button refills for
-  you using the hint bot (and the guide's hint shows which stack it would take from).
+- Then your hand refills from the pile.
+- If no tile can be discarded (a twist forbids it) and you hold no set, you may play a single.
 - If you hold no set and have no discards, you may play a single tile.
 - **Upgrade a tabled pong:** select its fourth matching tile in your hand, then upgrade that
   tabled pong to a kong. **Proposed first implementation (validate in the sim):** one play,
@@ -60,7 +62,7 @@ Tile chips: a suited tile is worth its rank; a wind is worth 10.
   including before refilling. The proposed initial version uses the normal score count and
   payout, including unused discards; unused plays have no cash value. Continuing is optional. A capped over-target
   cash reward is approved for exploration but deferred until separately modelled.
-- Otherwise the round ends after the last play (or when hand and wall are both empty). Then the
+- Otherwise the round ends after the last play (or when hand and pile are both empty). Then the
   table scores. Beat the target to win the round.
 - A live preview always shows what the table would score now, and what the selected set or
   pong upgrade would add, with a proper signed delta. Warn explicitly when it breaks a dragon
@@ -99,8 +101,8 @@ Every step is an engine event, so the UI can count it up the way Balatro does.
 
 Four rounds: **East (spring), South (summer), West (autumn), North (winter).**
 
-- **Targets (lantern 1): 1,000 / 4,000 / 9,000 / 18,000.** Simulated: the smart bot wins 71%, the
-  casual bot 24%, and nobody loses in round 1 (`docs/balance/2026-10-02-run.md`). Miss a target
+- **Targets (lantern 1): 1,000 / 3,600 / 8,000 / 16,000** (lowered with the pile). Simulated: the
+  smart bot wins 68%, the casual bot 35% (`docs/balance/2026-10-02-draw-pile.md`). Miss a target
   and the run ends.
 - **Money:** start with $4. After rounds 1-3 you are paid $10 / $12 / $14, + $1 per unused
   discard, + $1 interest per $5 held (max $5), + dragon income.
@@ -120,10 +122,10 @@ twist's name and rule.
 
 | Wind | Calm: twist | Storm: twist |
 |---|---|---|
-| East 東 | Masked (`fox`): the tile under each stack top is hidden, but each set you play that has a tile you took while it was hidden gives +1 mult | The coil (`azureDragon`): one stack is locked until you play a chow; chows score double chips |
-| South 南 | Swaps (`monkey`): after every 2nd play two stack tops swap; once a round you may swap two stack tops yourself | Embers (`vermilionBird`): 3 tiles in the wall are burning; play a set containing one for +3 mult, or it burns away when it reaches a stack top unplayed for 2 turns |
-| West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles go back to the bottom of a random stack | Claws (`whiteTiger`): pongs and kongs score double chips |
-| North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): 6 stacks instead of 8; the top tile of each stack is armoured until you play a set; kongs +4 mult; target ×1.25 rather than ×1.5 |
+| East 東 | Masked (`fox`): hand size −1; each set of 3 or more tiles gives +1 mult | The coil (`azureDragon`): no discarding until you play a chow; chows score double chips |
+| South 南 | Swaps (`monkey`): after every 2nd play a random tile in your hand goes back into the pile and you draw another; once a round you may swap a tile of your choice | Embers (`vermilionBird`): 4 tiles in your set are burning; play a set containing one for +4 mult, or it burns away after 2 turns in your hand |
+| West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles are shuffled back into the pile | Claws (`whiteTiger`): pongs and kongs score double chips |
+| North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): your first hand is armoured (no discarding it) until you play a set; kongs +4 mult; target ×1.25 rather than ×1.5 |
 
 All twists are *tune*: the run simulator does not model them yet (milestone M5 adds them). Until
 M5, the choice screen shows the wind, the target and the reward, and labels the twist as coming
@@ -168,7 +170,7 @@ In code the type is `Dragon` (it was "curio" in the simulators); the ids stay.
 | `outside` Moon Gate | uncommon | +4 mult per set with a 1, 9 or wind |
 | `ironTeapot` Iron Teapot | uncommon | +2 discards |
 | `longSleeves` Long Sleeves | uncommon | +1 hand size |
-| `lantern` Lantern | uncommon | see 1 tile deeper in every stack |
+| `lantern` Lantern | uncommon | see the next 3 tiles of the pile |
 | `mahjong` Mahjong! | uncommon | ×2 mult with 4+ sets and a pair |
 | `twoSuits` Two Fish | uncommon | ×1.5 mult if the table uses 2 suits or fewer |
 | `allSimples` Rice Bowl | rare | ×2 mult if no 1s, 9s or winds on the table |
@@ -227,7 +229,7 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 |---|---|
 | 2 | targets ×1.25 |
 | 3 | + no interest |
-| 4 | + targets ×1.5 (not ×1.25) and 2 discards |
+| 4 | + targets ×1.5 (not ×1.25) and 3 discards |
 
 ## Tile sets (decks)
 
@@ -235,7 +237,7 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 |---|---|---|
 | Bone & Bamboo | the starting 81 | from the start |
 | Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + one of each wind | win a run |
-| Jade Court | the 81, hand 9, 2 discards | win with 3 different hosts |
+| Jade Court | the 81, hand 13, 3 discards | win with 3 different hosts |
 
 ## Colourways (unlocks)
 
@@ -262,16 +264,16 @@ generator as every tile (`guide({ theme, mood, blink })` in `tiles.ts`), so it a
 colourway and can be animated: it blinks, hops onto the table to give a tip, points at what it
 means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo keeps its sparrow.
 
-- **Guided first run:** the first East round is scripted: a fixed seed and a queue of tips (pick
-  from a stack, a pair, a run, a pong, the preview, discarding to dig, the score count). The Rain
+- **Guided first run:** the first East round is scripted: a fixed seed and a queue of tips (your
+  hand and the pile, a pair, a run, a pong, the preview, discarding to dig, the score count). The Rain
   Man's tip queue from Twelve Petals carries over: tips wait until the table is still and hold
   play until dismissed.
 - **Hints (Settings), three levels:** off; *sets* (tiles in your hand that form a set glow);
-  *full* (also mark wall tiles that would complete a set in your hand).
-- **Ask the dragon:** show a legal action and its reason (play, discard, upgrade, or draw),
-  highlight the relevant tiles or stack, and leave execution to the player. Final-play hints
+  *full* (also outline the move the guide would make).
+- **Ask the dragon:** show a legal action and its reason (play, discard, upgrade or bank),
+  highlight the relevant tiles, and leave execution to the player. Final-play hints
   compare actual complete-table scores; earlier hints avoid breaking a multiplier when a
-  scoring alternative is available. Advice uses visible tiles only, never hidden wall contents.
+  scoring alternative is available. Advice uses visible tiles only, never the hidden pile.
 - **The set book:** every set type and dragon rule with a picture, and your levels.
 
 ## Around the game
@@ -314,4 +316,4 @@ introductory teaching sheet and illustrated set book, plus persistent off/sets/f
 The full scripted first-run lesson queue remains M6 work. M5 host twists remain unimplemented;
 the prototype host screen must say so instead of advertising inactive rules as working.
 
-*Twist tuning (planner, 2 Oct): Masked per set, +1; Claws loses the chow half; the shell is lifted by any set and has a target of ×1.25. Results in `docs/balance/2026-10-02-hosts.md`.*
+*Twists reworked for the pile (2 Oct): results in `docs/balance/2026-10-02-draw-pile.md`.*

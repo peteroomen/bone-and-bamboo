@@ -2,7 +2,13 @@ import type { Twist } from '@/content/hosts';
 import { PACK_IDS } from '@/content/packs';
 import { legalPlays } from '@/engine/advice';
 import { type Policy, chooseMove, moveAction } from '@/engine/ai';
-import { finishProblem, needsRefill, previewUpgrade, scoreContext, upgrades } from '@/engine/round';
+import {
+  finishProblem,
+  previewUpgrade,
+  scoreContext,
+  upgrades,
+  usableDiscards,
+} from '@/engine/round';
 import { scoreTable } from '@/engine/scoring';
 import { Rng, deriveSeed } from '@/engine/rng';
 import { newRun, runReduce } from '@/engine/run';
@@ -63,8 +69,6 @@ export function driveRound(start: RunState, policy: Policy, opts: PlayOptions = 
     if (opts.bank && finishProblem(run.round) === null) {
       return runReduce(run, { type: 'round', action: { type: 'finish' } }).state;
     }
-    if (needsRefill(run.round)) run = runReduce(run, { type: 'auto', policy }).state;
-    if (run.phase !== 'round' || !run.round) break;
     if (opts.upgrade) {
       const up = bestUpgrade(run.round);
       if (up) {
@@ -85,7 +89,6 @@ export function driveRound(start: RunState, policy: Policy, opts: PlayOptions = 
 function bestUpgrade(
   round: NonNullable<RunState['round']>,
 ): { setIndex: number; tileId: number } | null {
-  if (needsRefill(round)) return null;
   const ctx = scoreContext(round);
   const now = scoreTable(round.table, ctx).total;
   let best: { setIndex: number; tileId: number; total: number } | null = null;
@@ -96,7 +99,7 @@ function bestUpgrade(
   }
   if (!best) return null;
   let play = 0;
-  for (const p of legalPlays(round.hand, round.discardsLeft))
+  for (const p of legalPlays(round.hand, usableDiscards(round)))
     play = Math.max(
       play,
       scoreTable([...round.table, { kind: p.kind, tiles: p.tiles }], ctx).total,

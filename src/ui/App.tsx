@@ -32,7 +32,6 @@ export function App() {
       unlockAudio();
       const b = (e.target as HTMLElement | null)?.closest('button');
       if (!b || b.disabled || b.hasAttribute('data-quiet')) return;
-      if (b.classList.contains('stack')) return;
       if (b.classList.contains('hand-tile')) sfx.pick();
       else sfx.tock();
     };

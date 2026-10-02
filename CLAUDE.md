@@ -1,7 +1,7 @@
 # Bone & Bamboo: Claude Code Instructions
 
 A mobile-first, Balatro-style roguelike with mahjong tiles. You play sets from a hand of tiles,
-refill from a wall of face-up stacks, and beat four friendly hosts' scores, one per wind. Sibling
+refill from a face-down pile, and beat four friendly hosts' scores, one per wind. Sibling
 of Twelve Petals (`peteroomen/hanafuda-roguelike`), which uses the same stack and conventions.
 
 ## Read first
@@ -98,3 +98,4 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
   the planner. Milestone status is in the PR.
 - The art style trial: three colourways exist; colourways become unlocks in M7.
 - **2 Oct (later):** M1-M8 done, plus the planner's twist tuning (Masked +1 per set, Claws without the chow half, the shell lifted by any set with target ×1.25; see `docs/balance/2026-10-02-hosts.md`), a centred hand layout and stacks drawn with depth. Merged to `main`; ready for Vercel import (README). M9 (art) is next, with the planner.
+- **2 Oct (playtest):** the wall is gone. A face-down pile refills the hand on its own after every play and discard: hand 12, 4 discards, targets 1,000 / 3,600 / 8,000 / 16,000, six twists and the Lantern reworked (`docs/work/2026-10-02-draw-pile.md`, `docs/balance/2026-10-02-draw-pile.md`). The engine keeps one stack (`stacks[0]` is the pile); there is no take action.

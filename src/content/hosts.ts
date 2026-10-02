@@ -5,31 +5,31 @@
  */
 export type Twist =
   | {
-      /** The tile under each stack top is hidden; each set played with a tile taken while hidden gives mult. */
+      /** A smaller hand; each set of 3 or more tiles gives mult. */
       readonly id: 'masked';
+      readonly hand: number;
       readonly mult: number;
     }
   | {
-      /** Stacks are locked until a chow is played; chows score double chips. */
+      /** No discarding until a chow is played; chows score double chips. */
       readonly id: 'coil';
-      readonly lockedStacks: number;
       readonly chowChipsX: number;
     }
   | {
-      /** After every nth play two stack tops swap; once a round the player may swap two. */
+      /** After every nth play a random hand tile goes back into the pile and is redrawn; the player may do it once. */
       readonly id: 'swaps';
       readonly every: number;
       readonly playerSwaps: number;
     }
   | {
-      /** Some wall tiles burn: a set containing one gives mult, or it burns away if left on a top. */
+      /** Some tiles in the set burn: a set containing one gives mult; one held too long burns away. */
       readonly id: 'embers';
       readonly burning: number;
       readonly mult: number;
       readonly turns: number;
     }
   | {
-      /** A bigger hand, but discarded tiles go back to the bottom of a random stack. */
+      /** A bigger hand, but discarded tiles are shuffled back into the pile. */
       readonly id: 'moonTide';
       readonly hand: number;
     }
@@ -45,9 +45,8 @@ export type Twist =
       readonly noDiscardX: number;
     }
   | {
-      /** Fewer stacks, armoured tops until any set is played; kongs +mult. */
+      /** The first hand is armoured (no discarding it) until any set is played; kongs +mult. */
       readonly id: 'shell';
-      readonly stacks: number;
       readonly kongMult: number;
     };
 
@@ -75,9 +74,8 @@ export const HOSTS: readonly Host[] = [
     storm: false,
     tile: 'w1',
     title: 'Masked',
-    twistText:
-      'The tile under each stack top is hidden. Each set you play that has a tile you took while it was hidden gives +1 mult.',
-    twist: { id: 'masked', mult: 1 },
+    twistText: 'Hand size −1. Each set of 3 or more tiles gives +1 mult.',
+    twist: { id: 'masked', hand: -1, mult: 1 },
   },
   {
     id: 'azureDragon',
@@ -85,8 +83,8 @@ export const HOSTS: readonly Host[] = [
     storm: true,
     tile: 'w1',
     title: 'The coil',
-    twistText: 'One stack is locked until you play a chow. Chows score double chips.',
-    twist: { id: 'coil', lockedStacks: 1, chowChipsX: 2 },
+    twistText: 'No discarding until you play a chow. Chows score double chips.',
+    twist: { id: 'coil', chowChipsX: 2 },
   },
   {
     id: 'monkey',
@@ -95,7 +93,7 @@ export const HOSTS: readonly Host[] = [
     tile: 'w2',
     title: 'Swaps',
     twistText:
-      'After every 2nd play two stack tops swap. Once a round you may swap two stack tops yourself.',
+      'After every 2nd play a random tile in your hand is swapped for a new one. Once a round you may swap a tile yourself.',
     twist: { id: 'swaps', every: 2, playerSwaps: 1 },
   },
   {
@@ -105,8 +103,8 @@ export const HOSTS: readonly Host[] = [
     tile: 'w2',
     title: 'Embers',
     twistText:
-      '3 tiles in the wall are burning. Play a set with one for +3 mult, or it burns away after 2 turns on a stack top.',
-    twist: { id: 'embers', burning: 3, mult: 3, turns: 2 },
+      '4 tiles in your set are burning. Play a set with one for +4 mult, or it burns away after 2 turns in your hand.',
+    twist: { id: 'embers', burning: 4, mult: 4, turns: 2 },
   },
   {
     id: 'rabbit',
@@ -114,7 +112,7 @@ export const HOSTS: readonly Host[] = [
     storm: false,
     tile: 'w3',
     title: 'Moon tide',
-    twistText: 'Hand size +1, but discarded tiles go back to the bottom of a random stack.',
+    twistText: 'Hand size +1, but discarded tiles are shuffled back into the pile.',
     twist: { id: 'moonTide', hand: 1 },
   },
   {
@@ -142,9 +140,8 @@ export const HOSTS: readonly Host[] = [
     tile: 'w4',
     title: 'The shell',
     targetMult: 1.25,
-    twistText:
-      '6 stacks instead of 8. The top tile of each stack is armoured until you play a set. Kongs +4 mult.',
-    twist: { id: 'shell', stacks: 6, kongMult: 4 },
+    twistText: 'Your first hand is armoured: no discarding it until you play a set. Kongs +4 mult.',
+    twist: { id: 'shell', kongMult: 4 },
   },
 ];
 

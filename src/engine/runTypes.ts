@@ -3,7 +3,6 @@ import type { FortuneId } from '@/content/fortunes';
 import type { PackId } from '@/content/packs';
 import type { SetKind } from '@/content/sets';
 import type { SuitedSuit, TileKind } from '@/content/tiles';
-import type { Policy } from './ai';
 import type { RoundAction, RoundEvent, RoundState } from './round';
 import type { Levels } from './scoring';
 import type { Tile } from './tiles';
@@ -114,7 +113,6 @@ export interface FortuneArgs {
 export type RunAction =
   | { readonly type: 'chooseHost'; readonly storm: boolean }
   | { readonly type: 'round'; readonly action: RoundAction }
-  | { readonly type: 'auto'; readonly policy?: Policy }
   | { readonly type: 'continue' }
   | { readonly type: 'gift'; readonly pick: number | null; readonly replace?: number }
   | {

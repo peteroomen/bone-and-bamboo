@@ -1,25 +1,23 @@
 import { SET_TYPES } from '@/content/sets';
-import { type Policy, chooseMove, chooseStack } from './ai';
+import { type Policy, chooseMove } from './ai';
 import { brokenDragons } from './goals';
 import {
   type RoundState,
   finishProblem,
-  needsRefill,
   scoreContext,
   upgradeProblem,
   upgrades,
+  usableDiscards,
 } from './round';
 import { type PlayedSet, scoreTable } from './scoring';
 import { classify, orderSet, playProblem } from './sets';
-import { type Tile, kindName } from './tiles';
-import { visibleTiles } from './wall';
+import type { Tile } from './tiles';
 
 /**
- * Ask the dragon: one legal action with a reason, from what you can see. It never reads hidden
- * wall tiles. Final-play advice compares the real scores of the whole table.
+ * Ask the dragon: one legal action with a reason, from what you can see. It never reads the hidden
+ * pile. Final-play advice compares the real scores of the whole table.
  */
 export type Advice =
-  | { readonly type: 'draw'; readonly stack: number; readonly reason: string }
   | {
       readonly type: 'play';
       readonly ids: readonly number[];
@@ -73,26 +71,11 @@ function tableAfter(s: RoundState, p: Play): PlayedSet[] {
   return [...s.table, { kind: p.kind, tiles: orderSet(p.tiles) }];
 }
 
-function describeDraw(s: RoundState, stack: number): string {
-  const top = visibleTiles(s.stacks[stack] ?? [], s.rules.peek)[0];
-  if (!top) return 'The best tile on show.';
-  const have = s.hand.filter((t) => t.kind === top.kind).length;
-  const name = kindName(top.kind);
-  if (have >= 3) return `Take the ${name} from stack ${stack + 1}: a fourth to make a kong.`;
-  if (have === 2) return `Take the ${name} from stack ${stack + 1}: it makes a pong.`;
-  if (have === 1) return `Take the ${name} from stack ${stack + 1}: it makes a pair.`;
-  return `Take the ${name} from stack ${stack + 1}: it fits a run or your dragons.`;
-}
-
 export function advise(s: RoundState, policy: Policy = 'greedy'): Advice | null {
   if (s.phase !== 'play') return null;
-  if (needsRefill(s)) {
-    const stack = chooseStack(s, policy);
-    return stack === null ? null : { type: 'draw', stack, reason: describeDraw(s, stack) };
-  }
   const ctx = scoreContext(s);
   const now = scoreTable(s.table, ctx).total;
-  const plays = legalPlays(s.hand, s.discardsLeft);
+  const plays = legalPlays(s.hand, usableDiscards(s));
   const ups = upgrades(s).filter((u) => upgradeProblem(s, u.setIndex, u.tileId) === null);
   const scored = plays.map((p) => ({ p, total: scoreTable(tableAfter(s, p), ctx).total }));
   const upScored = ups.map((u) => {

@@ -1,19 +1,11 @@
 import { ENHANCEMENTS } from '@/content/enhancements';
 import { SET_TYPES, type SetKind } from '@/content/sets';
 import type { TileKind } from '@/content/tiles';
-import {
-  type RoundAction,
-  type RoundEvent,
-  type RoundState,
-  type Reduced,
-  needsRefill,
-  roundReduce,
-} from './round';
+import { type RoundAction, type RoundState, roundReduce, usableDiscards } from './round';
 import { type PlayedSet } from './scoring';
 import { type Candidate, findSets } from './sets';
 import { type Tile, isOutside, isSuited, isWind, rankOf, suitOf, tileChips } from './tiles';
-import { armouredIds, takeProblem } from './twists';
-import { visibleTiles } from './wall';
+import { armouredIds } from './twists';
 
 /**
  * The hint bot: it plays a round the way the Python prototypes did (tools/sim-py/runsim.py,
@@ -162,53 +154,18 @@ function keepValue(s: RoundState, t: Tile, policy: Policy): number {
   return tileValue(s, t.kind, c, policy);
 }
 
-// ---- refill ------------------------------------------------------------------------------------
-const DEPTH_WEIGHTS = [1.0, 0.55, 0.3, 0.15];
-
-/** Which stack the bot takes from, or null if no stack can be taken from. */
-export function chooseStack(s: RoundState, policy: Policy = 'greedy'): number | null {
-  const c = counts(s.hand);
-  let best = -Infinity;
-  let bi: number | null = null;
-  s.stacks.forEach((stack, i) => {
-    if (stack.length === 0 || takeProblem(s, i) !== null) return;
-    const vis = visibleTiles(stack, s.rules.peek);
-    let sc = 0;
-    vis.forEach((t, d) => (sc += (DEPTH_WEIGHTS[d] ?? 0.1) * tileValue(s, t.kind, c, policy)));
-    if (sc > best) {
-      best = sc;
-      bi = i;
-    }
-  });
-  return bi;
-}
-
-/** Refill the hand with the bot's choices, one take at a time. */
-export function autoRefill(
-  s: RoundState,
-  policy: Policy = 'greedy',
-): Reduced<RoundState, RoundEvent> {
-  let state = s;
-  const events: RoundEvent[] = [];
-  while (needsRefill(state)) {
-    const i = chooseStack(state, policy);
-    if (i === null) break;
-    const r = roundReduce(state, { type: 'take', stack: i });
-    if (r.state === state) break;
-    state = r.state;
-    events.push(...r.events);
-  }
-  return { state, events };
-}
-
 // ---- a turn ------------------------------------------------------------------------------------
 function keptSets(s: RoundState, all: Candidate[]): Candidate[] {
   return all.filter((c) => setValue(s, c.kind, c.tiles) > -50 || s.playsLeft <= 2);
 }
 
+/** A fourth copy may still come: the set has 4 and not all are in sight (hand, table, discards). */
 function kongInReach(s: RoundState, kind: TileKind): boolean {
   if ((s.copies[kind] ?? 0) < 4) return false;
-  return s.stacks.some((st) => visibleTiles(st, s.rules.peek).some((t) => t.kind === kind));
+  const seen = [...s.hand, ...s.table.flatMap((x) => x.tiles), ...s.discarded].filter(
+    (t) => t.kind === kind,
+  ).length;
+  return seen < (s.copies[kind] ?? 0);
 }
 
 function best(s: RoundState, list: Candidate[]): Candidate {
@@ -248,7 +205,8 @@ export function chooseMove(s: RoundState, policy: Policy = 'greedy'): Move | nul
   const all = findSets(s.hand);
   const sets = keptSets(s, all);
   const held = new Set(armouredIds(s));
-  const canDiscard = s.discardsLeft > 0 && s.hand.some((t) => !held.has(t.id));
+  const free = s.hand.filter((t) => !held.has(t.id));
+  const canDiscard = usableDiscards(s) > 0 && free.length > 0;
   if (policy === 'pongs') {
     const big = sets.filter((c) => ['kong', 'pong', 'winds'].includes(c.kind));
     if (big.length) return playMove(best(s, big), 'A big set: play it.');
@@ -298,12 +256,10 @@ export function moveAction(m: Move): RoundAction {
   return { type: m.type, ids: m.ids };
 }
 
-/** Plays the rest of a round with the bot (refilling, playing, discarding) to the end. */
+/** Plays the rest of a round with the bot (playing, discarding) to the end. */
 export function playOut(s: RoundState, policy: Policy = 'greedy'): RoundState {
   let state = s;
   for (let guard = 0; guard < 400 && state.phase === 'play'; guard++) {
-    state = autoRefill(state, policy).state;
-    if (state.phase !== 'play') break;
     const m = chooseMove(state, policy);
     if (!m) break;
     const r = roundReduce(state, moveAction(m));

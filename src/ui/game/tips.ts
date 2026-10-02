@@ -1,5 +1,5 @@
 import { type Tip, tipFor } from '@/content/guide';
-import { needsRefill, upgrades } from '@/engine/round';
+import { upgrades } from '@/engine/round';
 import type { RunState } from '@/engine/runTypes';
 import { findSets } from '@/engine/sets';
 
@@ -19,8 +19,8 @@ export function dueTip(run: RunState, sel: Selection): Tip | null {
   if (run.phase === 'host') return pick('host');
   const round = run.round;
   if (run.phase !== 'round' || !round || round.phase !== 'play') return null;
-  if (round.hand.length === 0 && round.table.length === 0 && round.turns === 0) return pick('wall');
-  if (needsRefill(round)) return null;
+  if (round.table.length === 0 && round.turns === 0 && !run.tipsSeen.includes('hand'))
+    return pick('hand');
   const kinds = new Set(findSets(round.hand).map((c) => c.kind));
   return (
     pick('full') ??

@@ -4,7 +4,6 @@ import { newRun, runReduce } from './run';
 import { type RoundState, preview, roundReduce, startRound } from './round';
 import { roundWith } from './testkit';
 import { buildTiles } from './tiles';
-import { viewStack } from './wall';
 
 const twist = (id: string) =>
   HOSTS.find((h) => h.id === id)?.twist as NonNullable<(typeof HOSTS)[number]['twist']>;
@@ -54,7 +53,7 @@ describe('hosts', () => {
 });
 
 describe('Masked (fox)', () => {
-  it('hides the tile under each stack top', () => {
+  it('shrinks the hand by 1', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: roundWith().rules,
@@ -64,96 +63,86 @@ describe('Masked (fox)', () => {
       twist: twist('fox'),
       rng: 4,
     });
-    expect(s.rules.peek).toBe(0);
-    expect(viewStack(s.stacks[0] ?? [], s.rules.peek).under).toEqual([]);
+    expect(s.rules.handSize).toBe(11);
+    expect(s.hand).toHaveLength(11);
   });
-  it('gives +1 mult to each set played that holds a tile that was not a stack top at the deal', () => {
-    let s = roundWith({ hand: 'p1 p2 p3 s4 s5 s6', rules: { handSize: 6 }, twist: twist('fox') });
-    const topId = s.hand[0]?.id as number;
-    s = { ...s, twist: { ...(s.twist as NonNullable<typeof s.twist>), tops: [topId] } };
-    const r = play(s, 'p1', 'p2', 'p3');
-    // a chow is one set: mult 1 + 1 (once, not per tile)
-    expect(r.state.table).toHaveLength(1);
-    expect(preview(r.state).now.mult).toBe(1 + 1);
+  it('gives +1 mult to each set of 3 or more tiles, not to a pair', () => {
+    const s = roundWith({ hand: 'p1 p2 p3 s4 s4', rules: { handSize: 5 }, twist: twist('fox') });
+    expect(preview(play(s, 'p1', 'p2', 'p3').state).now.mult).toBe(1 + 1);
+    expect(preview(play(s, 's4', 's4').state).now.mult).toBe(1);
   });
 });
 
 describe('The coil (azure dragon)', () => {
-  it('locks a stack until a chow is played, and doubles chow chips', () => {
-    let s = roundWith({
-      hand: 'p1 p2 p3 s4',
-      stacks: ['m1 m2', 'm3 m4'],
-      rules: { handSize: 4 },
-      twist: twist('azureDragon'),
-      twistState: { locked: [1] },
-    });
-    expect(illegal(roundReduce(s, { type: 'take', stack: 1 }))).toBe(true);
-    s = roundWith({
+  it('blocks discarding until a chow is played, and doubles chow chips', () => {
+    const s = roundWith({
       hand: 'p1 p2 p3 s4 s9',
-      stacks: ['m1 m2', 'm3 m4'],
+      stacks: ['m1 m2 m3'],
       rules: { handSize: 5 },
       twist: twist('azureDragon'),
-      twistState: { locked: [1] },
     });
+    expect(illegal(roundReduce(s, { type: 'discard', ids: kinds(s, 's9') }))).toBe(true);
     const r = play(s, 'p1', 'p2', 'p3');
-    expect(r.state.twist?.locked).toEqual([]);
-    expect(illegal(roundReduce(r.state, { type: 'take', stack: 1 }))).toBe(false);
+    expect(r.state.twist?.uncoiled).toBe(true);
+    expect(illegal(roundReduce(r.state, { type: 'discard', ids: kinds(r.state, 's9') }))).toBe(
+      false,
+    );
     // chow: (10 + 6) x2 chips, mult 1
     expect(preview(r.state).now.total).toBe(32);
   });
-  it('does not unlock for a pair', () => {
-    const s = roundWith({
-      hand: 'p1 p1 s4',
-      stacks: ['m1 m2', 'm3 m4'],
-      rules: { handSize: 3 },
-      twist: twist('azureDragon'),
-      twistState: { locked: [0] },
-    });
-    expect(play(s, 'p1', 'p1').state.twist?.locked).toEqual([0]);
+  it('does not uncoil for a pair', () => {
+    const s = roundWith({ hand: 'p1 p1 s4', rules: { handSize: 3 }, twist: twist('azureDragon') });
+    expect(play(s, 'p1', 'p1').state.twist?.uncoiled).toBe(false);
+  });
+  it('lets a single be played when no set is held and discarding is blocked', () => {
+    const s = roundWith({ hand: 'p1 p4 s7', rules: { handSize: 3 }, twist: twist('azureDragon') });
+    expect(illegal(roundReduce(s, { type: 'play', ids: kinds(s, 'p1') }))).toBe(false);
   });
 });
 
 describe('Swaps (monkey)', () => {
-  it('swaps two stack tops after every 2nd play', () => {
+  it('swaps a random hand tile back into the pile after every 2nd play', () => {
     let s = roundWith({
-      hand: 'p1 p1 s2 s2 m3 m3',
-      stacks: ['m1', 'm2', 'm4', 'm5'],
+      hand: 'p1 p1 s2 s2 m3',
+      stacks: ['m5 m6 m7 m8 m9'],
+      rules: { handSize: 5 },
+      twist: twist('monkey'),
+    });
+    let r = play(s, 'p1', 'p1');
+    expect(r.events.some((e) => e.type === 'swap')).toBe(false);
+    s = r.state;
+    const pile = s.stacks[0]?.length ?? 0;
+    r = play(s, 's2', 's2');
+    expect(r.events.find((e) => e.type === 'swap')).toMatchObject({ type: 'swap', auto: true });
+    expect(r.state.hand).toHaveLength(5);
+    // two drawn for the pair, one put back and one drawn for the swap
+    expect(r.state.stacks[0]).toHaveLength(pile - 2);
+  });
+  it('lets the player swap one tile of their choice once a round', () => {
+    const s = roundWith({
+      hand: 'p1 s9',
+      stacks: ['m1 m2 m3'],
       rules: { handSize: 2 },
       twist: twist('monkey'),
     });
-    const before = s.stacks.map((st) => st[st.length - 1]?.id);
-    let r = play(s, 'p1', 'p1');
-    expect(r.events.some((e) => e.type === 'swap')).toBe(false);
-    s = { ...r.state, hand: [...r.state.hand] };
-    r = play(s, 's2', 's2');
-    const swap = r.events.find((e) => e.type === 'swap');
-    expect(swap).toMatchObject({ type: 'swap', auto: true });
-    const after = r.state.stacks.map((st) => st[st.length - 1]?.id);
-    expect(after).not.toEqual(before);
-    expect([...after].sort()).toEqual([...before].sort());
-  });
-  it('lets the player swap two tops once a round', () => {
-    const s = roundWith({
-      hand: 'p1',
-      stacks: ['m1', 'm2', 'm4'],
-      rules: { handSize: 1 },
-      twist: twist('monkey'),
-    });
-    const a = s.stacks[0]?.[0]?.id;
-    const r = roundReduce(s, { type: 'swap', a: 0, b: 2 });
-    expect(r.state.stacks[2]?.[0]?.id).toBe(a);
+    const id = kinds(s, 's9')[0] as number;
+    const r = roundReduce(s, { type: 'swap', id });
+    expect(r.state.hand.map((t) => t.id)).not.toContain(id);
+    expect(r.state.hand).toHaveLength(2);
+    expect(r.state.stacks[0]?.map((t) => t.id)).toContain(id);
     expect(r.state.twist?.swapsLeft).toBe(0);
-    expect(illegal(roundReduce(r.state, { type: 'swap', a: 0, b: 1 }))).toBe(true);
-    expect(illegal(roundReduce(s, { type: 'swap', a: 1, b: 1 }))).toBe(true);
+    expect(illegal(roundReduce(r.state, { type: 'swap', id: r.state.hand[0]?.id as number }))).toBe(
+      true,
+    );
   });
   it('is not allowed in other winds', () => {
-    const s = roundWith({ hand: 'p1', stacks: ['m1', 'm2'], rules: { handSize: 1 } });
-    expect(illegal(roundReduce(s, { type: 'swap', a: 0, b: 1 }))).toBe(true);
+    const s = roundWith({ hand: 'p1', stacks: ['m1'], rules: { handSize: 1 } });
+    expect(illegal(roundReduce(s, { type: 'swap', id: s.hand[0]?.id as number }))).toBe(true);
   });
 });
 
 describe('Embers (vermilion bird)', () => {
-  it('sets 3 wall tiles burning', () => {
+  it('sets 4 tiles burning', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: roundWith().rules,
@@ -163,38 +152,38 @@ describe('Embers (vermilion bird)', () => {
       twist: twist('vermilionBird'),
       rng: 9,
     });
-    expect(s.twist?.burning).toHaveLength(3);
+    expect(s.twist?.burning).toHaveLength(4);
   });
-  it('gives +3 mult to a played burning tile', () => {
+  it('gives +4 mult to a played burning tile', () => {
     let s = roundWith({ hand: 'p1 p2 p3', rules: { handSize: 3 }, twist: twist('vermilionBird') });
     s = {
       ...s,
       twist: { ...(s.twist as NonNullable<typeof s.twist>), burning: [s.hand[0]?.id as number] },
     };
     const r = play(s, 'p1', 'p2', 'p3');
-    expect(preview(r.state).now.mult).toBe(1 + 3);
+    expect(preview(r.state).now.mult).toBe(1 + 4);
   });
-  it('burns away a tile that sits on a stack top for 2 turns', () => {
+  it('burns away a tile held in the hand for 2 turns', () => {
     let s = roundWith({
-      hand: 'p1 p1 s2 s2 m3 m3 m4 m4',
-      stacks: ['m1 m2', 'm5'],
-      rules: { handSize: 2 },
+      hand: 'p1 p1 s2 s2 m9',
+      stacks: ['m1 m2 m3 m4 m5'],
+      rules: { handSize: 5 },
       twist: twist('vermilionBird'),
     });
-    const burningId = s.stacks[0]?.[1]?.id as number;
+    const burningId = kinds(s, 'm9')[0] as number;
     s = { ...s, twist: { ...(s.twist as NonNullable<typeof s.twist>), burning: [burningId] } };
     const r1 = play(s, 'p1', 'p1');
-    expect(r1.state.twist?.burning).toEqual([burningId]);
     expect(r1.events.some((e) => e.type === 'burn')).toBe(false);
-    const r2 = play({ ...r1.state }, 's2', 's2');
+    const r2 = play(r1.state, 's2', 's2');
     expect(r2.events.some((e) => e.type === 'burn')).toBe(true);
     expect(r2.state.twist?.burning).toEqual([]);
-    expect(r2.state.stacks[0]?.map((t) => t.id)).not.toContain(burningId);
+    expect(r2.state.hand.map((t) => t.id)).not.toContain(burningId);
+    expect(r2.state.hand).toHaveLength(5);
   });
 });
 
 describe('Moon tide (rabbit)', () => {
-  it('adds 1 to the hand size and sends discards to the bottom of a stack', () => {
+  it('adds 1 to the hand size and shuffles discards back into the pile', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: roundWith().rules,
@@ -204,18 +193,19 @@ describe('Moon tide (rabbit)', () => {
       twist: twist('rabbit'),
       rng: 3,
     });
-    expect(s.rules.handSize).toBe(9);
+    expect(s.rules.handSize).toBe(13);
     let r = roundWith({
       hand: 'p1 p5 s9',
-      stacks: ['m1', 'm2'],
+      stacks: ['m1 m2'],
       rules: { handSize: 3 },
       twist: twist('rabbit'),
     });
     r = { ...r, rules: { ...r.rules, handSize: 3 } };
-    const wall = r.stacks.flat().length;
     const d = roundReduce(r, { type: 'discard', ids: kinds(r, 'p1', 's9') });
     expect(d.state.discarded).toHaveLength(0);
-    expect(d.state.stacks.flat()).toHaveLength(wall + 2);
+    expect(d.state.hand).toHaveLength(3);
+    // 2 went back in, 2 were drawn
+    expect(d.state.stacks[0]).toHaveLength(2);
     expect(d.events.filter((e) => e.type === 'tide')).toHaveLength(2);
   });
 });
@@ -250,7 +240,7 @@ describe('The report (kitchen god)', () => {
 });
 
 describe('The shell (black tortoise)', () => {
-  it('deals 6 stacks', () => {
+  it('armours the first hand', () => {
     const s = startRound({
       tiles: buildTiles('boneBamboo'),
       rules: roundWith().rules,
@@ -260,9 +250,8 @@ describe('The shell (black tortoise)', () => {
       twist: twist('blackTortoise'),
       rng: 5,
     });
-    expect(s.stacks).toHaveLength(6);
     expect(s.twist?.armour).toBe(true);
-    expect(s.twist?.tops).toHaveLength(6);
+    expect([...(s.twist?.tops ?? [])].sort()).toEqual(s.hand.map((t) => t.id).sort());
   });
   it('keeps armoured tiles in hand until any set is played; kongs +4 mult', () => {
     let s = roundWith({

@@ -4,7 +4,7 @@ import { useStage } from './stageSize';
 
 /**
  * Animates every [data-flip] element from where it was on the last render to where it is now, so a
- * tile that moves from a stack to the hand (or the hand to the table) visibly flies there. The
+ * tile that moves from the hand to the table visibly flies there. The
  * elements may be in different parents; they are matched by their data-flip id.
  */
 export function useFlip(root: RefObject<HTMLElement | null>): void {

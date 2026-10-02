@@ -2,7 +2,7 @@
 export const GUIDED_SEED = 11;
 
 export type TipId =
-  'host' | 'wall' | 'full' | 'pair' | 'run' | 'pong' | 'preview' | 'discard' | 'kong' | 'score';
+  'host' | 'hand' | 'full' | 'pair' | 'run' | 'pong' | 'preview' | 'discard' | 'kong' | 'score';
 
 export interface Tip {
   readonly id: TipId;
@@ -18,14 +18,14 @@ export const TIPS: readonly Tip[] = [
     text: 'Each round is hosted by a wind. Your first round is a plain one, so pick Calm and we will begin.',
   },
   {
-    id: 'wall',
+    id: 'hand',
     mood: 'point',
-    text: 'This is the wall. Tap a stack to take its top tile. You can see a strip of the tile under it.',
+    text: 'This is your hand. Each time you play or discard, it refills from the pile.',
   },
   {
     id: 'full',
     mood: 'think',
-    text: 'Your hand is full. Look for tiles that go together: two alike, three alike, or three in a row.',
+    text: 'Look for tiles that go together: two alike, three alike, or three in a row.',
   },
   {
     id: 'pair',

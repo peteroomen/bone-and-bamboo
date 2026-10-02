@@ -52,7 +52,7 @@ export function HostView({ run, choose }: { run: RunState; choose: (storm: boole
               </i>
               <span className="host-twist">{plain ? 'A plain round' : h.title}</span>
               <span className="muted" data-testid="twist-text">
-                {plain ? 'No twist in your first round: just you and the wall.' : h.twistText}
+                {plain ? 'No twist in your first round: just you and your tiles.' : h.twistText}
               </span>
             </span>
           </button>

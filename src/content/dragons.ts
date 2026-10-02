@@ -147,8 +147,8 @@ const list: Dragon[] = [
     id: 'lantern',
     name: 'Lantern',
     rarity: 'uncommon',
-    text: 'See 1 tile deeper in every stack',
-    effects: [{ type: 'mod', peek: 1 }],
+    text: 'See the next 3 tiles of the pile',
+    effects: [{ type: 'mod', peek: 3 }],
   },
   {
     id: 'mahjong',

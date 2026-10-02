@@ -35,7 +35,7 @@ const HINTS: { id: HintLevel; name: string; text: string }[] = [
   {
     id: 'full',
     name: 'Full',
-    text: 'Also marks wall tiles that would complete a set in your hand.',
+    text: 'Also outlines the move the guide would make.',
   },
 ];
 
@@ -90,11 +90,12 @@ export function HelpSheet({
             </p>
           </div>
           <section>
-            <h4>The wall</h4>
+            <h4>Your hand</h4>
             <Example kinds={['m8', 'p3', 's5']} base={1} />
             <p>
-              Your tiles are dealt into face-up stacks. You see each top tile and a strip of the one
-              under it. Tap a stack to take its top tile into your hand.
+              Your tiles are shuffled into a face-down pile and you are dealt a hand. Each time you
+              play or discard, the hand refills from the pile. A round gives you a set number of
+              plays and discards.
             </p>
           </section>
           <section>

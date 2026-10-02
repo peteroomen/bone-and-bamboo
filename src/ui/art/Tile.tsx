@@ -26,7 +26,7 @@ function backSvg(theme: ThemeId): string {
 
 /**
  * One tile, drawn from code. Its size comes from the CSS variable --tw (width) on it or a parent,
- * so the same component is a wall tile, a hand tile and a table tile. `data-flip` lets the
+ * so the same component is a hand tile, a table tile and a teahouse tile. `data-flip` lets the
  * layout animate it from wherever it was.
  */
 export function TileView({

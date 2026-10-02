@@ -38,6 +38,7 @@ export function installAudioDebug(): void {
 
 /** The sounds and buzzes for what the engine just did. */
 export function playEvents(events: readonly RunEvent[], _run?: RunState): void {
+  let drew = false;
   for (const e of events) {
     if (e.type === 'money') {
       if (e.delta > 0) sfx.coin();
@@ -46,9 +47,13 @@ export function playEvents(events: readonly RunEvent[], _run?: RunState): void {
     if (e.type !== 'round') continue;
     const ev = e.event;
     switch (ev.type) {
-      case 'take':
-        sfx.take();
-        haptics.take();
+      case 'draw':
+        // a refill is many draws at once: one clack for the lot
+        if (!drew) {
+          sfx.take();
+          haptics.take();
+        }
+        drew = true;
         break;
       case 'play':
         sfx.play(ev.tiles.length);

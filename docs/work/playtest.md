@@ -21,17 +21,17 @@ Set in the browser console (`localStorage`), then reload:
 
 ## What to look at
 
-1. **The wall and the hand at your phone's size.** Are the tiles readable? Is anything cut off or
-   too small to tap? (Two rows of four stacks, two rows for the hand; sizes follow the screen.)
+1. **The hand and the pile at your phone's size.** The wall is gone (2 Oct): your hand of 12
+   refills from a face-down pile after every play and discard. Is it clearer? Are the tiles
+   readable and easy to tap (two rows of six)?
 2. **The first run.** Do the tips come at the right moments, and does each wait until the table is
    still? Is "Ask" (the guide's advice) sensible?
 3. **A kong upgrade and banking.** Buy a Fourth copy pack or a Rubbing fortune, play a pong, then
    hold its fourth tile: the Kong button appears. Once the table beats the target a "bank" bar
    replaces the progress bar.
 4. **The eight twists.** Each wind offers Calm and Storm; the banner at the start says the rule.
-   Tuned on 2 Oct (see `docs/balance/2026-10-02-hosts.md`): Masked +1 per set, Claws without the
-   chow half, the shell lifted by any set with target ×1.25. The shell is still the hardest wind
-   (64% in the sim); tell me how it feels.
+   Six were reworked for the pile (`docs/balance/2026-10-02-draw-pile.md`). Swaps has a "Swap it"
+   button: pick one tile, then tap it. The shell is still the hardest wind (71% in the sim).
 5. **The teahouse.** Dragons, pages, fortunes (use one from the pocket), a pack, reroll, burn a kind,
    sell. Does the money feel right?
 6. **Colourways** (with the unlock flag): tiles, table and accents should all change together.

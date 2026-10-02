@@ -5,7 +5,7 @@ import { PACK_IDS, type PackId } from '@/content/packs';
 import { STORM_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
 import { GIFT, MONEY, SHOP } from '@/content/rules';
 import { tileSetDef } from '@/content/tilesets';
-import { autoRefill } from './ai';
+import { intoPile } from './twists';
 import { applyFortune, fortuneProblem } from './fortunes';
 import { Rng, deriveSeed, hashSeed } from './rng';
 import {
@@ -13,6 +13,7 @@ import {
   type RoundEvent,
   type RoundRules,
   type RoundState,
+  refill,
   roundReduce,
   startRound,
 } from './round';
@@ -175,11 +176,6 @@ export function runReduce(s: RunState, a: RunAction): R {
       return chooseHost(s, a.storm);
     case 'round':
       return roundAction(s, a.action);
-    case 'auto': {
-      if (s.phase !== 'round' || !s.round) return illegal(s, 'No round to refill.');
-      const r = autoRefill(s.round, a.policy);
-      return afterRound(s, r.state, r.events);
-    }
     case 'continue':
       return proceed(s);
     case 'gift':
@@ -500,20 +496,20 @@ function useFortune(s: RunState, index: number, args: FortuneArgs): R {
   if (inRound && round) {
     const byId = new Map(out.tiles.map((t) => [t.id, t]));
     const removed = new Set(out.removed);
-    const stacks = round.stacks.map((st) => st.slice());
+    let stacks = round.stacks;
     const rng = new Rng(round.rng);
-    for (const t of out.added) {
-      // A copy made in a round goes to the bottom of a random stack.
-      const i = rng.int(stacks.length);
-      (stacks[i] as (typeof t)[]).unshift(t);
-    }
-    round = {
-      ...round,
-      rng: rng.state,
-      stacks,
-      copies: Object.fromEntries(countKinds(out.tiles)),
-      hand: round.hand.filter((t) => !removed.has(t.id)).map((t) => byId.get(t.id) ?? t),
-    };
+    // A copy made in a round goes into the pile at a random depth.
+    for (const t of out.added) stacks = intoPile(stacks, t, rng);
+    round = refill(
+      {
+        ...round,
+        rng: rng.state,
+        stacks,
+        copies: Object.fromEntries(countKinds(out.tiles)),
+        hand: round.hand.filter((t) => !removed.has(t.id)).map((t) => byId.get(t.id) ?? t),
+      },
+      [],
+    );
   }
   return {
     state: {

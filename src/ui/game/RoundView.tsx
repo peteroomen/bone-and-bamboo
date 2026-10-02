@@ -3,18 +3,24 @@ import { SET_TYPES } from '@/content/sets';
 import { WIND_NAMES } from '@/content/rules';
 import { type Advice, advise } from '@/engine/advice';
 import { dragonGoals } from '@/engine/goals';
-import { finishProblem, needsRefill, preview, previewUpgrade, upgrades } from '@/engine/round';
+import {
+  finishProblem,
+  nextTiles,
+  preview,
+  previewUpgrade,
+  upgrades,
+  usableDiscards,
+} from '@/engine/round';
 import type { RunAction, RunEvent, RunState } from '@/engine/runTypes';
 import { findSets, playProblem } from '@/engine/sets';
 import { kindName, sortTiles } from '@/engine/tiles';
-import { viewStack, visibleTiles } from '@/engine/wall';
 import { TileView } from '@/ui/art/Tile';
 import { PlayerBar } from './PlayerBar';
 import { useFlip } from './useFlip';
 import { hostFor } from '@/content/hosts';
-import { armouredIds, discardProblem, takeProblem } from '@/engine/twists';
+import { armouredIds, discardProblem, swapProblem } from '@/engine/twists';
 import { updateSettings, useStore, useTheme } from '@/ui/state/store';
-import { useStage } from './stageSize';
+import { STAGE_W, useStage } from './stageSize';
 import { GuideBubble } from './GuideBubble';
 import { TipLayer } from './TipLayer';
 import { dueTip } from './tips';
@@ -37,7 +43,6 @@ export function RoundView({
   const [selected, setSelected] = useState<readonly number[]>([]);
   const [advice, setAdvice] = useState<Advice | null>(null);
   const [help, setHelp] = useState<'intro' | 'sets' | null>(null);
-  const [swapPick, setSwapPick] = useState<number | null | 'off'>('off');
   const [bannerSeen, setBannerSeen] = useState(false);
   // the first round of a new browser opens the introduction
   useEffect(() => {
@@ -61,36 +66,37 @@ export function RoundView({
     }
     return glow;
   }, [round, hints]);
-  const wallGlow = useMemo(() => {
-    const glow = new Set<number>();
-    if (!round || hints !== 'full' || round.hand.length >= round.rules.handSize) return glow;
-    for (const st of round.stacks)
-      for (const t of visibleTiles(st, round.rules.peek))
-        if (findSets([...round.hand, t]).some((c) => c.tiles.some((x) => x.id === t.id)))
-          glow.add(t.id);
-    return glow;
+  // the Full hint level outlines the guide's pick
+  const hinted = useMemo(() => {
+    if (!round || hints !== 'full' || round.phase !== 'play') return new Set<number>();
+    const a = advise(round);
+    return new Set(a && 'ids' in a ? a.ids : a?.type === 'upgrade' ? [a.tileId] : []);
   }, [round, hints]);
+  // tiles new to the hand since the last render deal in from the pile, one after another
+  const seen = useRef<Set<number> | null>(null);
+  const fresh = useMemo(() => {
+    const ids = new Set(round?.hand.map((t) => t.id) ?? []);
+    const before = seen.current;
+    seen.current = ids;
+    return before ? [...ids].filter((id) => !before.has(id)) : [];
+  }, [round?.hand]);
   if (!round) return null;
   const host = hostFor(run.roundIndex, run.storm);
   const twistState = round.twist;
   const burning = new Set(twistState?.burning ?? []);
   const armoured = new Set(armouredIds(round));
   const showBanner =
-    twistState !== null &&
-    !bannerSeen &&
-    round.turns === 0 &&
-    round.hand.length === 0 &&
-    round.table.length === 0;
+    twistState !== null && !bannerSeen && round.turns === 0 && round.table.length === 0;
 
   const live = selected.filter((id) => round.hand.some((t) => t.id === id));
-  const refill = needsRefill(round);
   const done = round.phase === 'done';
   const pv = preview(round, live);
-  const problem = live.length ? playProblem(round.hand, live, round.discardsLeft) : 'Pick tiles.';
-  const canPlay = !done && !refill && problem === null;
+  const problem = live.length
+    ? playProblem(round.hand, live, usableDiscards(round))
+    : 'Pick tiles.';
+  const canPlay = !done && problem === null;
   const canDiscard =
     !done &&
-    !refill &&
     round.discardsLeft > 0 &&
     live.length >= 1 &&
     live.length <= round.rules.maxDiscard &&
@@ -98,17 +104,24 @@ export function RoundView({
   const nowScore = pv.now.total;
   const gain = pv.withSelected ? pv.withSelected.total - nowScore : null;
   const ups = upgrades(round);
-  const up = !refill && !done ? (ups.find((u) => live.includes(u.tileId)) ?? ups[0]) : undefined;
+  const up = !done ? (ups.find((u) => live.includes(u.tileId)) ?? ups[0]) : undefined;
   const upPreview = up ? previewUpgrade(round, up.setIndex, up.tileId) : null;
   const canBank = !done && finishProblem(round) === null;
   const target = run.target;
   const pct = Math.min(100, (nowScore / Math.max(1, target)) * 100);
-  const cols = Math.ceil(round.stacks.length / 2);
+  const pile = round.stacks[0]?.length ?? 0;
+  const next = nextTiles(round);
+  const swap = twistState?.twist.id === 'swaps' && twistState.swapsLeft > 0;
+  const swapId = live.length === 1 ? live[0] : undefined;
+  const canSwap = swap && !done && swapId !== undefined && swapProblem(round, swapId) === null;
 
-  // Tiles are sized to what is left of the stage after the fixed rows and the ones that are showing.
+  // The hand is two rows; tiles take the width they can, and shrink on a short stage.
+  const hc = Math.ceil(round.rules.handSize / 2);
+  const byWidth = Math.floor((STAGE_W - 24 - 6 * (hc - 1)) / hc) - 2;
   const fixed =
-    410 + (goals.length > 0 ? 24 : 0) + (pv.warnings.length > 0 ? 18 : 0) + (canBank ? 38 : 0);
-  const tw = Math.max(40, Math.min(60, Math.floor((stage.h - fixed) / 5.4)));
+    470 + (goals.length > 0 ? 24 : 0) + (pv.warnings.length > 0 ? 18 : 0) + (canBank ? 38 : 0);
+  const byHeight = Math.floor((stage.h - fixed) / 2.9);
+  const tw = Math.max(40, Math.min(64, byWidth, byHeight));
 
   const toggle = (id: number) =>
     setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
@@ -148,7 +161,6 @@ export function RoundView({
       data-theme={theme}
       style={{
         ['--tw-round' as string]: `${tw}px`,
-        ['--strip' as string]: `${Math.round(tw * 0.26)}px`,
       }}
     >
       <header className="hud">
@@ -193,92 +205,8 @@ export function RoundView({
         </ul>
       )}
 
-      <section className="wall" style={{ ['--cols' as string]: cols }} aria-label="The wall">
-        {round.stacks.map((stack, i) => {
-          const v = viewStack(stack, round.rules.peek);
-          const locked = takeProblem(round, i) !== null;
-          const swapping = swapPick !== 'off';
-          const canTake =
-            !done && !locked && round.hand.length < round.rules.handSize && v.count > 0;
-          return (
-            <button
-              key={i}
-              type="button"
-              className={`stack${advice?.type === 'draw' && advice.stack === i ? ' advised' : ''}${locked ? ' locked' : ''}${swapping && swapPick === i ? ' advised' : ''}`}
-              data-testid={`stack-${i}`}
-              data-count={v.count}
-              disabled={swapping ? v.count === 0 : !canTake}
-              onClick={() => {
-                if (swapPick === 'off') {
-                  dispatch({ type: 'round', action: { type: 'take', stack: i } });
-                } else if (swapPick === null) {
-                  setSwapPick(i);
-                } else if (swapPick !== i) {
-                  dispatch({ type: 'round', action: { type: 'swap', a: swapPick, b: i } });
-                  setSwapPick('off');
-                } else setSwapPick(null);
-              }}
-              aria-label={
-                v.top
-                  ? `Stack ${i + 1}, ${v.count} tiles, top ${kindName(v.top.kind)}${locked ? ', locked' : ''}`
-                  : `Stack ${i + 1}, empty`
-              }
-              style={{ ['--peek' as string]: round.rules.peek }}
-            >
-              {v.count === 0 && <span className="stack-empty" />}
-              {Array.from({ length: stackDepth(v.count) }, (_, k) => (
-                <span
-                  key={`d${k}`}
-                  className="stack-depth"
-                  aria-hidden
-                  style={{
-                    top: `calc(var(--strip) * ${round.rules.peek} + ${(stackDepth(v.count) - k) * DEPTH_STEP}px)`,
-                  }}
-                />
-              ))}
-              {v.under
-                .map((t, j) => ({ t, j }))
-                .reverse()
-                .map(({ t, j }) => (
-                  <TileView
-                    key={t.id}
-                    tile={t}
-                    theme={theme}
-                    className={`stack-tile under${wallGlow.has(t.id) ? ' hint-draw' : ''}${burning.has(t.id) ? ' burning' : ''}`}
-                    style={{ top: `calc(var(--strip) * ${round.rules.peek - 1 - j})` }}
-                  />
-                ))}
-              {v.top && (
-                <TileView
-                  tile={v.top}
-                  theme={theme}
-                  className={`stack-tile top${wallGlow.has(v.top.id) ? ' hint-draw' : ''}${burning.has(v.top.id) ? ' burning' : ''}`}
-                  style={{ top: `calc(var(--strip) * ${round.rules.peek})` }}
-                />
-              )}
-              {locked && (
-                <span className="stack-lock" aria-hidden>
-                  🔒
-                </span>
-              )}
-              {v.count > 0 && <span className="stack-count">{v.count}</span>}
-            </button>
-          );
-        })}
-      </section>
-
       <section className="table" aria-label="Your table" data-testid="table">
         {round.table.length === 0 && <p className="table-empty">Play sets here.</p>}
-        {twistState && twistState.twist.id === 'swaps' && twistState.swapsLeft > 0 && (
-          <button
-            type="button"
-            className="swap-btn"
-            data-testid="btn-swap"
-            onClick={() => setSwapPick(swapPick === 'off' ? null : 'off')}
-          >
-            {swapPick === 'off' ? 'Swap two tops' : 'Cancel swap'}
-          </button>
-        )}
         {round.table.map((set, i) => (
           <div
             className={`set${advice?.type === 'upgrade' && advice.setIndex === i ? ' advised' : ''}`}
@@ -296,15 +224,13 @@ export function RoundView({
         {advice && (
           <GuideBubble mood="think" testId="advice">
             <b>
-              {advice.type === 'draw'
-                ? 'Draw'
-                : advice.type === 'play'
-                  ? 'Play'
-                  : advice.type === 'discard'
-                    ? 'Discard'
-                    : advice.type === 'upgrade'
-                      ? 'Upgrade'
-                      : 'Bank'}
+              {advice.type === 'play'
+                ? 'Play'
+                : advice.type === 'discard'
+                  ? 'Discard'
+                  : advice.type === 'upgrade'
+                    ? 'Upgrade'
+                    : 'Bank'}
               .
             </b>{' '}
             {advice.reason}
@@ -338,11 +264,9 @@ export function RoundView({
           <span className="preview-add" data-testid="score-add">
             {gain !== null && pv.withSelected
               ? `${signed(gain)} → ${fmt(pv.withSelected.total)}`
-              : refill
-                ? 'Take tiles from the wall'
-                : live.length
-                  ? problem
-                  : 'Pick tiles to play'}
+              : live.length
+                ? problem
+                : 'Pick tiles to play'}
           </span>
         </div>
         {pv.warnings.length > 0 && (
@@ -352,17 +276,49 @@ export function RoundView({
         )}
       </section>
 
+      <section className="pile-row" aria-label="The pile">
+        <span className="pile" data-testid="pile" data-count={pile}>
+          <span className="pile-back" aria-hidden />
+          <span>
+            <b>{pile}</b> in the pile
+          </span>
+        </span>
+        {next.length > 0 && (
+          <span className="pile-next" data-testid="pile-next" aria-label="Next from the pile">
+            {next.map((t) => (
+              <TileView key={t.id} tile={t} theme={theme} />
+            ))}
+          </span>
+        )}
+        {swap && (
+          <button
+            type="button"
+            className="swap-btn"
+            data-testid="btn-swap"
+            disabled={!canSwap}
+            onClick={() => {
+              if (swapId === undefined) return;
+              dispatch({ type: 'round', action: { type: 'swap', id: swapId } });
+              setSelected([]);
+            }}
+          >
+            {swapId === undefined ? 'Pick a tile to swap' : 'Swap it'}
+          </button>
+        )}
+      </section>
+
       <section
         className="hand"
         aria-label="Your hand"
         data-testid="hand"
-        style={{ ['--hc' as string]: Math.ceil(round.rules.handSize / 2) }}
+        style={{ ['--hc' as string]: hc }}
       >
         {hand.map((t) => (
           <button
             key={t.id}
             type="button"
-            className={`hand-tile${live.includes(t.id) ? ' selected' : ''}${handGlow.has(t.id) ? ' glow' : ''}`}
+            className={`hand-tile${live.includes(t.id) ? ' selected' : ''}${handGlow.has(t.id) ? ' glow' : ''}${fresh.includes(t.id) ? ' fresh' : ''}${hinted.has(t.id) ? ' hinted' : ''}`}
+            style={fresh.includes(t.id) ? { ['--deal' as string]: fresh.indexOf(t.id) } : undefined}
             data-testid={`tile-${t.id}`}
             aria-pressed={live.includes(t.id)}
             aria-label={kindName(t.kind)}
@@ -405,11 +361,11 @@ export function RoundView({
           <button
             type="button"
             className="btn"
-            data-testid="btn-auto"
-            disabled={done || !refill}
-            onClick={() => dispatch({ type: 'auto' })}
+            data-testid="btn-clear"
+            disabled={done || live.length === 0}
+            onClick={() => setSelected([])}
           >
-            Auto
+            Clear
           </button>
         )}
         <button
@@ -458,10 +414,4 @@ export function RoundView({
       )}
     </div>
   );
-}
-
-/** How many tile edges show under a stack's top: a full stack looks deep, a nearly empty one flat. */
-const DEPTH_STEP = 3;
-function stackDepth(count: number): number {
-  return Math.min(3, Math.ceil(Math.max(0, count - 1) / 3));
 }

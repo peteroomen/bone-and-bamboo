@@ -32,7 +32,7 @@ export function Title() {
         <main className="title" data-testid="title">
           <Guide mood="happy" size={110} />
           <h1 className="title-name">Bone &amp; Bamboo</h1>
-          <p className="title-sub">Four winds. Four hosts. One wall.</p>
+          <p className="title-sub">Four winds. Four hosts. One hand.</p>
           <div className="title-buttons">
             {run && (
               <button

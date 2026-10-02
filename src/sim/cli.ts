@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { DRAGON_IDS } from '@/content/dragons';
 import { HOSTS } from '@/content/hosts';
 import { SET_ORDER } from '@/content/sets';
+import { STORM_TARGET_MULT, TARGETS } from '@/content/targets';
 import { chooseMove, moveAction, type Policy } from '@/engine/ai';
 import { newRun, runReduce } from '@/engine/run';
 import { type SimRunOptions, type SimRunResult, driveRound, playRunSim } from './driver';
@@ -14,7 +15,7 @@ const HELP = `pnpm sim: the headless simulator (reproduces tools/sim-py).
       The base round: 81 tiles, hand 8, 8 stacks, see 1 under, 8 plays, 3 discards, no dragons.
   pnpm sim free  [--runs 200] [--shopper smart|casual]
       Score distributions per round (nobody can lose).
-  pnpm sim run   [--runs 400] [--shopper smart|casual] [--targets 1000,4000,9000,18000]
+  pnpm sim run   [--runs 400] [--shopper smart|casual] [--targets 1000,3600,8000,16000]
                  [--no-gift] [--fire 6] [--python-shop] [--bank] [--upgrade] [--lantern 1] [--tileset boneBamboo]
       Win rates against the targets. --python-shop leaves the almanac pack out, as the Python
       prototype's teahouse did (the parity check).
@@ -183,7 +184,7 @@ function summarise(res: SimRunResult[], shopper: string, mode: 'free' | 'run') {
 
 async function hostsMode(args: string[], jobs: number, from: number, shopper: 'smart' | 'casual') {
   const runs = Number(flag(args, 'runs', '400'));
-  const base = { shopper, gift: true, fire: 6, targets: [1000, 4000, 9000, 18000] };
+  const base = { shopper, gift: true, fire: 6, targets: [...TARGETS] };
   const calm = await runMany({ ...base, storm: [false, false, false, false] }, from, runs, jobs);
   console.log(
     `| Wind | Host | Round win rate | Median score ÷ target | Runs reaching it | (${shopper}, ${runs} runs) |`,
@@ -213,7 +214,7 @@ async function hostsMode(args: string[], jobs: number, from: number, shopper: 's
     row(['East', 'South', 'West', 'North'][w] as string, `${names[0]?.title} (calm)`, calmRounds);
     row(
       ['East', 'South', 'West', 'North'][w] as string,
-      `${names[1]?.title} (storm, target ×1.5)`,
+      `${names[1]?.title} (storm, target ×${names[1]?.targetMult ?? STORM_TARGET_MULT})`,
       stormRounds,
     );
   }
@@ -230,7 +231,7 @@ async function policiesMode(
     shopper,
     gift: true,
     fire: 6,
-    targets: [1000, 4000, 9000, 18000],
+    targets: [...TARGETS],
   };
   console.log(
     `| Policy | Won | Money at the end | Rounds banked early | Kongs on tables | (${shopper}, ${runs} runs) |`,
@@ -273,7 +274,7 @@ async function main() {
   if (mode === 'trace') return trace(args);
   if (mode === 'free' || mode === 'run') {
     const runs = Number(flag(args, 'runs', mode === 'free' ? '200' : '400'));
-    const targetArg = flag(args, 'targets', mode === 'run' ? '1000,4000,9000,18000' : undefined);
+    const targetArg = flag(args, 'targets', mode === 'run' ? TARGETS.join(',') : undefined);
     const opts: Omit<SimRunOptions, 'seed'> = {
       shopper,
       gift: !has(args, 'no-gift'),

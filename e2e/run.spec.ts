@@ -1,5 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import {
+  botTurn,
   freshStart,
   hook,
   newRun,
@@ -69,9 +70,10 @@ test('a missed target ends the run', async ({ page }, info) => {
 test('reloading mid-round resumes exactly', async ({ page }) => {
   await startRun(page, [300, 400, 500, 600]);
   await page.getByTestId('host-calm').click();
-  await page.getByTestId('btn-auto').click();
+  await botTurn(page);
   const before = (await hook(page))?.run;
-  expect(before?.round?.hand).toHaveLength(8);
+  expect(before?.round?.hand).toHaveLength(before?.round?.rules.handSize ?? -1);
+  expect(before?.round?.turns).toBe(1);
   await page.reload();
   await expect(page.getByTestId('title')).toBeVisible();
   await page.getByTestId('btn-continue').click();

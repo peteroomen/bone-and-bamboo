@@ -68,7 +68,7 @@ test('instant speed plays a round with no animation waits; normal speed animates
   let busiest = 0;
   const t0 = Date.now();
   for (let i = 0; i < 40; i++) {
-    if (!(await botTurn(page, { auto: true }))) break;
+    if (!(await botTurn(page))) break;
     busiest = Math.max(busiest, await animations());
   }
   expect(busiest).toBe(0);
@@ -76,12 +76,12 @@ test('instant speed plays a round with no animation waits; normal speed animates
   await expect(page.getByTestId('score-total')).toBeVisible();
   expect(Date.now() - t0).toBeLessThan(60_000);
 
-  // at normal speed a tap on a stack sets tiles flying
+  // at normal speed a play sets tiles flying and new ones deal in
   await freshStart(page, { speed: 'normal' });
   await setDev(page, { seed: 5, targets: [300, 400, 500, 600] });
   await newRun(page);
   await page.getByTestId('host-calm').click();
-  await page.getByTestId('stack-0').click();
-  await page.getByTestId('stack-1').click();
+  await page.getByTestId('btn-banner-ok').click();
+  await botTurn(page);
   expect(await animations()).toBeGreaterThan(0);
 });

@@ -1,32 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { autoRefill, chooseMove, chooseStack, moveAction, playOut } from './ai';
+import { chooseMove, moveAction, playOut } from './ai';
 import { roundReduce, startRound } from './round';
 import { roundWith } from './testkit';
 import { buildTiles } from './tiles';
 import { BASE_ROUND_RULES } from './round';
 
 describe('the hint bot', () => {
-  it('refills the hand to full', () => {
-    const s = startRound({
-      tiles: buildTiles('boneBamboo'),
-      rules: BASE_ROUND_RULES,
-      dragons: [],
-      levels: {},
-      target: 0,
-      rng: 3,
-    });
-    const r = autoRefill(s);
-    expect(r.state.hand).toHaveLength(8);
-    expect(r.events).toHaveLength(8);
-  });
-  it('takes from the stack that completes a set', () => {
-    const s = roundWith({
-      hand: 'p1 p2 s9',
-      rules: { handSize: 4 },
-      stacks: ['m4', 's5 p3', 'm8'],
-    });
-    expect(chooseStack(s)).toBe(1);
-  });
   it('plays a pong over a pair, and a chow when it has one', () => {
     const s = roundWith({ hand: 'p5 p5 p5 s1 s2 s3 m9 m9', rules: { handSize: 8 } });
     const m = chooseMove(s);
@@ -55,8 +34,6 @@ describe('the hint bot', () => {
           rng: seed,
         });
         for (let n = 0; n < 200 && s.phase === 'play'; n++) {
-          s = autoRefill(s, policy).state;
-          if (s.phase !== 'play') break;
           const m = chooseMove(s, policy);
           expect(m).not.toBeNull();
           if (!m) break;
@@ -81,7 +58,8 @@ describe('the hint bot', () => {
     expect(done.phase).toBe('done');
     expect(done.result?.score.total).toBeGreaterThan(300);
   });
-  it('reproduces the Python base round: median about 2,450 (within 10%)', () => {
+  // The draw pile (docs/work/2026-10-02-draw-pile.md): hand 12, 4 discards, no twist, no dragons.
+  it('plays the base round to a median of about 2,000 (within 10%)', () => {
     const scores: number[] = [];
     for (let seed = 0; seed < 600; seed++) {
       const s = startRound({
@@ -96,7 +74,7 @@ describe('the hint bot', () => {
     }
     scores.sort((a, b) => a - b);
     const median = scores[Math.floor(scores.length / 2)] as number;
-    expect(median).toBeGreaterThan(2450 * 0.9);
-    expect(median).toBeLessThan(2450 * 1.1);
+    expect(median).toBeGreaterThan(2000 * 0.9);
+    expect(median).toBeLessThan(2000 * 1.1);
   });
 });

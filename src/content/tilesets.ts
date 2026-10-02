@@ -38,12 +38,12 @@ export const TILE_SETS: readonly TileSetDef[] = [
   {
     id: 'jadeCourt',
     name: 'Jade Court',
-    text: 'The 81, with a hand of 9 and 2 discards.',
+    text: 'The 81, with a hand of 13 and 3 discards.',
     suits: ['p', 's', 'm'],
     copies: 3,
     honours: {},
-    hand: 9,
-    discards: 2,
+    hand: 13,
+    discards: 3,
     unlock: { kind: 'hosts', n: 3 },
   },
 ];

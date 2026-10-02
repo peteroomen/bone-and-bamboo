@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DRAGONS } from '@/content/dragons';
-import { chooseMove, moveAction, autoRefill } from './ai';
+import { chooseMove, moveAction } from './ai';
 import { newRun, roundRulesFor, runReduce, targetFor, interestFor } from './run';
 import type { RunAction, RunState } from './runTypes';
 import { sellPrice } from './shop';
@@ -18,8 +18,7 @@ const tryStep = (run: RunState, a: RunAction) => runReduce(run, a);
 function playRound(start: RunState): RunState {
   let run = start;
   for (let i = 0; i < 400 && run.phase === 'round'; i++) {
-    run = step(run, { type: 'auto' });
-    if (run.phase !== 'round' || !run.round) break;
+    if (!run.round) break;
     const m = chooseMove(run.round);
     if (!m) break;
     run = step(run, { type: 'round', action: moveAction(m) });
@@ -50,40 +49,41 @@ describe('a run', () => {
     expect(run.dragons).toEqual([]);
   });
 
-  it('has the targets 1,000 / 4,000 / 9,000 / 18,000 and the lantern and storm multipliers', () => {
-    expect([0, 1, 2, 3].map((r) => targetFor(1, r, false))).toEqual([1000, 4000, 9000, 18000]);
-    expect([0, 1, 2, 3].map((r) => targetFor(2, r, false))).toEqual([1250, 5000, 11250, 22500]);
+  it('has the targets 1,000 / 3,600 / 8,000 / 16,000 and the lantern and storm multipliers', () => {
+    expect([0, 1, 2, 3].map((r) => targetFor(1, r, false))).toEqual([1000, 3600, 8000, 16000]);
+    expect([0, 1, 2, 3].map((r) => targetFor(2, r, false))).toEqual([1250, 4500, 10000, 20000]);
     expect(targetFor(4, 0, false)).toBe(1500);
     expect(targetFor(1, 0, true)).toBe(1500);
-    expect(targetFor(1, 1, true)).toBe(6000);
+    expect(targetFor(1, 1, true)).toBe(5400);
   });
 
   it('works out the round rules from dragons, tile set and lantern', () => {
     expect(roundRulesFor(free())).toMatchObject({
-      handSize: 8,
+      handSize: 12,
       plays: 8,
-      discards: 3,
-      peek: 1,
-      stacks: 8,
+      discards: 4,
+      peek: 0,
+      stacks: 1,
     });
     const rules = roundRulesFor({
       dragons: ['longSleeves', 'nightOwl', 'ironTeapot', 'lantern'],
       tileSet: 'boneBamboo',
       lantern: 1,
     });
-    expect(rules).toMatchObject({ handSize: 9, plays: 9, discards: 5, peek: 2 });
+    expect(rules).toMatchObject({ handSize: 13, plays: 9, discards: 6, peek: 3 });
     expect(roundRulesFor({ dragons: [], tileSet: 'jadeCourt', lantern: 1 })).toMatchObject({
-      handSize: 9,
-      discards: 2,
+      handSize: 13,
+      discards: 3,
     });
-    expect(roundRulesFor({ dragons: [], tileSet: 'boneBamboo', lantern: 4 }).discards).toBe(2);
+    expect(roundRulesFor({ dragons: [], tileSet: 'boneBamboo', lantern: 4 }).discards).toBe(3);
   });
 
   it('deals the round when you choose a host, and the storm raises the target', () => {
     const folk = step(newRun({ seed: 2 }), { type: 'chooseHost', storm: false });
     expect(folk.phase).toBe('round');
     expect(folk.target).toBe(1000);
-    expect(folk.round?.stacks).toHaveLength(8);
+    expect(folk.round?.stacks).toHaveLength(1);
+    expect(folk.round?.hand).toHaveLength(folk.round?.rules.handSize ?? 0);
     const storm = step(newRun({ seed: 2 }), { type: 'chooseHost', storm: true });
     expect(storm.target).toBe(1500);
   });
@@ -469,13 +469,12 @@ describe('a run', () => {
         storm: false,
       });
       run = { ...run, fortunes: ['jade'] };
-      run = step(run, { type: 'auto' });
       const hand = run.round?.hand ?? [];
       const ids = hand.slice(0, 2).map((t) => t.id);
       const next = step(run, { type: 'fortune', index: 0, args: { tileIds: ids } });
       expect(next.round?.hand.filter((t) => t.enh === 'jade')).toHaveLength(2);
       expect(next.tiles.filter((t) => t.enh === 'jade')).toHaveLength(2);
-      // a tile in the wall is not in the hand
+      // a tile in the pile is not in the hand
       const wallTile = run.round?.stacks[0]?.[0];
       expect(
         tryStep(run, { type: 'fortune', index: 0, args: { tileIds: [wallTile?.id as number] } })
@@ -488,10 +487,11 @@ describe('a run', () => {
         storm: false,
       });
       run = { ...run, fortunes: ['fire'] };
-      run = step(run, { type: 'auto' });
       const id = run.round?.hand[0]?.id as number;
       const next = step(run, { type: 'fortune', index: 0, args: { tileIds: [id] } });
-      expect(next.round?.hand).toHaveLength(7);
+      // the hand refills at once
+      expect(next.round?.hand).toHaveLength(run.round?.hand.length ?? 0);
+      expect(next.round?.hand.some((t) => t.id === id)).toBe(false);
       expect(next.tiles.some((t) => t.id === id)).toBe(false);
     });
     it('is not usable outside a round or the teahouse', () => {
@@ -513,8 +513,7 @@ describe('a run', () => {
       expect(b).toEqual(a);
     });
     it('resumes mid-round exactly', () => {
-      let run = step(newRun({ seed: 'mid' }), { type: 'chooseHost', storm: false });
-      run = step(run, { type: 'auto' });
+      const run = step(newRun({ seed: 'mid' }), { type: 'chooseHost', storm: false });
       const copy = JSON.parse(JSON.stringify(run)) as RunState;
       const move = chooseMove(run.round as NonNullable<RunState['round']>);
       expect(move).not.toBeNull();
@@ -523,7 +522,6 @@ describe('a run', () => {
         action: moveAction(move as NonNullable<typeof move>),
       };
       expect(step(copy, act)).toEqual(step(run, act));
-      expect(autoRefill).toBeDefined();
     });
     it('never mutates its input', () => {
       const run = atShop(40);

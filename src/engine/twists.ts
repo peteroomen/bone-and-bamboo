@@ -12,17 +12,17 @@ import type { Stacks } from './wall';
  */
 export interface TwistState {
   readonly twist: Twist;
-  /** coil: stack indexes that cannot be taken from until a chow is played. */
-  readonly locked: readonly number[];
+  /** coil: a chow has been played, so discarding is allowed. */
+  readonly uncoiled: boolean;
   /** swaps: swaps the player may still make themselves. */
   readonly swapsLeft: number;
   /** swaps: sets played (a play or an upgrade). */
   readonly played: number;
   /** embers: the burning tiles, by id. */
   readonly burning: readonly number[];
-  /** embers: turns each burning tile has sat on a stack top. */
+  /** embers: turns each burning tile has sat in the hand. */
   readonly clock: Readonly<Record<number, number>>;
-  /** The tile ids that were stack tops at the deal (the masked twist's unhidden tiles; the shell's armoured ones). */
+  /** shell: the tiles of the first hand, armoured while the armour holds. */
   readonly tops: readonly number[];
   /** shell: armour is still on. */
   readonly armour: boolean;
@@ -32,51 +32,43 @@ export function twistRules(rules: RoundRules, twist: Twist | null): RoundRules {
   if (!twist) return rules;
   switch (twist.id) {
     case 'masked':
-      return { ...rules, peek: 0 };
     case 'moonTide':
       return { ...rules, handSize: rules.handSize + twist.hand };
-    case 'shell':
-      return { ...rules, stacks: twist.stacks };
     default:
       return rules;
   }
 }
 
-/** Set up a twist for a freshly dealt wall. */
+/** Set up a twist for a freshly shuffled pile. */
 export function initTwist(twist: Twist, stacks: Stacks, rng: Rng): TwistState {
-  const tops = stacks.filter((s) => s.length > 0).map((s) => (s[s.length - 1] as Tile).id);
-  let locked: number[] = [];
   let burning: number[] = [];
-  if (twist.id === 'coil') {
-    const idx = rng.shuffle(stacks.map((_, i) => i));
-    locked = idx.slice(0, twist.lockedStacks);
-  }
   if (twist.id === 'embers') {
     const all = stacks.flat().map((t) => t.id);
     burning = rng.shuffle(all).slice(0, twist.burning);
   }
   return {
     twist,
-    locked,
+    uncoiled: false,
     swapsLeft: twist.id === 'swaps' ? twist.playerSwaps : 0,
     played: 0,
     burning,
     clock: {},
-    tops,
+    tops: [],
     armour: twist.id === 'shell',
   };
 }
 
-export function takeProblem(s: RoundState, stack: number): string | null {
-  const t = s.twist;
-  if (t && t.locked.includes(stack)) return 'That stack is locked until you play a chow.';
-  return null;
+/** After the first hand is drawn: the shell armours it. */
+export function afterDeal(t: TwistState, hand: readonly Tile[]): TwistState {
+  return t.twist.id === 'shell' ? { ...t, tops: hand.map((x) => x.id) } : t;
 }
 
 /** Why these tiles can't be discarded under the twist, or null. */
 export function discardProblem(s: RoundState, ids: readonly number[]): string | null {
   const t = s.twist;
-  if (t && t.armour && ids.some((id) => t.tops.includes(id)))
+  if (!t) return null;
+  if (t.twist.id === 'coil' && !t.uncoiled) return 'No discarding until you play a chow.';
+  if (t.armour && ids.some((id) => t.tops.includes(id)))
     return 'Armoured tiles stay in your hand until you play a set.';
   return null;
 }
@@ -86,15 +78,22 @@ export function armouredIds(s: RoundState): readonly number[] {
   return s.twist?.armour ? s.twist.tops : [];
 }
 
-/** After a set is played (or a pong upgraded): chows unlock stacks, any set breaks the armour. */
+/** After a set is played (or a pong upgraded): a chow uncoils, any set breaks the armour. */
 export function afterSetPlayed(t: TwistState, kind: string): TwistState {
   let next: TwistState = { ...t, played: t.played + 1 };
-  if (t.twist.id === 'coil' && kind === 'chow') next = { ...next, locked: [] };
+  if (t.twist.id === 'coil' && kind === 'chow') next = { ...next, uncoiled: true };
   if (t.twist.id === 'shell') next = { ...next, armour: false };
   return next;
 }
 
-/** Discards: the moon tide sends them back to the bottom of a random stack. */
+/** Put a tile back into the pile at a random depth (never straight back on top). */
+export function intoPile(stacks: Stacks, tile: Tile, rng: Rng): Stacks {
+  const pile = (stacks[0] ?? []).slice();
+  pile.splice(rng.int(Math.max(1, pile.length)), 0, tile);
+  return [pile, ...stacks.slice(1)];
+}
+
+/** Discards: the moon tide shuffles them back into the pile. */
 export function afterDiscard(
   s: RoundState,
   tiles: readonly Tile[],
@@ -103,70 +102,55 @@ export function afterDiscard(
 ): { stacks: Stacks; discarded: readonly Tile[] } {
   if (s.twist?.twist.id !== 'moonTide')
     return { stacks: s.stacks, discarded: [...s.discarded, ...tiles] };
-  const stacks = s.stacks.map((st) => st.slice());
+  let stacks = s.stacks;
   for (const tile of tiles) {
-    const i = rng.int(stacks.length);
-    (stacks[i] as Tile[]).unshift(tile);
-    events.push({ type: 'tide', tile, stack: i });
+    stacks = intoPile(stacks, tile, rng);
+    events.push({ type: 'tide', tile });
   }
   return { stacks, discarded: s.discarded };
 }
 
-/** End of a turn: embers burn away and a swap may fall due. Returns the new stacks and twist. */
+/** End of a turn, before the refill: embers burn away and a swap may fall due. */
 export function endTurn(
   twist: TwistState,
+  hand: readonly Tile[],
   stacks: Stacks,
   rng: Rng,
   events: RoundEvent[],
   playedNow: boolean,
-): { stacks: Stacks; twist: TwistState } {
+): { hand: readonly Tile[]; stacks: Stacks; twist: TwistState } {
+  let h = hand;
   let st = stacks;
   let t = twist;
   const w = t.twist;
   if (w.id === 'embers') {
     const clock: Record<number, number> = { ...t.clock };
     const burning = new Set(t.burning);
-    st = st.map((stack, i) => {
-      const top = stack[stack.length - 1];
-      if (!top || !burning.has(top.id)) return stack;
-      clock[top.id] = (clock[top.id] ?? 0) + 1;
-      if ((clock[top.id] ?? 0) >= w.turns) {
-        events.push({ type: 'burn', tile: top, stack: i });
-        burning.delete(top.id);
-        return stack.slice(0, -1);
-      }
-      return stack;
+    h = h.filter((tile) => {
+      if (!burning.has(tile.id)) return true;
+      clock[tile.id] = (clock[tile.id] ?? 0) + 1;
+      if ((clock[tile.id] ?? 0) < w.turns) return true;
+      events.push({ type: 'burn', tile });
+      burning.delete(tile.id);
+      return false;
     });
     t = { ...t, clock, burning: [...burning] };
   }
-  if (t.twist.id === 'swaps' && playedNow && t.played > 0 && t.played % t.twist.every === 0) {
-    const full = st.map((x, i) => (x.length > 0 ? i : -1)).filter((i) => i >= 0);
-    if (full.length >= 2) {
-      const [a, b] = rng.shuffle(full) as [number, number];
-      st = swapTops(st, a, b);
-      events.push({ type: 'swap', a, b, auto: true });
-    }
+  if (w.id === 'swaps' && playedNow && t.played > 0 && t.played % w.every === 0 && h.length > 0) {
+    const tile = h[rng.int(h.length)] as Tile;
+    h = h.filter((x) => x.id !== tile.id);
+    st = intoPile(st, tile, rng);
+    events.push({ type: 'swap', tile, auto: true });
   }
-  return { stacks: st, twist: t };
+  return { hand: h, stacks: st, twist: t };
 }
 
-export function swapTops(stacks: Stacks, a: number, b: number): Stacks {
-  const out = stacks.map((s) => s.slice());
-  const sa = out[a] as Tile[];
-  const sb = out[b] as Tile[];
-  const ta = sa.pop() as Tile;
-  const tb = sb.pop() as Tile;
-  sa.push(tb);
-  sb.push(ta);
-  return out;
-}
-
-export function swapProblem(s: RoundState, a: number, b: number): string | null {
+export function swapProblem(s: RoundState, id: number): string | null {
   const t = s.twist;
   if (!t || t.twist.id !== 'swaps') return 'This wind does not allow swaps.';
   if (t.swapsLeft <= 0) return 'You have used your swap.';
-  if (a === b) return 'Pick two different stacks.';
-  if (!s.stacks[a]?.length || !s.stacks[b]?.length) return 'Pick two stacks with tiles.';
+  if (!s.hand.some((x) => x.id === id)) return 'That tile is not in your hand.';
+  if ((s.stacks[0]?.length ?? 0) === 0) return 'The pile is empty.';
   return null;
 }
 
@@ -176,15 +160,8 @@ export function twistModifiers(s: RoundState): ScoreModifiers | undefined {
   if (!t) return undefined;
   const w = t.twist;
   switch (w.id) {
-    case 'masked': {
-      const tileMult: Record<number, number> = {};
-      // +mult per set that holds a tile taken while hidden: carried by the first such tile
-      for (const set of s.table) {
-        const blind = set.tiles.find((tile) => !t.tops.includes(tile.id));
-        if (blind) tileMult[blind.id] = w.mult;
-      }
-      return { tileMult };
-    }
+    case 'masked':
+      return { setMult: { chow: w.mult, pong: w.mult, kong: w.mult, winds: w.mult } };
     case 'coil':
       return { chipsX: { chow: w.chowChipsX } };
     case 'claws':

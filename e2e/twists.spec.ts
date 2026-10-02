@@ -38,49 +38,51 @@ for (const host of HOSTS) {
   });
 }
 
-test('the coil: a stack is locked until a chow is played', async ({ page }) => {
+test('the coil: no discarding until a chow is played', async ({ page }) => {
   await freshStart(page);
   const base = atHost(0);
   const round = roundWith({
     hand: 'p1 p2 p3 s4 s5 s9 m9 m8',
-    stacks: ['m1 m2', 'm3 m4', 'm5 m6'],
+    stacks: ['m1 m2 m3 m4 m5 m6'],
+    rules: { handSize: 8 },
     twist: HOSTS.find((h) => h.id === 'azureDragon')?.twist,
-    twistState: { locked: [1] },
     target: 100000,
   });
   await resumeFrom(page, { ...base, phase: 'round', storm: true, round });
-  await expect(page.getByTestId('stack-1')).toBeDisabled();
-  await expect(page.getByTestId('stack-1')).toHaveAttribute('aria-label', /locked/);
   const hand = (await hook(page))?.run.round?.hand ?? [];
-  for (const k of ['p1', 'p2', 'p3'])
-    await page.getByTestId(`tile-${hand.find((t) => t.kind === k)?.id}`).click();
+  const tile = (k: string) => page.getByTestId(`tile-${hand.find((t) => t.kind === k)?.id}`);
+  await tile('s9').click();
+  await expect(page.getByTestId('btn-discard')).toBeDisabled();
+  await tile('s9').click();
+  for (const k of ['p1', 'p2', 'p3']) await tile(k).click();
   await page.getByTestId('btn-play').click();
-  await expect((await hook(page))?.run.round?.twist?.locked).toEqual([]);
-  await expect(page.getByTestId('stack-1')).toBeEnabled();
+  expect((await hook(page))?.run.round?.twist?.uncoiled).toBe(true);
+  await tile('s9').click();
+  await expect(page.getByTestId('btn-discard')).toBeEnabled();
 });
 
-test('the swaps: the player may swap two stack tops once', async ({ page }) => {
+test('the swaps: the player may swap one tile once', async ({ page }) => {
   await freshStart(page);
   const base = atHost(1);
   const round = roundWith({
-    hand: 'p1',
-    stacks: ['m1', 'm2', 'm4', 'm5'],
+    hand: 'p1 s9 m5',
+    stacks: ['m1 m2 m4'],
     rules: { handSize: 3 },
     twist: HOSTS.find((h) => h.id === 'monkey')?.twist,
     target: 100000,
   });
   await resumeFrom(page, { ...base, phase: 'round', round });
-  const before = (await hook(page))?.run.round?.stacks.map((s) => s.at(-1)?.id);
+  await expect(page.getByTestId('btn-swap')).toBeDisabled();
+  const id = round.hand[1]?.id as number;
+  await page.getByTestId(`tile-${id}`).click();
   await page.getByTestId('btn-swap').click();
-  await page.getByTestId('stack-0').click();
-  await page.getByTestId('stack-2').click();
-  const after = (await hook(page))?.run.round?.stacks.map((s) => s.at(-1)?.id);
-  expect(after?.[0]).toBe(before?.[2]);
-  expect(after?.[2]).toBe(before?.[0]);
+  const after = (await hook(page))?.run.round;
+  expect(after?.hand.map((t) => t.id)).not.toContain(id);
+  expect(after?.hand).toHaveLength(3);
   await expect(page.getByTestId('btn-swap')).toHaveCount(0);
 });
 
-test('the shell: armoured tiles cannot be discarded until a pong or kong', async ({ page }) => {
+test('the shell: armoured tiles cannot be discarded until a set is played', async ({ page }) => {
   await freshStart(page);
   const base = atHost(3);
   const round = roundWith({
@@ -103,7 +105,7 @@ test('the shell: armoured tiles cannot be discarded until a pong or kong', async
   await expect(page.getByTestId(`tile-${armouredId}`).locator('.badge')).toBeVisible();
   await page.getByTestId(`tile-${armouredId}`).click();
   await expect(page.getByTestId('btn-discard')).toBeDisabled();
-  expect((await hook(page))?.run.round?.discardsLeft).toBe(3);
+  expect((await hook(page))?.run.round?.discardsLeft).toBe(4);
   const hand = (await hook(page))?.run.round?.hand ?? [];
   for (const t of hand.filter((x) => x.kind === 'p5'))
     await page.getByTestId(`tile-${t.id}`).click();

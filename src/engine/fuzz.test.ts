@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HOSTS } from '@/content/hosts';
+import { chooseMove, moveAction } from './ai';
 import { Rng } from './rng';
 import { newRun, runReduce } from './run';
 import type { RunAction, RunState } from './runTypes';
@@ -11,16 +12,15 @@ function randomAction(run: RunState, rng: Rng): RunAction {
     case 'host':
       return { type: 'chooseHost', storm: rng.next() < 0.5 };
     case 'round': {
-      if (!r) return { type: 'auto' };
+      if (!r) return { type: 'continue' };
       const roll = rng.next();
-      if (r.hand.length < r.rules.handSize && roll < 0.8)
-        return { type: 'round', action: { type: 'take', stack: rng.int(r.stacks.length) } };
+      const bot = r.phase === 'play' ? chooseMove(r) : null;
+      if (bot && roll < 0.35) return { type: 'round', action: moveAction(bot) };
       const ids = rng.shuffle(r.hand.map((t) => t.id)).slice(0, 1 + rng.int(4));
       if (roll < 0.5) return { type: 'round', action: { type: 'play', ids } };
       if (roll < 0.7) return { type: 'round', action: { type: 'discard', ids } };
       if (roll < 0.8) return { type: 'round', action: { type: 'finish' } };
-      if (roll < 0.9)
-        return { type: 'round', action: { type: 'swap', a: rng.int(8), b: rng.int(8) } };
+      if (roll < 0.9) return { type: 'round', action: { type: 'swap', id: ids[0] ?? 0 } };
       return {
         type: 'round',
         action: { type: 'upgrade', setIndex: rng.int(4), tileId: ids[0] ?? 0 },

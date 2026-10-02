@@ -35,18 +35,22 @@ test('a whole round through the UI: start, mid-round and the score count', async
   await page.getByTestId('host-calm').click();
   await expect(page.getByTestId('round')).toBeVisible();
 
-  // The start: an empty hand, eight stacks, nothing on the table.
-  await expect(page.getByTestId('hand').locator('button')).toHaveCount(0);
-  await expect(page.locator('[data-testid^="stack-"]')).toHaveCount(8);
+  // The start: a full hand dealt from the pile, nothing on the table.
+  const first = (await hook(page))?.run.round;
+  await expect(page.getByTestId('hand').locator('button')).toHaveCount(first?.rules.handSize ?? 0);
+  await expect(page.getByTestId('pile')).toHaveAttribute(
+    'data-count',
+    String(first?.stacks[0]?.length),
+  );
   await expect(page.getByTestId('target')).toContainText('300');
   await checkFit(page, [
-    '[data-testid^="stack-"]',
+    '[data-testid^="tile-"]',
     '[data-testid="btn-play"]',
-    '[data-testid="btn-auto"]',
+    '[data-testid="btn-clear"]',
   ]);
   await page.screenshot({ path: shot('round-1-start', project) });
 
-  // Fill the hand by tapping stacks: the hint bot picks which.
+  // The hint bot picks each move; the hand refills on its own.
   // A legal opening can spend all three discards before placing a set, so advance by observed
   // plays rather than assuming a turn always means a play.
   for (let turn = 0; turn < 5; turn++) {
@@ -57,8 +61,9 @@ test('a whole round through the UI: start, mid-round and the score count', async
   await page.screenshot({ path: shot('round-2-mid', project) });
   const h = await hook(page);
   expect(h?.run.round?.playsLeft).toBeLessThan(8);
+  const mid = (await hook(page))?.run.round;
+  expect(mid?.hand.length).toBe(mid?.rules.handSize);
   await checkFit(page, [
-    '[data-testid^="stack-"]',
     '[data-testid^="tile-"]',
     '[data-testid="btn-play"]',
     '[data-testid="btn-discard"]',
@@ -85,7 +90,7 @@ test('the count-up plays at normal speed and can be skipped', async ({ page }) =
   await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
   await page.getByTestId('host-calm').click();
-  await playRound(page, { auto: true });
+  await playRound(page);
   await expect(page.getByTestId('score-overlay')).toBeVisible();
   await expect(page.getByTestId('score-total')).toHaveCount(0);
   await page.getByTestId('btn-score-skip').click();
@@ -99,16 +104,19 @@ test('play and discard enable only when legal', async ({ page }) => {
   await page.getByTestId('host-calm').click();
   await expect(page.getByTestId('btn-play')).toBeDisabled();
   await expect(page.getByTestId('btn-discard')).toBeDisabled();
-  await page.getByTestId('btn-auto').click();
-  await expect(page.getByTestId('btn-auto')).toBeDisabled();
-  await expect(page.locator('[data-testid^="tile-"]')).toHaveCount(8);
-  // a stack can't be taken from with a full hand
-  await expect(page.getByTestId('stack-0')).toBeDisabled();
+  const r = (await hook(page))?.run.round;
+  await expect(page.locator('[data-testid^="tile-"]')).toHaveCount(r?.rules.handSize ?? 0);
   // one tile selected: discard is fine, play is not (a single is a last resort)
-  const first = page.locator('[data-testid^="tile-"]').first();
-  await first.click();
+  const one = page.locator('[data-testid^="tile-"]').first();
+  await one.click();
   await expect(page.getByTestId('btn-discard')).toBeEnabled();
   await expect(page.getByTestId('btn-play')).toBeDisabled();
-  await first.click();
+  await one.click();
   await expect(page.getByTestId('btn-discard')).toBeDisabled();
+  // a discard refills the hand at once
+  const before = (await hook(page))?.run.round?.stacks[0]?.length ?? 0;
+  await one.click();
+  await page.getByTestId('btn-discard').click();
+  await expect(page.locator('[data-testid^="tile-"]')).toHaveCount(r?.rules.handSize ?? 0);
+  await expect(page.getByTestId('pile')).toHaveAttribute('data-count', String(before - 1));
 });

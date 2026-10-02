@@ -1,11 +1,12 @@
 /** The round, the money and the teahouse: every number from docs/design.md. */
 export const ROUND = {
-  hand: 8,
-  stacks: 8,
-  /** Tiles you can see under each stack top (as a strip). */
-  peek: 1,
+  hand: 12,
+  /** The set is one face-down pile; the hand refills from its top. */
+  stacks: 1,
+  /** Tiles of the pile shown face up (the Lantern). */
+  peek: 0,
   plays: 8,
-  discards: 3,
+  discards: 4,
   maxDiscard: 5,
 } as const;
 

@@ -1,5 +1,5 @@
 /** Lantern 1 targets for the four rounds. */
-export const TARGETS: readonly number[] = [1000, 4000, 9000, 18000];
+export const TARGETS: readonly number[] = [1000, 3600, 8000, 16000];
 
 export interface Lantern {
   readonly level: number;
@@ -18,8 +18,8 @@ export const LANTERNS: readonly Lantern[] = [
     level: 4,
     targetMult: 1.5,
     interest: false,
-    discards: 2,
-    text: 'Targets ×1.5. No interest. 2 discards.',
+    discards: 3,
+    text: 'Targets ×1.5. No interest. 3 discards.',
   },
 ];
 

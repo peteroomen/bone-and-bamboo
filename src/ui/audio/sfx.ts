@@ -127,7 +127,7 @@ function now(f: (c: Ctx, t: number) => void): void {
 }
 
 export const sfx = {
-  /** A tile taken from a stack. */
+  /** Tiles drawn from the pile. */
   take: () => now((c, t) => clack(c, t, 1.05, 0.45)),
   /** A tile picked in your hand. */
   pick: () => now((c, t) => clack(c, t, 1.4, 0.22)),
@@ -177,7 +177,7 @@ export const sfx = {
       ban(c, t, 0.5);
       gong(c, t + 0.1, 230, 0.4, 1.6);
     }),
-  /** Two stack tops swapping, a tile burning, a tide: small rustles. */
+  /** A tile swapped, a tile burning, a tide: small rustles. */
   swap: () =>
     now((c, t) => {
       clack(c, t, 1.2, 0.3);

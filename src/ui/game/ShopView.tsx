@@ -213,7 +213,7 @@ export function ShopView({
                 }}
               >
                 <TileView tile={tile} theme={theme} />
-                <span className="stack-count">{n}</span>
+                <span className="count-badge">{n}</span>
               </button>
             ))}
           </div>

@@ -33,16 +33,17 @@ test('a new profile gets the guided first run: a fixed seed, a plain round and a
   expect(texts[0]).toMatch(/hosted by a wind/);
   await page.getByTestId('host-calm').click();
 
-  // the first round is plain (no twist) and the wall tip comes first
+  // the first round is plain (no twist) and the hand tip comes first
   expect((await hook(page))?.run.round?.twist).toBeNull();
   await expect(page.getByTestId('twist-banner')).toHaveCount(0);
   await expect(page.getByTestId('tip')).toBeVisible();
-  const blockedStack = await page
-    .getByTestId('stack-0')
+  const firstTile = (await hook(page))?.run.round?.hand[0]?.id;
+  const blockedTile = await page
+    .getByTestId(`tile-${firstTile}`)
     .click({ timeout: 1500 })
     .then(() => false)
     .catch(() => true);
-  expect(blockedStack).toBe(true);
+  expect(blockedTile).toBe(true);
   texts.push(...(await readTips(page)));
 
   // play the round: after each move any tip that has come due is read
@@ -54,11 +55,11 @@ test('a new profile gets the guided first run: a fixed seed, a plain round and a
   }
   texts.push(...(await readTips(page)));
   const joined = texts.join(' | ');
-  expect(joined).toMatch(/Tap a stack/);
-  expect(joined).toMatch(/hand is full/);
+  expect(joined).toMatch(/refills from the pile/);
+  expect(joined).toMatch(/go together/);
   expect(joined).toMatch(/pair|run|pong/);
   const seen = (await hook(page))?.run.tipsSeen ?? [];
-  expect(seen).toEqual(expect.arrayContaining(['host', 'wall', 'full']));
+  expect(seen).toEqual(expect.arrayContaining(['host', 'hand', 'full']));
   expect(new Set(seen).size).toBe(seen.length);
 
   // the score tip rides on the count-up; finishing it ends the lesson
@@ -108,7 +109,8 @@ test('Ask the dragon names a legal action in the guided round, and the guide app
   await page.getByTestId('host-calm').click();
   await readTips(page);
   await page.getByTestId('btn-ask').click();
-  await expect(page.getByTestId('advice')).toContainText('Draw');
+  await expect(page.getByTestId('advice')).toContainText(/Play|Discard/);
+  await expect(page.locator('[data-testid^="tile-"][aria-pressed="true"]').first()).toBeVisible();
   const round = (await hook(page))?.run.round;
   expect(round && chooseMove).toBeTruthy();
 });
