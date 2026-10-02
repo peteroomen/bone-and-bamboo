@@ -1,0 +1,265 @@
+<title>Bone &amp; Bamboo Tiles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=Noto+Serif+SC:wght@900&display=swap">
+<style>
+/* Layout: a kit sheet. Page chrome stays quiet; each tile panel takes the chosen colourway's table colour. */
+:root {
+  --ground: #eef0ee;
+  --panel: #f9faf8;
+  --ink: #1c211e;
+  --muted: #5b655f;
+  --rule: #cfd6d1;
+  --accent: #2f7a64;
+  --f-display: "Young Serif", Georgia, serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --table: #3a2618;
+  --table-ink: #f3ead6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ground: #121614; --panel: #19201c; --ink: #e3e9e5; --muted: #9babA2; --rule: #2c3832; --accent: #7cc4a4; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --ground: #121614; --panel: #19201c; --ink: #e3e9e5; --muted: #9baba2; --rule: #2c3832; --accent: #7cc4a4; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--f-body); font-size: 1rem; line-height: 1.55; margin: 0; padding-inline: 16px; padding-block: 32px 72px; }
+.wrap { max-width: 1100px; margin-inline: auto; display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.1rem; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+section { display: grid; gap: 14px; }
+section > * { min-width: 0; }
+header { display: grid; gap: 12px; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--ground); padding-block: 10px; border-bottom: 1px solid var(--rule); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 0.9rem; border: 0; background: var(--panel); color: var(--ink); padding: 8px 14px; min-height: 40px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--ground); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 0.9rem; cursor: pointer; min-height: 40px; }
+label.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.table { background: var(--table); color: var(--table-ink); border-radius: 10px; padding: 18px; }
+.set { display: grid; gap: 18px; }
+.row { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 10px 8px; }
+@media (max-width: 480px) { .row { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 6px; } }
+.cell { display: grid; gap: 4px; justify-items: center; min-width: 0; }
+.cell svg { width: 100%; max-width: 72px; height: auto; display: block; }
+.cell span { font-family: var(--f-mono); font-size: 0.68rem; opacity: 0.8; text-align: center; line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
+.rowlabel { font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+
+/* phone-size play mock */
+.phone-wrap { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 760px) { .phone-wrap { grid-template-columns: 1fr; } }
+.phone { width: 100%; max-width: 360px; border-radius: 18px; border: 5px solid var(--ink); background: var(--table); padding: 12px 8px; display: grid; gap: 14px; color: var(--table-ink); }
+.zone { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+.wall { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.stack { position: relative; height: 82px; }
+.stack > div svg { width: 100%; height: auto; display: block; }
+.stack .n { position: absolute; left: 0; right: 0; bottom: -16px; text-align: center; font-family: var(--f-mono); font-size: 0.65rem; opacity: 0.7; }
+.hand { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; padding-top: 10px; }
+.hand svg { width: 100%; height: auto; display: block; transition: transform 0.15s; }
+.hand .sel { transform: translateY(-9px); filter: drop-shadow(0 0 0 transparent); }
+.tableau { display: flex; flex-wrap: wrap; gap: 8px; }
+.meld { display: flex; gap: 1px; }
+.meld svg { width: 26px; height: auto; display: block; }
+.score { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.8rem; }
+
+.grid4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.item { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 10px; }
+.item .t { background: var(--table); border-radius: 6px; padding: 4px; }
+.item svg { width: 100%; height: auto; display: block; }
+.item b { font-family: var(--f-display); font-weight: 400; font-size: 1.05rem; display: block; }
+.item small { color: var(--muted); font-size: 0.85rem; line-height: 1.35; display: block; }
+
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.sw { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; font-family: var(--f-mono); font-size: 0.72rem; }
+.sw i { width: 28px; height: 28px; border-radius: 5px; border: 1px solid var(--rule); display: block; }
+.notes { display: grid; gap: 8px; }
+.notes li { max-width: 72ch; }
+code { font-family: var(--f-mono); font-size: 0.88em; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Art kit v1 · tiles · 2 October 2026</div>
+    <h1>Bone &amp; Bamboo Tiles</h1>
+    <p>Every tile in the game, drawn from code: the 108 suited tiles, honours, flowers and seasons, the back, and every enhancement, edition and chop. Switch colourways to compare the three art directions on the real pieces.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Kit controls">
+    <div class="seg" id="themes" role="group" aria-label="Colourway"></div>
+    <label class="toggle" for="idx"><input type="checkbox" id="idx" checked> Corner index (training wheels)</label>
+  </div>
+
+  <section>
+    <div class="eyebrow">The set</div>
+    <h2>34 kinds, 8 bonus tiles</h2>
+    <p class="muted">A run starts with the three suits, 1 to 9, three of each (81 tiles). Winds, dragons, flowers and 4th copies are bought. The 1 of Bamboo is a tree sparrow, the game's guide.</p>
+    <div class="table set" id="set"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">At phone size</div>
+    <h2>The wall, your hand, your table</h2>
+    <div class="phone-wrap">
+      <div class="phone" id="phone" aria-label="Mock of a round at 360 pixels wide"></div>
+      <div style="display:grid;gap:10px;min-width:0">
+        <p>Drawn at the sizes the game will use on a 360px phone. Each stack is fanned so the top strip of the two tiles beneath shows. That strip is where the corner index sits, so you can read what you'd dig to without taking anything.</p>
+        <p class="muted">Hand tiles are about 41px wide, wall tiles 40px, table tiles 26px. The raised tile in the hand is selected.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Modifiers</div>
+    <h2>Enhancements</h2>
+    <p class="muted">Applied by fortunes. They change the face, so you can tell them apart at a glance.</p>
+    <div class="grid4" id="enh"></div>
+  </section>
+
+  <section>
+    <h2>Editions and chops</h2>
+    <p class="muted">Editions sit on the rim; chops are the red name stamps, Balatro's seals. Each chop carries a character for what it does.</p>
+    <div class="grid4" id="eds"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Colour</div>
+    <h2 id="palname">Palette</h2>
+    <div class="swatches" id="pal"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">For the build</div>
+    <h2>Notes</h2>
+    <ul class="notes">
+      <li>One generator, <code>tiles.js</code>: <code>BBTiles.svg({ suit, rank }, { theme, index, enh, edition, chop })</code>. The same code renders the game, this page and the exported SVGs (129 files, every tile in every colourway).</li>
+      <li>Tiles are 60 &times; 80 units: a 56 &times; 72 face on a coloured back that shows 4 units below it, so a tile reads as a thick object.</li>
+      <li>Original drawings. Layouts follow the traditional counts but every motif is drawn here; no printed set is copied.</li>
+      <li>Characters need a CJK serif (Noto Serif SC, OFL). The game needs only these glyphs: 一二三四五六七八九 萬 東南西北 中發 梅蘭菊竹 春夏秋冬 再金書運.</li>
+      <li>Next for the kit: the sparrow guide in poses, the spirits and the wall's table, once a colourway is chosen.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+/*TILES*/
+</script>
+<script>
+(function () {
+  var B = window.BBTiles;
+  var state = { theme: "theatre", index: true };
+  try {
+    var saved = JSON.parse(localStorage.getItem("bb-kit") || "{}");
+    if (saved.theme && B.THEMES[saved.theme]) state.theme = saved.theme;
+    if (typeof saved.index === "boolean") state.index = saved.index;
+  } catch (e) {}
+
+  var NAMES = {
+    dots: "Dots", bamboo: "Bamboo", chars: "Characters",
+    wind: ["", "East", "South", "West", "North"], dragon: ["", "Red dragon", "Green dragon", "White dragon"],
+    flower: ["", "Plum", "Orchid", "Chrysanthemum", "Bamboo"], season: ["", "Spring", "Summer", "Autumn", "Winter"]
+  };
+  function label(t) {
+    if (Array.isArray(NAMES[t.suit])) return NAMES[t.suit][t.rank];
+    return t.rank + " " + NAMES[t.suit];
+  }
+  function tile(t, extra) {
+    var o = { theme: state.theme, index: state.index };
+    for (var k in extra || {}) o[k] = extra[k];
+    return B.svg(t, o);
+  }
+
+  var themesEl = document.getElementById("themes");
+  Object.keys(B.THEMES).forEach(function (k) {
+    var b = document.createElement("button");
+    b.type = "button"; b.id = "theme-" + k; b.textContent = B.THEMES[k].name;
+    b.addEventListener("click", function () { state.theme = k; render(); });
+    themesEl.appendChild(b);
+  });
+  var idx = document.getElementById("idx");
+  idx.addEventListener("change", function () { state.index = idx.checked; render(); });
+
+  function render() {
+    try { localStorage.setItem("bb-kit", JSON.stringify(state)); } catch (e) {}
+    var T = B.THEMES[state.theme];
+    document.documentElement.style.setProperty("--table", T.table);
+    document.documentElement.style.setProperty("--table-ink", state.theme === "theatre" ? "#f3ead6" : T.ink);
+    Array.prototype.forEach.call(themesEl.children, function (b) { b.setAttribute("aria-pressed", String(b.id === "theme-" + state.theme)); });
+    idx.checked = state.index;
+
+    // the set
+    var groups = [["Dots 筒", ["dots"]], ["Bamboo 條", ["bamboo"]], ["Characters 萬", ["chars"]], ["Winds and dragons", ["wind", "dragon"]], ["Flowers and seasons", ["flower", "season"]]];
+    var html = "";
+    groups.forEach(function (g) {
+      html += '<div><div class="rowlabel">' + g[0] + '</div><div class="row">';
+      B.ALL.filter(function (t) { return g[1].indexOf(t.suit) >= 0; }).forEach(function (t) {
+        html += '<div class="cell">' + tile(t) + "<span>" + label(t) + "</span></div>";
+      });
+      html += "</div></div>";
+    });
+    html += '<div><div class="rowlabel">Back</div><div class="row"><div class="cell">' + tile({ suit: "back" }) + "<span>Back</span></div></div></div>";
+    document.getElementById("set").innerHTML = html;
+
+    // phone mock
+    var wall = [
+      [{ suit: "chars", rank: 2 }, { suit: "dots", rank: 7 }, { suit: "bamboo", rank: 4 }],
+      [{ suit: "dots", rank: 9 }, { suit: "bamboo", rank: 6 }, { suit: "dots", rank: 5 }],
+      [{ suit: "bamboo", rank: 2 }, { suit: "chars", rank: 5 }, { suit: "chars", rank: 6 }],
+      [{ suit: "dots", rank: 3 }, { suit: "dots", rank: 3 }, { suit: "bamboo", rank: 8 }],
+      [{ suit: "chars", rank: 9 }, { suit: "bamboo", rank: 1 }, { suit: "dots", rank: 2 }],
+      [{ suit: "bamboo", rank: 7 }, { suit: "chars", rank: 3 }, { suit: "dots", rank: 4 }],
+      [{ suit: "dots", rank: 6 }, { suit: "chars", rank: 8 }, { suit: "bamboo", rank: 5 }],
+      [{ suit: "chars", rank: 1 }, { suit: "bamboo", rank: 9 }, { suit: "chars", rank: 4 }]
+    ];
+    var left = [7, 9, 8, 6, 9, 8, 7, 9];
+    var p = '<div class="zone">The wall</div><div class="wall">';
+    wall.forEach(function (st, i) {
+      p += '<div class="stack">';
+      st.forEach(function (t, j) { p += '<div style="position:absolute;left:0;right:0;top:' + (j * 13) + 'px">' + tile(t) + "</div>"; });
+      p += '<span class="n">' + left[i] + "</span></div>";
+    });
+    p += "</div>";
+    var hand = [{ suit: "dots", rank: 3 }, { suit: "dots", rank: 4 }, { suit: "dots", rank: 4 }, { suit: "bamboo", rank: 5 }, { suit: "bamboo", rank: 5 }, { suit: "chars", rank: 6 }, { suit: "chars", rank: 7 }, { suit: "dragon", rank: 1 }];
+    p += '<div class="zone" style="margin-top:12px">Your hand</div><div class="hand">';
+    hand.forEach(function (t, i) { p += '<div class="' + (i === 3 || i === 4 ? "sel" : "") + '">' + tile(t, i === 6 ? { enh: "jade" } : i === 1 ? { chop: "red" } : {}) + "</div>"; });
+    p += "</div>";
+    var melds = [
+      [{ suit: "bamboo", rank: 2 }, { suit: "bamboo", rank: 3 }, { suit: "bamboo", rank: 4 }],
+      [{ suit: "chars", rank: 9 }, { suit: "chars", rank: 9 }, { suit: "chars", rank: 9 }],
+      [{ suit: "dots", rank: 6 }, { suit: "dots", rank: 7 }, { suit: "dots", rank: 8 }]
+    ];
+    p += '<div class="zone">Your table</div><div class="tableau">';
+    melds.forEach(function (m) { p += '<div class="meld">' + m.map(function (t) { return tile(t); }).join("") + "</div>"; });
+    p += '</div><div class="score"><span>chow · pong · chow</span><span>117 chips × 6</span></div>';
+    document.getElementById("phone").innerHTML = p;
+
+    // enhancements
+    var ENH = [["gold", "Gold leaf", "Pays cash at the end of the round."], ["jade", "Jade", "+4 mult when it scores."], ["bone", "Bone", "+30 chips when it scores."], ["porcelain", "Porcelain", "×2 mult, but may crack."], ["iron", "Iron", "×1.5 mult while held in your hand."], ["wild", "Wild", "Counts as any suit."], ["blank", "Blank", "Big chips; no suit or number."], ["lucky", "Lucky knot", "A chance at extra mult or cash."]];
+    document.getElementById("enh").innerHTML = ENH.map(function (e) {
+      return '<div class="item"><div class="t">' + tile({ suit: "dots", rank: 5 }, { enh: e[0] }) + "</div><div><b>" + e[1] + "</b><small>" + e[2] + "</small></div></div>";
+    }).join("");
+    var EDS = [["edition", "lacquer", "Lacquer", "+50 chips."], ["edition", "pearl", "Mother-of-pearl", "+10 mult."], ["edition", "cloisonne", "Cloisonné", "×1.5 mult."], ["edition", "paper", "Paper", "+1 hand slot while you hold it."],
+      ["chop", "red", "Red chop 再", "Scores twice."], ["chop", "gold", "Gold chop 金", "+$3 when played."], ["chop", "blue", "Blue chop 書", "Writes an almanac page if held at the end."], ["chop", "purple", "Purple chop 運", "Makes a fortune when discarded."]];
+    document.getElementById("eds").innerHTML = EDS.map(function (e) {
+      var o = {}; o[e[0]] = e[1];
+      var t = e[0] === "edition" ? { suit: "bamboo", rank: 3 } : { suit: "chars", rank: 7 };
+      return '<div class="item"><div class="t">' + tile(t, o) + "</div><div><b>" + e[2] + "</b><small>" + e[3] + "</small></div></div>";
+    }).join("");
+
+    // palette
+    document.getElementById("palname").textContent = T.name + " palette";
+    var keys = ["face", "back", "edge", "ink", "blue", "green", "red", "gold", "brown", "chestnut", "pink", "table"];
+    document.getElementById("pal").innerHTML = keys.map(function (k) {
+      return '<div class="sw"><i style="background:' + T[k] + '"></i><span>' + k + "<br>" + T[k] + "</span></div>";
+    }).join("");
+  }
+  render();
+})();
+</script>

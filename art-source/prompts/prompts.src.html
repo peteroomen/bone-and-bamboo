@@ -1,0 +1,219 @@
+<title>Bone &amp; Bamboo Art Prompts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a working checklist. One column of prompt cards; round 1 is a 3-style grid per subject. */
+:root {
+  --ground: #eef0ee; --panel: #f9faf8; --ink: #1c211e; --muted: #5b655f; --rule: #cfd6d1;
+  --accent: #2f7a64; --done: #2f7a64; --warn: #a3471f;
+  --f-display: "Young Serif", Georgia, serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ground: #121614; --panel: #19201c; --ink: #e3e9e5; --muted: #9baba2; --rule: #2c3832; --accent: #7cc4a4; --done: #7cc4a4; --warn: #e08a5f; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --ground: #121614; --panel: #19201c; --ink: #e3e9e5; --muted: #9baba2; --rule: #2c3832; --accent: #7cc4a4; --done: #7cc4a4; --warn: #e08a5f; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--f-body); line-height: 1.55; margin: 0; padding-inline: 16px; padding-block: 32px 72px; }
+.wrap { max-width: 980px; margin-inline: auto; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 5vw, 2.8rem); }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.1rem; }
+p, ol, ul { margin: 0; max-width: 70ch; }
+ol, ul { padding-left: 1.2em; display: grid; gap: 6px; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+section { display: grid; gap: 14px; }
+section > * { min-width: 0; }
+code, .file { font-family: var(--f-mono); font-size: 0.85em; }
+
+.subject { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 14px; display: grid; gap: 10px; }
+.subject header { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .trio { grid-template-columns: 1fr; } }
+.cell { border: 1px solid var(--rule); border-radius: 6px; padding: 10px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cell b { font-family: var(--f-display); font-weight: 400; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button.copy { font: inherit; font-size: 0.9rem; min-height: 40px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--ground); cursor: pointer; }
+button.copy.ok { background: var(--panel); color: var(--accent); }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.done { display: inline-flex; gap: 6px; align-items: center; font-size: 0.85rem; color: var(--muted); min-height: 40px; cursor: pointer; }
+label.done input { width: 18px; height: 18px; accent-color: var(--done); }
+details summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono); font-size: 0.75rem; line-height: 1.5; background: var(--ground); border: 1px solid var(--rule); border-radius: 6px; padding: 10px; margin: 0; max-height: 360px; overflow: auto; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 0.9rem; border: 0; background: var(--panel); color: var(--ink); padding: 8px 14px; min-height: 40px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--ground); }
+.list { display: grid; gap: 10px; }
+.item { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; }
+.item header { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.tag { font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); }
+.check { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
+.check li { list-style: none; }
+.inv { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.inv th, .inv td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.inv th { font-family: var(--f-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 400; }
+.tablewrap { overflow-x: auto; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:12px">
+    <div class="eyebrow">Image prompts · round 1 of 2 · 2 October 2026</div>
+    <h1>Bone &amp; Bamboo Art Prompts</h1>
+    <p>Prompts for ChatGPT image generation, built the same way as Twelve Petals: one style block, a vibe, a format and a subject, pasted as one prompt. Round 1 is a style trial: four subjects in each of the three styles, so you can pick the look from real art. Round 2 is everything else, in the winning style.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">How</div>
+    <h2>Each image</h2>
+    <ol>
+      <li>Start a fresh ChatGPT chat for every image, so styles don't bleed into each other.</li>
+      <li>Tap <b>Copy prompt</b> and paste it whole. Don't edit it; if something comes out wrong, tell me and I'll change the block.</li>
+      <li>If an image is close but off, ask ChatGPT for another take in the same chat. Keep the best.</li>
+      <li>Save it under the file name shown, then attach it here in our chat. I'll review it against the checklist below and process the keepers.</li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="eyebrow">Round 1</div>
+    <h2>Style trial: 12 images</h2>
+    <p class="muted">The guide, one spirit, one great beast and one sheet of curio objects, each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
+    <div id="trial" class="list"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Round 2</div>
+    <h2>Everything else</h2>
+    <p class="muted">Ready now, but best run after the trial picks a style. From the second image on in a style, attach the approved trial images as references (I'll add a reference block once we have them).</p>
+    <div class="row"><span class="tag">Style</span><div class="seg" id="styles" role="group" aria-label="Style for round 2"></div></div>
+    <div id="rest" class="list"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Review</div>
+    <h2>What I check</h2>
+    <ul class="check">
+      <li>It reads at game size: 60px for spirits, 50px for the sparrow, 18px for objects.</li>
+      <li>The background keys out: even #00FF00 green, a clean edge, no bright green in the figure.</li>
+      <li>It looks like the real craft, not a modern illustration of it.</li>
+      <li>One held item, the right one. No text, characters, seals or signatures.</li>
+      <li>All images in a style look like one hand made them.</li>
+      <li>Cultural care: hosts are respected figures, the Kitchen God above all. Nothing mocking.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="eyebrow">Inventory</div>
+    <h2>The MVP's generated art</h2>
+    <div class="tablewrap">
+    <table class="inv">
+      <thead><tr><th>What</th><th>Count</th><th>How it's used</th></tr></thead>
+      <tbody>
+        <tr><td>The sparrow guide</td><td>1, then 3 poses</td><td>Cut out from green; a 50px face beside tips, larger on the title and tutorial</td></tr>
+        <tr><td>Spirit hosts</td><td>4</td><td>Cut out; on the round intro and the score panel</td></tr>
+        <tr><td>Great beasts</td><td>4</td><td>Full-bleed; the hardest host of each wind</td></tr>
+        <tr><td>Backdrops</td><td>4</td><td>One per wind, behind the table</td></tr>
+        <tr><td>Object sheets</td><td>5 (30 objects)</td><td>Traced into vectors: curios, fortunes, almanac, packs, shop services</td></tr>
+        <tr><td>Teahouse, title</td><td>later</td><td>After the style is set</td></tr>
+        <tr><td>Tiles</td><td>done</td><td>Drawn from code (the tile kit)</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="muted">Processing reuses Twelve Petals' scripts: <code>cutout.py</code> keys out the green, <code>trace-charms.py</code> traces object sheets into SVG paths.</p>
+  </section>
+</div>
+
+<script>
+/*PROMPTS*/
+</script>
+<script>
+(function () {
+  var P = window.BBPrompts;
+  var done = {};
+  try { done = JSON.parse(localStorage.getItem("bb-prompts-done") || "{}"); } catch (e) {}
+  var round2 = "A";
+  try { round2 = localStorage.getItem("bb-prompts-style") || "A"; } catch (e) {}
+  if (!P.STYLES[round2]) round2 = "A";
+
+  function save() {
+    try { localStorage.setItem("bb-prompts-done", JSON.stringify(done)); localStorage.setItem("bb-prompts-style", round2); } catch (e) {}
+  }
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  function file(subject, style, trial) {
+    return (trial ? "trial-" + style + "-" : "") + subject.id + ".png";
+  }
+  function cell(subject, style, trial, titled) {
+    var f = file(subject, style, trial);
+    var key = f;
+    return '<div class="cell">' +
+      (titled ? "<b>" + P.STYLES[style].name + "</b>" : "") +
+      '<span class="file">' + f + "</span>" +
+      '<div class="row"><button class="copy" type="button" data-s="' + subject.id + '" data-k="' + style + '">Copy prompt</button>' +
+      '<label class="done" for="d-' + key + '"><input type="checkbox" id="d-' + key + '" data-key="' + key + '"' + (done[key] ? " checked" : "") + "> Done</label></div>" +
+      "<details><summary>Show prompt</summary><pre>" + esc(P.assemble(subject, style)) + "</pre></details></div>";
+  }
+  function title(s) {
+    return s.text.split("\n")[0].replace(/^SUBJECTS? ?\(?[^:]*\)?:?\s*/, "") || s.id;
+  }
+  function label(s) {
+    if (s.kind === "sheet") return "Objects: " + s.ids.join(", ");
+    return title(s);
+  }
+
+  // round 1
+  var trial = P.SUBJECTS.filter(function (s) { return s.trial; });
+  document.getElementById("trial").innerHTML = trial.map(function (s) {
+    return '<div class="subject"><header><h3>' + esc(label(s)) + '</h3><span class="tag">' + s.group + "</span></header>" +
+      '<div class="trio">' + Object.keys(P.STYLES).map(function (k) { return cell(s, k, true, true); }).join("") + "</div></div>";
+  }).join("");
+
+  // round 2
+  var stylesEl = document.getElementById("styles");
+  Object.keys(P.STYLES).forEach(function (k) {
+    var b = document.createElement("button");
+    b.type = "button"; b.id = "style-" + k; b.textContent = k + " · " + P.STYLES[k].name;
+    b.addEventListener("click", function () { round2 = k; save(); renderRest(); });
+    stylesEl.appendChild(b);
+  });
+  function renderRest() {
+    Array.prototype.forEach.call(stylesEl.children, function (b) { b.setAttribute("aria-pressed", String(b.id === "style-" + round2)); });
+    var rest = P.SUBJECTS.filter(function (s) { return !s.trial; });
+    var groups = [];
+    rest.forEach(function (s) { if (groups.indexOf(s.group) < 0) groups.push(s.group); });
+    document.getElementById("rest").innerHTML = groups.map(function (g) {
+      return '<h3 style="margin-top:8px">' + g + "</h3>" + rest.filter(function (s) { return s.group === g; }).map(function (s) {
+        return '<div class="item"><header><b>' + esc(label(s)) + '</b><span class="tag">' + (s.wind ? s.wind + " wind" : s.kind) + "</span></header>" + cell(s, round2, false, false).replace('class="cell"', 'class="cell" style="border:0;padding:0"') + "</div>";
+      }).join("");
+    }).join("");
+  }
+  renderRest();
+
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("button.copy");
+    if (!b) return;
+    var s = P.SUBJECTS.filter(function (x) { return x.id === b.getAttribute("data-s"); })[0];
+    var text = P.assemble(s, b.getAttribute("data-k"));
+    function ok() { b.textContent = "Copied"; b.classList.add("ok"); setTimeout(function () { b.textContent = "Copy prompt"; b.classList.remove("ok"); }, 1600); }
+    function fallback() {
+      var d = b.closest(".cell").querySelector("details");
+      d.open = true;
+      var pre = d.querySelector("pre");
+      var r = document.createRange(); r.selectNodeContents(pre);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      b.textContent = "Selected: copy it";
+    }
+    try {
+      navigator.clipboard.writeText(text).then(ok, fallback);
+    } catch (err) { fallback(); }
+  });
+  document.addEventListener("change", function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute("data-key");
+    if (!k) return;
+    done[k] = e.target.checked; save();
+  });
+})();
+</script>
