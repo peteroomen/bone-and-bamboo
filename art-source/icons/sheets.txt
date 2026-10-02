@@ -1,3 +1,6 @@
 # Icon sheets, one per line: the file, then its ids in reading order (- skips a cell).
 dragons-1.png abacus redString coinString bambooGrove coinPurse scroll
 bamboo.png --grid=3x3 bamboo-1 bamboo-2 bamboo-3 bamboo-4 bamboo-5 bamboo-6 bamboo-7 bamboo-8 bamboo-9
+dots.png --grid=3x3 dots-1 dots-2 dots-3 dots-4 dots-5 dots-6 dots-7 dots-8 dots-9
+chars.png --grid=3x3 chars-1 chars-2 chars-3 chars-4 chars-5 chars-6 chars-7 chars-8 chars-9
+honours.png --grid=4,3 wind-1 wind-2 wind-3 wind-4 dragon-1 dragon-2 dragon-3

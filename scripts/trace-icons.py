@@ -180,7 +180,7 @@ def write(art: dict) -> None:
     OUT.write_text(json.dumps(dict(sorted(art.items())), separators=(',', ':')) + '\n')
 
 
-def grid_objects(rgb: np.ndarray, cols: int, rows: int) -> tuple[list, list]:
+def grid_objects(rgb: np.ndarray, cols: int | list[int], rows: int) -> tuple[list, list]:
     """For sheets where one icon is several pieces (a tile face of nine sticks). Rows and columns
     are cut through the emptiest line near each nominal grid line, so a piece that pokes past an
     even third stays with its own icon. Every box is then grown to the size of the largest one
@@ -212,12 +212,13 @@ def grid_objects(rgb: np.ndarray, cols: int, rows: int) -> tuple[list, list]:
             out.append(lo + (best[0] + best[1]) // 2)
         return out + [length]
 
+    per_row = cols if isinstance(cols, list) else [cols] * rows
     ycut = cuts(solid.sum(1), rows, h)
     raw = []
     for j in range(rows):
         band = solid[ycut[j] : ycut[j + 1]]
-        xcut = cuts(band.sum(0), cols, w)
-        for i in range(cols):
+        xcut = cuts(band.sum(0), per_row[j], w)
+        for i in range(per_row[j]):
             m = np.zeros_like(solid)
             m[ycut[j] : ycut[j + 1], xcut[i] : xcut[i + 1]] = solid[ycut[j] : ycut[j + 1], xcut[i] : xcut[i + 1]]
             yy, xx = np.where(m)
@@ -238,8 +239,12 @@ def grid_objects(rgb: np.ndarray, cols: int, rows: int) -> tuple[list, list]:
 def trace_sheet(sheet: str, ids: list[str], art: dict, grid: str | None = None) -> None:
     rgb = np.asarray(Image.open(sheet).convert('RGB'))
     if grid:
-        cols, rows = (int(x) for x in grid.split('x'))
-        boxes, masks = grid_objects(rgb, cols, rows)
+        if ',' in grid:  # icons per row, e.g. 4,3
+            per_row = [int(x) for x in grid.split(',')]
+            boxes, masks = grid_objects(rgb, per_row, len(per_row))
+        else:
+            cols, rows = (int(x) for x in grid.split('x'))
+            boxes, masks = grid_objects(rgb, cols, rows)
         for item_id, box, mask in zip(ids, boxes, masks):
             if item_id == '-' or box is None:
                 continue
@@ -269,7 +274,7 @@ def main() -> None:
     ap.add_argument('sheet', nargs='?')
     ap.add_argument('ids', nargs='*')
     ap.add_argument('--all', action='store_true', help='re-trace every sheet in sheets.txt')
-    ap.add_argument('--grid', help='split the sheet into equal cells, e.g. 3x3 (for multi-piece icons)')
+    ap.add_argument('--grid', help='split the sheet into cells: 3x3, or icons per row like 4,3 (for multi-piece icons)')
     args = ap.parse_args()
     if args.all:
         art: dict = {}

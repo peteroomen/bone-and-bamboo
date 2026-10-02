@@ -442,7 +442,9 @@
       sad: el("path", { d: "M25 31 q5 -4 10 0", stroke: ink, "stroke-width": 1.9, fill: "none", "stroke-linecap": "round" })
     }[mood];
     g += mouth;
-    if (dragon === "red") g += text(30, 66, 28, T.red, "中");
+    var glyph = FACES[dragon === "red" ? "dragon-1" : dragon === "green" ? "dragon-2" : ""];
+    if (glyph) g += iconPaths(glyph, T, 13, 40, 34, 32);
+    else if (dragon === "red") g += text(30, 66, 28, T.red, "中");
     else if (dragon === "green") g += text(30, 65, 26, T.green, "發");
     else g += el("rect", { x: 17, y: 41, width: 26, height: 29, rx: 2, fill: "none", stroke: T.blue, "stroke-width": 2.4 }) +
       el("rect", { x: 21, y: 45, width: 18, height: 21, rx: 1, fill: "none", stroke: T.blue, "stroke-width": 0.9 });
@@ -519,7 +521,8 @@
     s += el("rect", { x: 9.5, y: 9.5, width: 41, height: 57, rx: 2.5, fill: "none", stroke: col, "stroke-width": 0.9 });
     if (rarity !== "common") {
       s += el("rect", { x: 41, y: 3.5, width: 15, height: 15, rx: 3, fill: T.face, stroke: col, "stroke-width": 1.2 });
-      s += text(48.5, 15.4, 11, col, rarity === "rare" ? "中" : "發");
+      var badge = FACES[rarity === "rare" ? "dragon-1" : "dragon-2"];
+      s += badge ? iconPaths(badge, T, 42.5, 5, 12, 12) : text(48.5, 15.4, 11, col, rarity === "rare" ? "中" : "發");
     }
     if (opts.icon) s += iconPaths(opts.icon, T, 12, 14, 36, 50);
     else if (opts.initial) s += text(30, 47, 22, col, opts.initial, { "font-family": "Georgia, serif", "font-weight": 700 });

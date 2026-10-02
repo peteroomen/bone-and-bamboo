@@ -71,3 +71,11 @@ for the sheet) and drawn by `tiles.js` through `useFaces(icons)`: the traced fac
 code face; body, index and enhancements stay. Chunkier and easier to count at hand size than the
 code faces, and it recolours cleanly. Prompts added for Dots and the bonus tiles; Characters and
 winds stay in code (they are written characters).
+
+## 2026-10-02 · Dots, Characters, winds and dragons
+
+`icons/dots.png`, `icons/chars.png` (3x3) and `icons/honours.png` (4 winds over 3 dragons, traced
+with `--grid=4,3`). **Keepers.** Every character is correct (一 to 九 over 萬, 東南西北, 中 發)
+and the brush lettering is a clear step up from the font, so the whole set now uses traced faces;
+the code-drawn faces remain as fallbacks (the kit's "Traced faces" toggle). The guide's body and
+the dragons' rarity badges use the traced 中 and 發 too. Only flowers and seasons are still code.

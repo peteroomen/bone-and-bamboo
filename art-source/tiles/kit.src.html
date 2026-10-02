@@ -97,6 +97,7 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
   <div class="controls" role="group" aria-label="Kit controls">
     <div class="seg" id="themes" role="group" aria-label="Colourway"></div>
     <label class="toggle" for="idx"><input type="checkbox" id="idx" checked> Corner index (training wheels)</label>
+    <label class="toggle" for="traced"><input type="checkbox" id="traced" checked> Traced faces</label>
   </div>
 
   <section>
@@ -150,7 +151,7 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
     <ul class="notes">
       <li>One generator, <code>tiles.js</code>: <code>BBTiles.svg({ suit, rank }, { theme, index, enh, edition, chop })</code>. The same code renders the game, this page and the exported SVGs (129 files, every tile in every colourway).</li>
       <li>Tiles are 60 &times; 80 units: a 56 &times; 72 face on a coloured back that shows 4 units below it, so a tile reads as a thick object.</li>
-      <li>Original drawings. Layouts follow the traditional counts but every motif is drawn here; no printed set is copied.</li>
+      <li>Faces: the suits, winds and dragons are generated once in the tile-icon style, traced into colour-slot paths (<code>art-source/icons/icons.json</code>) and recoloured per colourway; untick "Traced faces" to see the code-drawn fallbacks. Flowers and seasons are still code-drawn. Original art throughout; no printed set is copied.</li>
       <li>Characters need a CJK serif (Noto Serif SC, OFL). The game needs only these glyphs: 一二三四五六七八九 萬 東南西北 中發 梅蘭菊竹 春夏秋冬 再金書運.</li>
       <li>Next for the kit: the dragon-tile frames for jokers (White, Green and Red Dragon by rarity) around their generated faces.</li>
     </ul>
@@ -161,9 +162,13 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
 /*TILES*/
 </script>
 <script>
+var ICONS = /*ICONS*/;
+</script>
+<script>
 (function () {
   var B = window.BBTiles;
-  var state = { theme: "theatre", index: true };
+  B.useFaces(ICONS);
+  var state = { theme: "theatre", index: true, traced: true };
   try {
     var saved = JSON.parse(localStorage.getItem("bb-kit") || "{}");
     if (saved.theme && B.THEMES[saved.theme]) state.theme = saved.theme;
@@ -180,7 +185,7 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
     return t.rank + " " + NAMES[t.suit];
   }
   function tile(t, extra) {
-    var o = { theme: state.theme, index: state.index };
+    var o = { theme: state.theme, index: state.index, traced: state.traced };
     for (var k in extra || {}) o[k] = extra[k];
     return B.svg(t, o);
   }
@@ -194,6 +199,8 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
   });
   var idx = document.getElementById("idx");
   idx.addEventListener("change", function () { state.index = idx.checked; render(); });
+  var tr = document.getElementById("traced");
+  tr.addEventListener("change", function () { state.traced = tr.checked; render(); });
 
   function render() {
     try { localStorage.setItem("bb-kit", JSON.stringify(state)); } catch (e) {}
@@ -202,6 +209,7 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
     document.documentElement.style.setProperty("--table-ink", state.theme === "theatre" ? "#f3ead6" : T.ink);
     Array.prototype.forEach.call(themesEl.children, function (b) { b.setAttribute("aria-pressed", String(b.id === "theme-" + state.theme)); });
     idx.checked = state.index;
+    tr.checked = state.traced;
 
     // the set
     var groups = [["Dots 筒", ["dots"]], ["Bamboo 條", ["bamboo"]], ["Characters 萬", ["chars"]], ["Winds and dragons", ["wind", "dragon"]], ["Flowers and seasons", ["flower", "season"]]];
