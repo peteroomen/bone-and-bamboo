@@ -194,23 +194,21 @@ def grid_objects(rgb: np.ndarray, cols: int | list[int], rows: int) -> tuple[lis
     h, w = solid.shape
 
     def cuts(profile: np.ndarray, n: int, length: int) -> list[int]:
-        out = [0]
-        for k in range(1, n):
-            nominal = length * k // n
-            lo, hi = nominal - length // 6, nominal + length // 6
-            win = profile[lo:hi]
-            low = win <= win.min()
-            # the widest run of the emptiest lines: the gap between icons, not a gap inside one
-            best, start = (0, 0), None
-            for k, v in enumerate(list(low) + [False]):
-                if v and start is None:
-                    start = k
-                elif not v and start is not None:
-                    if k - start > best[1] - best[0]:
-                        best = (start, k)
-                    start = None
-            out.append(lo + (best[0] + best[1]) // 2)
-        return out + [length]
+        """Cut at the n-1 widest empty runs between the first and last filled line: the gaps
+        between icons, whatever the icons' sizes (rows of a sheet need not be equal)."""
+        filled = np.where(profile > 0)[0]
+        if len(filled) == 0 or n == 1:
+            return [0, length]
+        first, last = filled[0], filled[-1]
+        runs, start = [], None
+        for k in range(first, last + 1):
+            if profile[k] == 0 and start is None:
+                start = k
+            elif profile[k] > 0 and start is not None:
+                runs.append((k - start, start, k))
+                start = None
+        widest = sorted(sorted(runs, reverse=True)[: n - 1], key=lambda r: r[1])
+        return [0] + [(a + b) // 2 for _, a, b in widest] + [length]
 
     per_row = cols if isinstance(cols, list) else [cols] * rows
     ycut = cuts(solid.sum(1), rows, h)

@@ -79,3 +79,15 @@ with `--grid=4,3`). **Keepers.** Every character is correct (一 to 九 over 萬
 and the brush lettering is a clear step up from the font, so the whole set now uses traced faces;
 the code-drawn faces remain as fallbacks (the kit's "Traced faces" toggle). The guide's body and
 the dragons' rarity badges use the traced 中 and 發 too. Only flowers and seasons are still code.
+
+## 2026-10-02 · Flowers and seasons, cards, dice, hanafuda
+
+- `icons/bonus.png` (4,4): the eight bonus faces (plum, iris, chrysanthemum, bamboo; blossom,
+  lotus, maple, snowy pine). **Keeper**: every tile face is now traced art.
+- `icons/cards-1.png`, `icons/cards-2.png`: playing-card faces (suits, kite, horseshoes, knight,
+  king, queen, page, jester bell, A, 0-9). `icons/dice.png`: Chinese dice pips 1-6 (red 1 and 4),
+  three jester caps and a die. `icons/hanafuda.png`: the twelve hanafuda months. All traced
+  cleanly; their use is not yet in the design (alternative tile sets?). Pips share the dice
+  sheet's scale, so they draw small; trace them as their own sheet if they become tile faces.
+- The tracer now cuts grids at the widest empty runs (rows of a sheet may differ in height);
+  every earlier icon traced identically.
