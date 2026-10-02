@@ -46,12 +46,11 @@ BASE = {  # chips, mult
     "chow": (20, 2),
     "pong": (30, 3),
     "kong": (60, 6),
-    "dragons": (50, 5),  # one of each dragon
     "winds": (80, 8),    # one of each wind
 }
 LEVEL_UP = {"single": (5, 0), "pair": (10, 1), "chow": (15, 1), "pong": (20, 2), "kong": (30, 3),
-            "dragons": (25, 2), "winds": (30, 3)}
-SET_ORDER = ["kong", "winds", "dragons", "pong", "chow", "pair", "single"]
+            "winds": (30, 3)}
+SET_ORDER = ["kong", "winds", "pong", "chow", "pair", "single"]
 
 
 @dataclass(frozen=True)
@@ -77,7 +76,6 @@ def build_set(r: Rules):
              if n not in r.removed]
     if r.honours:
         tiles += [("w", n) for n in range(1, 5) for _ in range(r.honours)]
-        tiles += [("d", n) for n in range(1, 4) for _ in range(r.honours)]
     tiles += [("f", i) for i in range(r.flowers)]
     return tiles
 
@@ -118,8 +116,6 @@ def find_sets(hand):
         for n in range(1, 8):
             if c[(s, n)] and c[(s, n + 1)] and c[(s, n + 2)]:
                 out.append(("chow", [(s, n), (s, n + 1), (s, n + 2)]))
-    if all(c[("d", n)] for n in (1, 2, 3)):
-        out.append(("dragons", [("d", n) for n in (1, 2, 3)]))
     if all(c[("w", n)] for n in (1, 2, 3, 4)):
         out.append(("winds", [("w", n) for n in (1, 2, 3, 4)]))
     return out
@@ -178,8 +174,6 @@ class Round:
             for a, b in ((n - 2, n - 1), (n - 1, n + 1), (n + 1, n + 2)):
                 if c[(s, a)] and c[(s, b)]:
                     return 3 if hunter else 8
-        if t[0] == "d" and sum(1 for n in (1, 2, 3) if c[("d", n)]) == 2 and not c[t]:
-            return 8
         if t[0] == "w" and sum(1 for n in (1, 2, 3, 4) if c[("w", n)]) >= 2 and not c[t]:
             return 6
         if c[t] == 1:
@@ -192,7 +186,7 @@ class Round:
                 return 3
             if c[(s, n - 2)] or c[(s, n + 2)]:
                 return 2
-        if t[0] in "wd" and any(c[(t[0], n)] for n in range(1, 5)):
+        if t[0] == "w" and any(c[(t[0], n)] for n in range(1, 5)):
             return 1
         return 0
 
@@ -242,7 +236,7 @@ class Round:
     def turn(self):
         sets = find_sets(self.hand)
         if self.rules.policy == "pongs":
-            big = [s for s in sets if s[0] in ("kong", "pong", "dragons", "winds")]
+            big = [s for s in sets if s[0] in ("kong", "pong", "winds")]
             if big:
                 return self.play(*max(big, key=lambda s: self.set_value(*s)))
             if self.discards and self.plays > 1:

@@ -79,8 +79,22 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
-- **2026-10-02:** the repo holds the design, the MVP plan, the Python simulators and their
-  results, the tile generator and the image prompt kit. No app code yet; the MVP build starts at
-  milestone M1 on the `mvp` branch.
-- The art style trial (shadow theatre, porcelain or papercut) is with the user. Until it decides,
-  the colourway is a setting.
+- **2026-10-02:** M1-M4 and the "complete run and teaching slice" are done on the `mvp` branch,
+  rebuilt around the new design (`docs/design.md`): the jokers are **dragons** (23, drawn as tiles
+  with a rarity frame; `src/content/dragons.ts`), winds are the only honours, each round is hosted
+  by its wind tile (Calm or Storm), the eight twists run as data (`src/engine/twists.ts`, M5; per-wind results in `docs/balance/2026-10-02-hosts.md`), traced tile faces and
+  dragon icons come from `art-source/icons/icons.json` split by `scripts/build-icons.ts`, and the
+  tile generator port includes the guide and dragon tiles (byte-identical, tested). Engine: tabled
+  pong to kong upgrade (one play), optional early finish once the target is beaten, live dragon
+  goals with multiplier-loss warnings, signed previews, Ask the dragon (`src/engine/advice.ts`,
+  visible tiles only), hint levels, an introduction sheet and an illustrated set book. Sim results:
+  `docs/balance/2026-10-02-dragons-and-policies.md`. Bamboo Hook is rejected.
+- `localStorage` key `bb.dev.v1` sets a fixed seed or targets for the next run (used by e2e).
+- M6 done: the guided first run (`bb.profile.v1` `guidedDone`; seed 11, a plain East round, the
+  guide's tip queue in `src/content/guide.ts` and `src/ui/game/tips.ts`). - M7 done: title, setup (tile set and lantern), collection, settings, the profile and unlocks
+  (`src/engine/profile.ts`), offline install and save transfer (`BB1.` codes). - M8 done: synthesised sound (`src/ui/audio`: bone clacks, the ban, gong and cymbal, a guzheng
+  and dizi score per wind and a calm teahouse, a wind bed), haptics, volume settings, and instant
+  speed that switches every animation off. The MVP milestones M1-M8 are built; M9 (art) is with
+  the planner. Milestone status is in the PR.
+- The art style trial: three colourways exist; colourways become unlocks in M7.
+- **2 Oct (later):** M1-M8 done, plus the planner's twist tuning (Masked +1 per set, Claws without the chow half, the shell lifted by any set with target ×1.25; see `docs/balance/2026-10-02-hosts.md`), a centred hand layout and stacks drawn with depth. Merged to `main`; ready for Vercel import (README). M9 (art) is next, with the planner.

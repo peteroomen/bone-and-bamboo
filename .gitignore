@@ -4,6 +4,7 @@ dev-dist/
 test-results/
 playwright-report/
 coverage/
+sim-out/
 __pycache__/
 *.pyc
 .DS_Store
