@@ -23,3 +23,12 @@ fox's cut-away gaps go transparent as they should).
 The user chose a dragon as the guide: a young red dragon from the Red Dragon tile (中). The
 sparrow images above stay in `sparrow/` as unused takes; the 1 of Bamboo keeps a sparrow as tile
 art. The trial's guide prompt (`dragon`) replaces the sparrow's, in all three styles.
+
+## 2026-10-02 · Dragon tiles are the jokers
+
+Following Balatro (its mascot is a Joker card and its jokers are cards): the guide is the Red
+Dragon tile come to life, and the jokers (curios in the simulators) are **dragon tiles**, each a
+tile with a little dragon on its face. The frame shows rarity: White Dragon common, Green
+uncommon, Red rare. Dragons leave the playable tile set; the honours are the four winds. The
+guide prompt (`guide`) and four dragon sheets (`dragons-1` to `-4`) replace the earlier guide and
+the curio object sheets; two object sheets remain for fortunes, packs and services.

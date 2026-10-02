@@ -12,8 +12,9 @@ once: chips × mult. You refill your hand from **the wall**: face-up stacks wher
 top tile and the corner of the tile under it, so digging for the tile you want costs you the tiles
 on top of it. A run is four rounds, one per wind, each hosted by a friendly spirit who sets the
 score to beat and changes one rule. Between rounds the spirit leaves a gift and the teahouse sells
-curios (passive), fortunes (single use, they change your tiles), almanac pages (level up a set
-type) and tiles. A little red dragon who lives on the Red Dragon tile (中) teaches you.
+**dragons** (the jokers: dragon tiles with a passive power each), fortunes (single use, they change
+your tiles), almanac pages (level up a set type) and tiles. The guide is the Red Dragon tile
+itself, come to life, the way Balatro's Jimbo is a Joker card.
 
 ## Tiles
 
@@ -23,21 +24,21 @@ type) and tiles. A little red dragon who lives on the Red Dragon tile (中) teac
 | Bamboo (條) | 1-9 | 4 | suit `s`; the 1 is the sparrow |
 | Characters (萬) | 1-9 | 4 | suit `m` |
 | Winds | East, South, West, North | 4 | honours: no rank, never in a run |
-| Dragons | Red, Green, White | 4 | honours |
+| Dragons | Red, Green, White | none | not in play: the dragon tiles are the jokers (see Dragons) and the guide |
 | Flowers, seasons | 4 + 4 | 1 | bonus tiles; not in the MVP's rules, art exists |
 
 **Starting set: 3 suits, 1-9, 3 copies each = 81 tiles.** With 3 copies a pong needs every copy
-of a tile and a kong is impossible, so 4th copies, winds and dragons are things you buy into your
+of a tile and a kong is impossible, so 4th copies and winds are things you buy into your
 set. Every physical tile has a unique id and may carry an enhancement.
 
-Tile chips: a suited tile is worth its rank; an honour is worth 10.
+Tile chips: a suited tile is worth its rank; a wind is worth 10.
 
 ## The wall
 
 - At the start of each round your whole set is shuffled (seeded) and dealt round-robin into
   **8 stacks**, face up. The top of each stack is the last tile dealt to it.
 - You see the top tile of each stack fully and the **top strip of the 1 tile under it** (the corner
-  index shows there). A curio can raise this to 2. Deeper tiles are hidden; each stack shows how
+  index shows there). A dragon can raise this to 2. Deeper tiles are hidden; each stack shows how
   many tiles it holds.
 - You take tiles only from the top of a stack, one at a time.
 
@@ -64,7 +65,6 @@ Tile chips: a suited tile is worth its rank; an honour is worth 10.
 | Chow | 3 in a row, one suit | 10 | +1 | +10, +1 |
 | Pong | 3 alike | 40 | +4 | +15, +2 |
 | Kong | 4 alike | 100 | +8 | +30, +3 |
-| Three Dragons | one of each dragon | 60 | +6 | +20, +2 |
 | Four Winds | one of each wind | 100 | +10 | +30, +3 |
 
 Cheap chows and dear pongs are deliberate: chows come easily (about 6 of 8 plays for a bot),
@@ -77,7 +77,7 @@ When the round ends:
 
 1. chips = for each set: set chips + level chips + tile chips + enhancement chips
 2. mult = for each set: set mult + level mult + enhancement mult
-3. Curios apply left to right in your curio row: each may add chips, add mult or multiply mult.
+3. Dragons apply left to right in your dragon row: each may add chips, add mult or multiply mult.
 4. Score = floor(chips × mult × product of the ×mult effects).
 
 Every step is an engine event, so the UI can count it up the way Balatro does.
@@ -90,14 +90,14 @@ Four rounds: **East (spring), South (summer), West (autumn), North (winter).**
   casual bot 24%, and nobody loses in round 1 (`docs/balance/2026-10-02-run.md`). Miss a target
   and the run ends.
 - **Money:** start with $4. After rounds 1-3 you are paid $10 / $12 / $14, + $1 per unused
-  discard, + $1 interest per $5 held (max $5), + curio income.
-- **After each of rounds 1-3:** the spirit's **gift** (pick 1 of 2 rare curios, free; if your
-  curio row is full you may swap one out or decline), then the **teahouse**.
+  discard, + $1 interest per $5 held (max $5), + dragon income.
+- **After each of rounds 1-3:** the spirit's **gift** (pick 1 of 2 rare dragons, free; if your
+  dragon row is full you may swap one out or decline), then the **teahouse**.
 
 ### Hosts and twists
 
 Before each round you choose your host from two: the wind's **folk spirit**, or its **great
-beast** (target ×1.5 *tune*, and its gift offers 3 rare curios instead of 2 plus $5). Each host
+beast** (target ×1.5 *tune*, and its gift offers 3 rare dragons instead of 2 plus $5). Each host
 changes one rule for its round. Twists are data (`src/content/hosts.ts`), not engine special cases.
 
 | Wind | Folk spirit: twist | Great beast: twist |
@@ -113,47 +113,54 @@ All twists are *tune*: the run simulator does not model them yet (milestone M5 a
 
 Every visit offers:
 
-- **3 curios** (weights: common 6, uncommon 3, rare 1; never one you own)
+- **3 dragons** (weights: common 6, uncommon 3, rare 1; never one you own)
 - **2 almanac pages** ($3 each, a random set type each)
 - **2 fortunes** ($3 each)
 - **1 pack** ($4, or $5 for an honour pack): open it and choose 1 of its offers
-- **Reroll** the curios ($2, +$1 each time this visit)
+- **Reroll** the dragons ($2, +$1 each time this visit)
 - **Burn a kind** ($5, once a visit): remove every copy of one tile kind from your set
-- Sell a curio for half its price (rounded down)
+- Sell a dragon for half its price (rounded down)
 
-Curio row: **5 slots**. Fortune pocket: **2 slots** (fortunes are used from the pocket at any
+Dragon row: **5 slots**. Fortune pocket: **2 slots** (fortunes are used from the pocket at any
 time outside a scoring animation: in the shop, or between turns in a round).
 
-### Curios (passive, 21)
+### Dragons (the jokers, 23)
 
-Prices: common $4, uncommon $6, rare $8. Ids are code ids.
+Balatro's jokers are cards; ours are **dragon tiles**. Each is a mahjong tile whose face shows a
+little dragon with the thing it does, and its frame is one of the three dragon tiles, which shows
+its rarity: **White Dragon 白 = common ($4), Green Dragon 發 = uncommon ($6), Red Dragon 中 = rare
+($8)**. The game draws the tile and frame (`tiles.ts`); the dragon on the face is generated art.
+In code the type is `Dragon` (it was "curio" in the simulators); the ids stay.
 
-| Curio | Rarity | Effect |
+| Dragon | Rarity | Effect |
 |---|---|---|
-| `abacus` Abacus | common | +2 mult per chow |
-| `redString` Red String | common | +6 mult |
-| `coinString` Coin String | common | +50 chips |
-| `bambooGrove` Bamboo Grove | common | +12 chips per Bamboo tile on the table |
-| `coinPurse` Coin Purse | common | +12 chips per Dots tile on the table |
-| `scroll` Scroll | common | +12 chips per Characters tile on the table |
-| `sparrowNest` Sparrow's Nest | common | pairs +6 mult |
-| `goldToad` Gold Toad | common | +$4 after each round |
-| `pongHall` Pong Hall | uncommon | ×2 mult with 2+ pongs or kongs |
-| `outside` Moon Gate | uncommon | +4 mult per set with a 1, 9 or honour |
-| `ironTeapot` Iron Teapot | uncommon | +2 discards |
+| `abacus` Abacus Dragon | common | +2 mult per chow |
+| `redString` Red String Dragon | common | +6 mult |
+| `coinString` Coin String Dragon | common | +50 chips |
+| `bambooGrove` Bamboo Dragon | common | +12 chips per Bamboo tile on the table |
+| `coinPurse` Purse Dragon | common | +12 chips per Dots tile on the table |
+| `scroll` Scroll Dragon | common | +12 chips per Characters tile on the table |
+| `sparrowNest` Nest Dragon | common | pairs +6 mult |
+| `goldToad` Toad-rider | common | +$4 after each round |
+| `pongHall` Bell Dragon | uncommon | ×2 mult with 2+ pongs or kongs |
+| `outside` Moon Gate Dragon | uncommon | +4 mult per set with a 1, 9 or wind |
+| `ironTeapot` Teapot Dragon | uncommon | +2 discards |
 | `longSleeves` Long Sleeves | uncommon | +1 hand size |
-| `lantern` Lantern | uncommon | see 1 tile deeper in every stack |
+| `lantern` Lantern Dragon | uncommon | see 1 tile deeper in every stack |
 | `mahjong` Mahjong! | uncommon | ×2 mult with 4+ sets and a pair |
 | `twoSuits` Two Fish | uncommon | ×1.5 mult if the table uses 2 suits or fewer |
-| `allSimples` Rice Bowl | rare | ×2 mult if no 1s, 9s or honours on the table |
+| `allSimples` Rice Bowl | rare | ×2 mult if no 1s, 9s or winds on the table |
 | `pureStraight` Nine Rings | rare | ×3 mult with 1-2-3, 4-5-6, 7-8-9 of one suit |
 | `nightOwl` Night Owl | rare | +1 play |
-| `kongBell` Kong Bell | rare | ×2 mult per kong |
-| `dragonLantern` Dragon Lantern | rare | +12 mult per dragon set (Three Dragons or a dragon pong or kong) |
+| `kongBell` Great Bell | rare | ×2 mult per kong |
+| `windChime` Wind Chime | rare | +12 mult per wind set (Four Winds, or a wind pong or kong) |
 | `twinCranes` Twin Cranes | rare | ×1.5 mult per pair of identical sets |
+| `threeTreasures` Three Treasures | rare | ×1.5 mult per pong *tune* |
+| `stoneLion` Stone Lion | rare | +3 mult per tile in pongs and kongs *tune* |
 
-Known from the simulator: Iron Teapot and Pong Hall are weak, Night Owl and Sparrow's Nest are
-strong, and the rares reward chows more than pongs. Add rare pong and kong curios after the MVP.
+Known from the simulator: Teapot and Bell Dragon are weak, Night Owl and Nest Dragon are strong,
+and the original rares rewarded chows more than pongs. Three Treasures and Stone Lion are new rare
+pong builds to balance that; they are untested, so M5's simulator pass must include them.
 
 ### Fortunes (single use)
 
@@ -186,9 +193,8 @@ post-MVP.
 | Pack | Price | Choose 1 of |
 |---|---|---|
 | Fourth copy | $4 | 3 random tile kinds you own exactly 3 of: add a 4th |
-| Dragons | $4 | add one of each dragon, or add 2 of one dragon |
 | Winds | $4 | add one of each wind, or add 2 of one wind |
-| Honour triple | $5 | 3 offered honours: add 3 copies of one |
+| Wind triple | $5 | 3 offered winds: add 3 copies of one |
 | Almanac | $4 | 3 almanac pages |
 
 ## Difficulty: lanterns
@@ -206,14 +212,15 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 | Set | Rule | Unlock |
 |---|---|---|
 | Bone & Bamboo | the starting 81 | from the start |
-| Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + dragons ×2 | win a run |
+| Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + one of each wind | win a run |
 | Jade Court | the 81, hand 9, 2 discards | win with 3 different hosts |
 
 ## The dragon guide (teaching)
 
-The guide is a young red dragon from the Red Dragon tile (中, "centre", also "hitting the mark").
-It is small and red so it never blurs with the Azure Dragon, East's great beast, which is vast and
-blue-green. The 1 of Bamboo keeps its sparrow as tile art.
+The guide is **the Red Dragon tile come to life**, Balatro's Jimbo in mahjong form: an ivory tile
+whose painted little red dragon leans out of its face to talk. It hops onto the table to give tips
+and sits in the corner of the title screen. It never blurs with the Azure Dragon, East's great
+beast, which is vast and blue-green. The 1 of Bamboo keeps its sparrow as tile art.
 
 - **Guided first run:** the first East round is scripted: a fixed seed and a queue of tips (pick
   from a stack, a pair, a run, a pong, the preview, discarding to dig, the score count). The Rain
@@ -223,12 +230,12 @@ blue-green. The 1 of Bamboo keeps its sparrow as tile art.
   *full* (also mark wall tiles that would complete a set in your hand).
 - **Ask the dragon:** a button that shows the hint bot's best move (a set to play, tiles to
   discard, or the stack to take from) with a one-line reason.
-- **The set book:** every set type and curio rule with a picture, and your levels.
+- **The set book:** every set type and dragon rule with a picture, and your levels.
 
 ## Around the game
 
 - Title: Continue, New run (tile set + lantern), Collection, Settings.
-- Collection: tile sets and their lanterns, every curio (seen / owned / locked), hosts met,
+- Collection: tile sets and their lanterns, every dragon (seen / owned / locked), hosts met,
   records (best round, best run, biggest single set).
 - Settings: speed (normal, fast, instant), hints, sound, music, ambience, haptics, colourway
   (until the style trial picks one), credits, play offline, move your progress.
@@ -240,7 +247,7 @@ blue-green. The 1 of Bamboo keeps its sparrow as tile art.
 
 - **Tiles** are drawn from code: `art-source/tiles/tiles.js` (port to TypeScript at
   `src/ui/art/tiles.ts`). Three colourways until the style trial decides.
-- **Generated art** (hosts, the dragon guide, backdrops, object sheets) comes from the planner and the
+- **Generated art** (hosts, the guide, the dragons' faces, backdrops, object sheets) comes from the planner and the
   user, through `art-source/prompts/`. Until it lands, use the placeholders described in
   `docs/work/2026-10-02-mvp-plan.md`.
 - **Sound** is synthesised as in Twelve Petals: bone-on-wood clacks for tiles, Chinese opera

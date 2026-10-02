@@ -81,7 +81,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   <section>
     <div class="eyebrow">Round 1</div>
     <h2>Style trial: 12 images</h2>
-    <p class="muted">The dragon guide, one spirit, one great beast and one sheet of curio objects, each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
+    <p class="muted">The guide (the Red Dragon tile, come to life), one spirit, one great beast and the first sheet of dragon tiles (the jokers), each in all three styles. The tiles already exist in all three colourways in the tile kit, so you'll be able to see each style with its tiles.</p>
     <div id="trial" class="list"></div>
   </section>
 
@@ -97,7 +97,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
     <div class="eyebrow">Review</div>
     <h2>What I check</h2>
     <ul class="check">
-      <li>It reads at game size: 60px for spirits, 50px for the guide, 18px for objects.</li>
+      <li>It reads at game size: 60px for spirits, 50px for the guide, 40px for dragon tiles, 18px for objects.</li>
       <li>The background keys out: even #00FF00 green, a clean edge, no bright green in the figure.</li>
       <li>It looks like the real craft, not a modern illustration of it.</li>
       <li>One held item, the right one. No text, characters, seals or signatures.</li>
@@ -113,11 +113,12 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
     <table class="inv">
       <thead><tr><th>What</th><th>Count</th><th>How it's used</th></tr></thead>
       <tbody>
-        <tr><td>The dragon guide</td><td>1, then 3 poses</td><td>Cut out from green; a 50px face beside tips, larger on the title and tutorial</td></tr>
+        <tr><td>The guide (Red Dragon tile)</td><td>1, then 3 poses</td><td>Cut out from green; a 50px face beside tips, larger on the title and tutorial</td></tr>
         <tr><td>Spirit hosts</td><td>4</td><td>Cut out; on the round intro and the score panel</td></tr>
         <tr><td>Great beasts</td><td>4</td><td>Full-bleed; the hardest host of each wind</td></tr>
         <tr><td>Backdrops</td><td>4</td><td>One per wind, behind the table</td></tr>
-        <tr><td>Object sheets</td><td>5 (30 objects)</td><td>Traced into vectors: curios, fortunes, almanac, packs, shop services</td></tr>
+        <tr><td>Dragon tiles (jokers)</td><td>4 sheets (23 dragons)</td><td>Traced; the game draws each on a tile with a White, Green or Red Dragon frame for its rarity</td></tr>
+        <tr><td>Object sheets</td><td>2 (12 objects)</td><td>Traced: fortunes, almanac, packs, shop services</td></tr>
         <tr><td>Teahouse, title</td><td>later</td><td>After the style is set</td></tr>
         <tr><td>Tiles</td><td>done</td><td>Drawn from code (the tile kit)</td></tr>
       </tbody>
@@ -161,6 +162,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--f-mono)
   }
   function label(s) {
     if (s.kind === "sheet") return "Objects: " + s.ids.join(", ");
+    if (s.kind === "dragons") return "Dragon tiles: " + s.ids.filter(function (x) { return x !== "-"; }).join(", ");
     return title(s);
   }
 
