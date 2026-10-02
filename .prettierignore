@@ -1,0 +1,16 @@
+dist
+dev-dist
+node_modules
+pnpm-lock.yaml
+coverage
+test-results
+playwright-report
+sim-out
+docs/balance
+art-source
+tools
+scripts/*.py
+docs/design.md
+docs/work/2026-10-02-mvp-plan.md
+CLAUDE.md
+README.md

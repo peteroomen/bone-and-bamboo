@@ -1,0 +1,139 @@
+:root {
+  /* Bone & Bamboo: the colourway is a setting until the art style trial decides. */
+  --ink: #1f1a17;
+  --ink-2: #2a211b;
+  --bone: #f3ead6;
+  --bone-2: #e6d9bd;
+  --jade: #2f7a64;
+  --jade-2: #225c4b;
+  --vermilion: #b3322a;
+  --gold: #c99a2e;
+  --table: #3a2618;
+  --table-2: #5a3a22;
+  --line: #0d0806;
+  --good: #7fbf5a;
+  --bad: #e25544;
+  --chips: #3a78d8;
+  --mult: #e0442a;
+
+  --font-display: 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, serif;
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* One type scale for the whole UI (tile labels are drawn to the tile's size). */
+  --fs-xs: 10.5px;
+  --fs-sm: 12px;
+  --fs-md: 13.5px;
+  --fs-base: 15px;
+  --fs-lg: 17.5px;
+  --fs-xl: 21px;
+  --fs-2xl: 25px;
+  --fs-3xl: 31px;
+  --fs-4xl: 40px;
+  --fs-hero: 50px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  color-scheme: dark;
+}
+
+/* A desktop or laptop: the stage is scaled to fill the height, so type is sized on screen (divided
+   by the stage's scale, --k) and never bigger than on a phone. */
+[data-landscape='y'] {
+  --fs-xs: min(10.5px, calc(14px / var(--k, 1)));
+  --fs-sm: min(12px, calc(15px / var(--k, 1)));
+  --fs-md: min(13.5px, calc(16px / var(--k, 1)));
+  --fs-base: min(15px, calc(16.5px / var(--k, 1)));
+  --fs-lg: min(17.5px, calc(17px / var(--k, 1)));
+  --fs-xl: min(21px, calc(20px / var(--k, 1)));
+  --fs-2xl: min(25px, calc(24px / var(--k, 1)));
+  --fs-3xl: min(31px, calc(28px / var(--k, 1)));
+  --fs-4xl: min(40px, calc(34px / var(--k, 1)));
+  --fs-hero: min(50px, calc(42px / var(--k, 1)));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--ink);
+  color: var(--bone);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, var(--table-2), var(--table) 70%);
+}
+
+.stage {
+  width: 390px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+.title {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.title-mark {
+  width: 96px;
+  height: 128px;
+  border-radius: 12px;
+  background: var(--jade);
+  padding-bottom: 6px;
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.title-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  border-radius: 12px;
+  background: var(--bone);
+  color: var(--vermilion);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 56px;
+  border: 2px solid var(--line);
+}
+
+.title-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-3xl);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.title-sub {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--bone-2);
+}

@@ -79,8 +79,9 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
-- **2026-10-02:** the repo holds the design, the MVP plan, the Python simulators and their
-  results, the tile generator and the image prompt kit. No app code yet; the MVP build starts at
-  milestone M1 on the `mvp` branch.
+- **2026-10-02:** M1 (scaffold) done on the `mvp` branch: Vite + React 19, strict TypeScript, the
+  engine purity lint rules, Vitest, Playwright (390×844, 360×640, 1366×768), PWA, `vercel.json`,
+  and an app shell that shows a title. The design, plan, Python simulators and tile generator are
+  as before. Next: M2 (engine and simulator). Milestone status is in the draft "MVP" PR.
 - The art style trial (shadow theatre, porcelain or papercut) is with the user. Until it decides,
   the colourway is a setting.
