@@ -378,7 +378,69 @@
   for (var f = 1; f <= 4; f++) ALL.push({ suit: "flower", rank: f });
   for (var q = 1; q <= 4; q++) ALL.push({ suit: "season", rank: q });
 
-  var api = { svg: svg, THEMES: THEMES, ALL: ALL };
+  // ---- the guide: the Red Dragon tile, alive ------------------------------------------------
+  // guide({ theme, mood, blink, width }): mood is idle | point | happy | think | wow | sad.
+  // 100 x 110 units: the tile stands in the middle (x 20-80, y 12-92), arms and feet around it.
+  var GUIDE_MOODS = ["idle", "point", "happy", "think", "wow", "sad"];
+  function guide(opts) {
+    opts = opts || {};
+    var T = THEMES[opts.theme || "theatre"], mood = opts.mood || "idle";
+    var size = opts.width ? ' width="' + opts.width + '" height="' + n(opts.width * 1.1) + '"' : "";
+    var ink = T.edge, s = "";
+    // limbs are ink with a thin light rim, so they read on a dark table as well as a light one
+    function limb(d) {
+      return el("path", { d: d, stroke: T.face, "stroke-width": 5.6, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" }) +
+        el("path", { d: d, stroke: ink, "stroke-width": 3.2, fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" });
+    }
+    function hand(x, y) { return el("circle", { cx: x, cy: y, r: 3.6, fill: T.face, stroke: ink, "stroke-width": 1.6 }); }
+    // feet
+    s += limb("M40 92 L39 97 M60 92 L61 97");
+    s += el("ellipse", { cx: 38, cy: 99, rx: 7, ry: 3.6, fill: ink, stroke: T.face, "stroke-width": 1.2 }) + el("ellipse", { cx: 62, cy: 99, rx: 7, ry: 3.6, fill: ink, stroke: T.face, "stroke-width": 1.2 });
+    // arms, behind the tile where they join it
+    var arms = {
+      idle: ["M21 56 Q12 62 11 72", "M79 56 Q88 62 89 72", [11, 74], [89, 74]],
+      point: ["M21 56 Q12 62 11 72", "M79 54 Q90 46 91 30", [11, 74], [91, 28]],
+      happy: ["M21 52 Q10 42 9 28", "M79 52 Q90 42 91 28", [9, 26], [91, 26]],
+      think: ["M21 56 Q12 62 11 72", "M79 58 Q92 52 84 42", [11, 74], [83, 40]],
+      wow: ["M21 54 Q9 52 4 44", "M79 54 Q91 52 96 44", [4, 42], [96, 42]],
+      sad: ["M21 58 Q16 70 15 80", "M79 58 Q84 70 85 80", [15, 82], [85, 82]]
+    }[mood] || null;
+    s += limb(arms[0]) + limb(arms[1]);
+    // the tile itself (its back shows below the face)
+    var g = el("rect", { x: 2, y: 6, width: 56, height: 72, rx: 7, fill: T.back, stroke: T.edge, "stroke-width": 1.5 }) +
+      el("rect", { x: 2, y: 2, width: 56, height: 72, rx: 7, fill: T.face, stroke: T.edge, "stroke-width": 1.5 });
+    // its face: eyes and mouth above the 中
+    var eyeY = 21, lx = 19, rx = 41;
+    if (opts.blink || mood === "happy") {
+      g += el("path", { d: "M" + (lx - 4) + " " + (eyeY + 1) + " q4 -5 8 0 M" + (rx - 4) + " " + (eyeY + 1) + " q4 -5 8 0", stroke: ink, "stroke-width": 2.2, fill: "none", "stroke-linecap": "round" });
+    } else {
+      var ry = mood === "wow" ? 5.6 : 4.6, look = mood === "think" ? 1.6 : 0;
+      [lx, rx].forEach(function (x) {
+        g += el("ellipse", { cx: x + look, cy: eyeY - (mood === "think" ? 1 : 0), rx: mood === "wow" ? 4.2 : 3.6, ry: ry, fill: ink });
+        g += el("circle", { cx: n(x + look + 1.2), cy: n(eyeY - 1.8 - (mood === "think" ? 1 : 0)), r: 1.3, fill: T.face });
+      });
+    }
+    if (mood === "think") g += el("path", { d: "M" + (lx - 4) + " 14.5 l8 0 M" + (rx - 4) + " 13 q4 -3.5 8 -1", stroke: ink, "stroke-width": 1.8, fill: "none", "stroke-linecap": "round" });
+    if (mood === "sad") g += el("path", { d: "M" + (lx - 4) + " 14 l8 -2 M" + (rx - 4) + " 12 l8 2", stroke: ink, "stroke-width": 1.8, "stroke-linecap": "round" });
+    // cheeks
+    g += el("ellipse", { cx: lx - 4, cy: 28, rx: 3.4, ry: 2, fill: T.pink, opacity: 0.55 }) + el("ellipse", { cx: rx + 4, cy: 28, rx: 3.4, ry: 2, fill: T.pink, opacity: 0.55 });
+    var mouth = {
+      idle: el("path", { d: "M25 28 q5 4 10 0", stroke: ink, "stroke-width": 1.9, fill: "none", "stroke-linecap": "round" }),
+      point: el("path", { d: "M24.5 27.5 q5.5 7 11 0 z", fill: ink }),
+      happy: el("path", { d: "M23.5 27 q6.5 9 13 0 z", fill: ink }),
+      think: el("path", { d: "M26 29.5 l8 -1", stroke: ink, "stroke-width": 1.9, "stroke-linecap": "round" }),
+      wow: el("ellipse", { cx: 30, cy: 30, rx: 3, ry: 3.8, fill: ink }),
+      sad: el("path", { d: "M25 31 q5 -4 10 0", stroke: ink, "stroke-width": 1.9, fill: "none", "stroke-linecap": "round" })
+    }[mood];
+    g += mouth;
+    g += text(30, 66, 28, T.red, "中");
+    s += el("g", { transform: "translate(20 12)" }, g);
+    s += hand(arms[2][0], arms[2][1]) + hand(arms[3][0], arms[3][1]);
+    if (mood === "point") s += limb("M91 24 L91 18");
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110"' + size + ">" + s + "</svg>";
+  }
+
+  var api = { svg: svg, guide: guide, GUIDE_MOODS: GUIDE_MOODS, THEMES: THEMES, ALL: ALL };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.BBTiles = api;
 })(typeof window !== "undefined" ? window : this);

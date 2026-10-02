@@ -124,8 +124,6 @@
 
   var SUBJECTS = [
     // the guide
-    { id: "guide", kind: "guide", group: "The guide", trial: true,
-      text: "SUBJECT: The Red Dragon tile, the player's guide\nRole in the game: it teaches the rules and gives tips in speech bubbles, like the Joker who hosts Balatro. It is the Red Dragon tile of the mahjong set come to life.\nOne upright mahjong tile: an ivory face on a thick jade-green back that shows along its side, with softly rounded corners. Painted on its face is a young red Chinese dragon (red body, gold belly scales, a short snout, big round bright eyes, two short gold antlers, long curling whiskers, a tuft of flame-like gold mane), and the dragon has come alive: its head, one arm and its tail curl out past the tile's edges, its body still on the face.\nHolds: nothing; one clawed hand is raised with a finger up, making a point.\nMood: bright, cheeky and kind, mid-sentence. At 50 pixels, the tile's shape, the red dragon's head and its big eyes are what read. Never a lizard or a Western dragon (no bat wings)." },
     // spirit hosts
     { id: "fox", kind: "host", group: "Spirit hosts", wind: "East", trial: true,
       text: "SUBJECT: The Fox Spirit (húli jīng), host of the East wind\nGame twist: 'Masked': covered tiles stay face down until you take them, but each one you use scores extra.\nA russet fox spirit with three bushy tails fanned behind it, standing upright on its hind legs like a person, in a short jacket. A painted opera mask is pushed up on top of its head, and its own narrow, amused eyes look at the viewer. Drawn as a fox, not as a woman.\nHolds: one mahjong tile, turned face down so only its plain back shows, held up to its chest like a secret.\nMood: sly and delighted, sure it knows something you don't." },

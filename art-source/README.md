@@ -19,8 +19,8 @@ SUBJECT and a FINAL REMINDER, pasted as one prompt into a fresh chat. `prompts/p
 holds every block and subject; `prompts.src.html` is the "Bone & Bamboo Art Prompts" page (copy
 buttons); `prompts.md` lists the round 1 trial prompts.
 
-- **Round 1, the style trial:** the guide (the Red Dragon tile come to life), the Fox Spirit, the
-  Azure Dragon and the first sheet of dragon tiles (the jokers)
+- **Round 1, the style trial:** the Fox Spirit, the Azure Dragon and the first sheet of dragon
+  tiles (the jokers). The guide is drawn in code (`tiles/tiles.js`, `guide()`), not generated.
   in each of three styles: A shadow theatre, B porcelain, C papercut. The winner sets the
   colourway and the style for everything after.
 - **Round 2:** the other hosts and beasts, four backdrops, dragon sheets 2-4, object sheets 1-2.

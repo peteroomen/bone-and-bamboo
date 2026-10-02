@@ -215,12 +215,13 @@ Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the bas
 | Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + one of each wind | win a run |
 | Jade Court | the 81, hand 9, 2 discards | win with 3 different hosts |
 
-## The dragon guide (teaching)
+## The guide (teaching)
 
-The guide is **the Red Dragon tile come to life**, Balatro's Jimbo in mahjong form: an ivory tile
-whose painted little red dragon leans out of its face to talk. It hops onto the table to give tips
-and sits in the corner of the title screen. It never blurs with the Azure Dragon, East's great
-beast, which is vast and blue-green. The 1 of Bamboo keeps its sparrow as tile art.
+The guide is **the Red Dragon tile itself**, the way Balatro's Jimbo is the Joker card: the real
+tile, red 中 on ivory, with eyes, a mouth, little arms and feet. It is drawn in code by the same
+generator as every tile (`guide({ theme, mood, blink })` in `tiles.ts`), so it always matches the
+colourway and can be animated: it blinks, hops onto the table to give a tip, points at what it
+means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo keeps its sparrow.
 
 - **Guided first run:** the first East round is scripted: a fixed seed and a queue of tips (pick
   from a stack, a pair, a run, a pong, the preview, discarding to dig, the score count). The Rain

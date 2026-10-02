@@ -32,3 +32,10 @@ tile with a little dragon on its face. The frame shows rarity: White Dragon comm
 uncommon, Red rare. Dragons leave the playable tile set; the honours are the four winds. The
 guide prompt (`guide`) and four dragon sheets (`dragons-1` to `-4`) replace the earlier guide and
 the curio object sheets; two object sheets remain for fortunes, packs and services.
+
+## 2026-10-02 · The guide is the tile itself
+
+Three generated takes of a dragon on a tile (`guide/unused/`) were set aside: the user wants the
+guide to literally be the Red Dragon tile. It is now drawn in code (`guide()` in `tiles.js`): the
+real tile with eyes, mouth, arms and feet, six moods and a blink, in every colourway. No image
+prompt is needed for it.

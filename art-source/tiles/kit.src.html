@@ -70,6 +70,8 @@ label.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
 .meld svg { width: 26px; height: auto; display: block; }
 .score { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.8rem; }
 
+.guide-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+.guide-row .cell svg { max-width: 110px; }
 .grid4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .item { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 10px; }
 .item .t { background: var(--table); border-radius: 6px; padding: 4px; }
@@ -102,6 +104,13 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
     <h2>34 kinds, 8 bonus tiles</h2>
     <p class="muted">A run starts with the three suits, 1 to 9, three of each (81 tiles). Winds, dragons, flowers and 4th copies are bought. The 1 of Bamboo is a tree sparrow, the game's guide.</p>
     <div class="table set" id="set"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The guide</div>
+    <h2>The Red Dragon tile, alive</h2>
+    <p class="muted">The guide is the Red Dragon tile itself, as Balatro's Jimbo is the Joker card: drawn by the same code as every tile, so it matches the colourway, and built from parts so the game can blink, hop and change its mood. <code>BBTiles.guide({ theme, mood, blink })</code>.</p>
+    <div class="table guide-row" id="guide"></div>
   </section>
 
   <section>
@@ -143,7 +152,7 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
       <li>Tiles are 60 &times; 80 units: a 56 &times; 72 face on a coloured back that shows 4 units below it, so a tile reads as a thick object.</li>
       <li>Original drawings. Layouts follow the traditional counts but every motif is drawn here; no printed set is copied.</li>
       <li>Characters need a CJK serif (Noto Serif SC, OFL). The game needs only these glyphs: 一二三四五六七八九 萬 東南西北 中發 梅蘭菊竹 春夏秋冬 再金書運.</li>
-      <li>Next for the kit: the sparrow guide in poses, the spirits and the wall's table, once a colourway is chosen.</li>
+      <li>Next for the kit: the dragon-tile frames for jokers (White, Green and Red Dragon by rarity) around their generated faces.</li>
     </ul>
   </section>
 </div>
@@ -206,6 +215,12 @@ code { font-family: var(--f-mono); font-size: 0.88em; }
     });
     html += '<div><div class="rowlabel">Back</div><div class="row"><div class="cell">' + tile({ suit: "back" }) + "<span>Back</span></div></div></div>";
     document.getElementById("set").innerHTML = html;
+
+    // the guide
+    var MOODS = { idle: "Idle", point: "Pointing (a tip)", happy: "Happy (a big score)", think: "Thinking (Ask the dragon)", wow: "Wow (a rare set)", sad: "Sad (missed the target)" };
+    document.getElementById("guide").innerHTML = B.GUIDE_MOODS.map(function (m) {
+      return '<div class="cell">' + B.guide({ theme: state.theme, mood: m }) + "<span>" + MOODS[m] + "</span></div>";
+    }).join("") + '<div class="cell">' + B.guide({ theme: state.theme, blink: true }) + "<span>Blink</span></div>";
 
     // phone mock
     var wall = [
