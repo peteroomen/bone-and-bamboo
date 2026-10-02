@@ -94,3 +94,57 @@ export async function playRound(page: Page, opts: { auto?: boolean } = {}): Prom
     if (!more) return;
   }
 }
+
+export async function setDev(page: Page, dev: Record<string, unknown>): Promise<void> {
+  await page.evaluate((d) => localStorage.setItem('bb.dev.v1', JSON.stringify(d)), dev);
+}
+
+/** The saved run, as the game keeps it. */
+export async function savedRun(page: Page): Promise<RunState | null> {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem('bb.run.v1');
+    return raw ? (JSON.parse(raw) as RunState) : null;
+  });
+}
+
+export async function phase(page: Page): Promise<string | undefined> {
+  return (await hook(page))?.run.phase;
+}
+
+/** One teahouse visit with scripted choices that touch every part of the shop. */
+export async function shopVisit(page: Page, visit: number): Promise<void> {
+  const tap = async (id: string) => {
+    const el = page.getByTestId(id);
+    if ((await el.count()) && (await el.isEnabled())) {
+      await el.click(T);
+      return true;
+    }
+    return false;
+  };
+  await tap('buy-almanac-0');
+  if (await tap('buy-fortune-0')) {
+    await page.getByTestId('pb-fortunes').click(T);
+    await page.getByTestId('use-fortune-0').click(T);
+    const pickers = page.locator('[data-testid^="pick-"]');
+    await pickers.first().click(T);
+    if (await page.getByTestId('suit-s').count()) await page.getByTestId('suit-s').click(T);
+    await page.getByTestId('btn-picker-confirm').click(T);
+    await page.getByTestId('sheet-use').waitFor({ state: 'detached', ...T });
+  }
+  await tap('buy-curio-0');
+  if (visit === 1) await tap('btn-reroll');
+  if (await tap('buy-pack')) {
+    await page.getByTestId('sheet-pack').waitFor(T);
+    await page.getByTestId('pack-offer-0').click(T);
+  }
+  if (visit === 2 && (await page.getByTestId('btn-burn').isEnabled())) {
+    await page.getByTestId('btn-burn').click(T);
+    await page.locator('[data-testid^="burn-"]').first().click(T);
+  }
+  if (visit === 2) {
+    await page.getByTestId('pb-curios').click(T);
+    if (await page.getByTestId('sell-0').count()) await page.getByTestId('sell-0').click(T);
+    await page.getByTestId('sheet-close').click(T);
+  }
+  await page.getByTestId('btn-leave').click(T);
+}

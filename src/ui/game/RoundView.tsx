@@ -3,17 +3,24 @@ import { SET_TYPES } from '@/content/sets';
 import { SEASON_NAMES, WIND_NAMES } from '@/content/rules';
 import { chooseMove } from '@/engine/ai';
 import { needsRefill, preview } from '@/engine/round';
-import type { RunAction, RunState } from '@/engine/runTypes';
+import type { RunAction, RunEvent, RunState } from '@/engine/runTypes';
 import { playProblem } from '@/engine/sets';
 import { kindName, sortTiles } from '@/engine/tiles';
 import { viewStack } from '@/engine/wall';
 import { TileView } from '@/ui/art/Tile';
+import { PlayerBar } from './PlayerBar';
 import { useFlip } from './useFlip';
 import { useStore } from '@/ui/state/store';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('en-GB');
 
-export function RoundView({ run, dispatch }: { run: RunState; dispatch: (a: RunAction) => void }) {
+export function RoundView({
+  run,
+  dispatch,
+}: {
+  run: RunState;
+  dispatch: (a: RunAction) => RunEvent[];
+}) {
   const round = run.round;
   const theme = useStore((s) => s.settings.colourway);
   const [selected, setSelected] = useState<readonly number[]>([]);
@@ -188,6 +195,8 @@ export function RoundView({ run, dispatch }: { run: RunState; dispatch: (a: RunA
           <span key={`gap${i}`} className="hand-gap" aria-hidden />
         ))}
       </section>
+
+      <PlayerBar run={run} dispatch={dispatch} />
 
       <footer className="actions">
         <button

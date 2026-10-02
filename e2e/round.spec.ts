@@ -1,5 +1,5 @@
 import { type Page, expect, test } from '@playwright/test';
-import { botTurn, freshStart, hook, newRun, playRound } from './helpers';
+import { botTurn, freshStart, hook, newRun, playRound, setDev } from './helpers';
 
 const shot = (name: string, project: string) => `test-results/shots/${name}-${project}.png`;
 
@@ -30,6 +30,7 @@ test('a whole round through the UI: start, mid-round and the score count', async
 }, info) => {
   const project = info.project.name;
   await freshStart(page, { speed: 'instant' });
+  await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
   await page.getByTestId('host-folk').click();
   await expect(page.getByTestId('round')).toBeVisible();
@@ -37,7 +38,7 @@ test('a whole round through the UI: start, mid-round and the score count', async
   // The start: an empty hand, eight stacks, nothing on the table.
   await expect(page.getByTestId('hand').locator('button')).toHaveCount(0);
   await expect(page.locator('[data-testid^="stack-"]')).toHaveCount(8);
-  await expect(page.getByTestId('target')).toContainText('1,000');
+  await expect(page.getByTestId('target')).toContainText('300');
   await checkFit(page, [
     '[data-testid^="stack-"]',
     '[data-testid="btn-play"]',
@@ -72,11 +73,12 @@ test('a whole round through the UI: start, mid-round and the score count', async
   expect(total).toBeGreaterThan(0);
   await expect(page.getByTestId('score-total')).toHaveText(total.toLocaleString('en-GB'));
   await page.getByTestId('btn-score-continue').click();
-  await expect(page.getByTestId(/^phase-/)).toBeVisible();
+  await expect(page.getByTestId('payout')).toBeVisible();
 });
 
 test('the count-up plays at normal speed and can be skipped', async ({ page }) => {
   await freshStart(page, { speed: 'normal' });
+  await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
   await page.getByTestId('host-folk').click();
   await playRound(page, { auto: true });
@@ -88,6 +90,7 @@ test('the count-up plays at normal speed and can be skipped', async ({ page }) =
 
 test('play and discard enable only when legal', async ({ page }) => {
   await freshStart(page);
+  await setDev(page, { seed: 7, targets: [300, 400, 500, 600] });
   await newRun(page);
   await page.getByTestId('host-folk').click();
   await expect(page.getByTestId('btn-play')).toBeDisabled();

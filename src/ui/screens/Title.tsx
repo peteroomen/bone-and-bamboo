@@ -1,13 +1,22 @@
 import { newRun } from '@/engine/run';
-import { setState, useStore } from '@/ui/state/store';
+import { devOverrides, setState, useStore } from '@/ui/state/store';
 import { Viewport } from '@/ui/game/Viewport';
 
 export function Title() {
   const run = useStore((s) => s.run);
   const theme = useStore((s) => s.settings.colourway);
   const start = () => {
-    const seed = Math.floor(Math.random() * 2 ** 32);
-    setState({ run: newRun({ seed }), screen: 'game' });
+    const dev = devOverrides();
+    const seed = dev.seed ?? Math.floor(Math.random() * 2 ** 32);
+    setState({
+      run: newRun({
+        seed,
+        ...(dev.targets ? { targets: dev.targets } : {}),
+        ...(dev.tileSet ? { tileSet: dev.tileSet } : {}),
+        ...(dev.lantern ? { lantern: dev.lantern } : {}),
+      }),
+      screen: 'game',
+    });
   };
   return (
     <Viewport theme={theme}>

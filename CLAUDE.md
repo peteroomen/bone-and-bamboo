@@ -79,11 +79,13 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
-- **2026-10-02:** M1-M3 done on the `mvp` branch. Engine (`src/engine`), content (`src/content`)
-  and `pnpm sim` reproduce the Python results (`docs/balance/2026-10-02-ts-sim.md`). The UI has
-  a title, the host choice and a playable round (the wall of stacks, hand, table, live preview,
-  Play / Discard / Auto / Ask, the score count-up) with tiles drawn from code
-  (`src/ui/art/tiles.ts`, byte-identical to the reference generator). Rounds end at a stub
-  screen: M4 builds the run flow. Milestone status is in the draft "MVP" PR.
-- The art style trial (shadow theatre, porcelain or papercut) is with the user. Until it decides,
-  the colourway is a setting (`settings.colourway`).
+- **2026-10-02:** M1-M4 done on the `mvp` branch. Engine, content and `pnpm sim` reproduce the
+  Python results (`docs/balance/2026-10-02-ts-sim.md`). The UI plays a whole four-round run: host
+  choice, the round, the score count-up, payout, gift (with swap or decline), the teahouse
+  (curios, pages, fortunes, packs, reroll, burn a kind, sell), the player bar, the set picker and
+  fortune use, with save and resume after every action. Hosts' twists are not built yet (M5).
+  Tiles are drawn from code (`src/ui/art/tiles.ts`). `localStorage` key `bb.dev.v1` sets a fixed
+  seed or targets for the next run (used by e2e). Milestone status is in the draft "MVP" PR.
+- The planner has sent redesign notes (dragons as jokers, wind-tile hosts, a dragon guide,
+  colourway unlocks, a "playability" slice) that are on `main` and not yet merged here; they
+  change `docs/design.md` and need the user's go-ahead.

@@ -31,7 +31,23 @@ export const DEFAULT_SETTINGS: Settings = {
   hints: 'sets',
 };
 
-export const KEYS = { settings: 'bb.settings.v1', run: 'bb.run.v1' };
+export const KEYS = { settings: 'bb.settings.v1', run: 'bb.run.v1', dev: 'bb.dev.v1' };
+
+/** Options for the next new run, for tests and tuning: a fixed seed, targets, tile set, lantern. */
+export interface DevOverrides {
+  seed?: number;
+  targets?: number[];
+  tileSet?: string;
+  lantern?: number;
+}
+
+export function devOverrides(): DevOverrides {
+  try {
+    return JSON.parse(localStorage.getItem(KEYS.dev) ?? '{}') as DevOverrides;
+  } catch {
+    return {};
+  }
+}
 
 function load<T>(key: string, fallback: T): T {
   try {

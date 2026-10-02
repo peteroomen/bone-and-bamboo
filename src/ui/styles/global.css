@@ -109,6 +109,8 @@ button {
 }
 
 .viewport {
+  /* A touch target is 44px on screen: more in the stage's own pixels when the stage is scaled down. */
+  --touch: calc(44px / var(--k, 1));
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -124,7 +126,7 @@ button {
 }
 
 .btn {
-  min-height: 48px;
+  min-height: max(48px, var(--touch));
   min-width: 64px;
   padding: 0 18px;
   border: 2px solid var(--line);
