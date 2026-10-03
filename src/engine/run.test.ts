@@ -49,12 +49,12 @@ describe('a run', () => {
     expect(run.dragons).toEqual([]);
   });
 
-  it('has the targets 1,000 / 3,600 / 8,000 / 16,000 and the lantern and storm multipliers', () => {
-    expect([0, 1, 2, 3].map((r) => targetFor(1, r, false))).toEqual([1000, 3600, 8000, 16000]);
-    expect([0, 1, 2, 3].map((r) => targetFor(2, r, false))).toEqual([1250, 4500, 10000, 20000]);
+  it('has the targets 1,000 / 3,400 / 7,500 / 15,000 and the lantern and storm multipliers', () => {
+    expect([0, 1, 2, 3].map((r) => targetFor(1, r, false))).toEqual([1000, 3400, 7500, 15000]);
+    expect([0, 1, 2, 3].map((r) => targetFor(2, r, false))).toEqual([1250, 4250, 9400, 18750]);
     expect(targetFor(4, 0, false)).toBe(1500);
     expect(targetFor(1, 0, true)).toBe(1500);
-    expect(targetFor(1, 1, true)).toBe(5400);
+    expect(targetFor(1, 1, true)).toBe(5100);
   });
 
   it('works out the round rules from dragons, tile set and lantern', () => {

@@ -24,16 +24,8 @@ describe('set detection', () => {
     expect(kind('d1 d2 d3')).toBeNull();
     expect(kind('w1 w2 w3')).toBeNull();
     expect(kind('p1 p1 p1 p2')).toBeNull();
-    expect(kind('p1 p2 p3 p5')).toBeNull();
-    expect(kind('p1 p2 p3 p4 s5')).toBeNull();
-    expect(kind('p1 p2 p3 p4 p5 p6')).toBeNull();
-  });
-  it('knows runs of four and five', () => {
-    expect(kind('p4 p5 p6 p7')).toBe('run4');
-    expect(kind('s9 s5 s7 s6 s8')).toBe('run5');
-    expect(findSets(tiles('m1 m2 m3 m4 m5')).map((c) => c.kind)).toEqual(
-      expect.arrayContaining(['chow', 'run4', 'run5']),
-    );
+    expect(kind('p1 p2 p3 p4')).toBeNull();
+    expect(kind('p1 p2 p3 p4 p5')).toBeNull();
   });
   it('never puts honours in a run', () => {
     expect(kind('w1 w2 w3')).toBeNull();
@@ -77,7 +69,7 @@ describe('several sets in one play', () => {
         )
         .sort();
     expect(kinds(partitions(tiles('p5 p5 p5 s1 s2 s3')))).toEqual(['chow+pong']);
-    // 1-6 of one suit: two chows (a run of four would leave two loose tiles)
+    // 1-6 of one suit: two chows
     expect(kinds(partitions(tiles('m1 m2 m3 m4 m5 m6')))).toEqual(['chow+chow']);
     // a chow would leave a loose 2: no split
     expect(partitions(tiles('p2 p2 p3 p4'))).toEqual([]);

@@ -7,9 +7,7 @@ export interface Candidate {
   readonly tiles: Tile[];
 }
 
-const RUN_OF: Record<number, SetKind> = { 3: 'chow', 4: 'run4', 5: 'run5' };
-
-/** Three to five suited tiles of one suit in a row. */
+/** Three suited tiles of one suit in a row. */
 function isRun(kinds: readonly string[]): boolean {
   if (!kinds.every(isSuited)) return false;
   const suit = suitOf(kinds[0] as string);
@@ -33,17 +31,10 @@ export function classify(tiles: readonly Tile[]): SetKind | null {
     case 4:
       if (same) return 'kong';
       if (WINDS.every((w) => kinds.includes(w))) return 'winds';
-      return isRun(kinds) ? 'run4' : null;
-    case 5:
-      return isRun(kinds) ? 'run5' : null;
+      return null;
     default:
       return null;
   }
-}
-
-/** Runs are kept in rank order. */
-export function isRunKind(k: SetKind): boolean {
-  return k === 'chow' || k === 'run4' || k === 'run5';
 }
 
 /** A chow's tiles in rank order; other sets in kind order. */
@@ -73,14 +64,10 @@ export function findSets(hand: readonly Tile[]): Candidate[] {
     if (isSuited(kind)) {
       const s = suitOf(kind);
       const r = rankOf(kind);
-      const run: Tile[] = [list[0] as Tile];
-      for (let n = 1; n < 5 && r + n <= 9; n++) {
-        const next = by.get(`${s}${r + n}`);
-        if (!next) break;
-        run.push(next[0] as Tile);
-        const k = RUN_OF[run.length];
-        if (k) out.push({ kind: k, tiles: run.slice() });
-      }
+      const a = by.get(`${s}${r + 1}`);
+      const b = by.get(`${s}${r + 2}`);
+      if (r <= 7 && a && b)
+        out.push({ kind: 'chow', tiles: [list[0] as Tile, a[0] as Tile, b[0] as Tile] });
     }
   }
   if (WINDS.every((w) => by.has(w)))
@@ -96,7 +83,7 @@ const SORT_KEY = (t: Tile) => `${isSuited(t.kind) ? suitOf(t.kind) : 'z'}${rankO
 
 /**
  * Every way to split these tiles into sets (no singles), each set as a candidate. A play may hold
- * several sets at once. The first tile left (in suit and rank order) is the lowest of its run or
+ * several sets at once. The first tile left (in suit and rank order) is the lowest of its chow or
  * part of a group of its own kind, so the search only tries sets that start with it.
  */
 export function partitions(tiles: readonly Tile[], limit = 64): Candidate[][] {
@@ -128,18 +115,13 @@ export function partitions(tiles: readonly Tile[], limit = 64): Candidate[][] {
     if (same.length >= 1) take([t, same[0] as Tile], 'pair');
     if (same.length >= 2) take([t, ...same.slice(0, 2)], 'pong');
     if (same.length >= 3) take([t, ...same.slice(0, 3)], 'kong');
-    // runs starting at t
+    // a chow starting at t
     if (isSuited(t.kind)) {
       const s = suitOf(t.kind);
       const r = rankOf(t.kind);
-      const run: Tile[] = [t];
-      for (let n = 1; n < 5; n++) {
-        const next = others.find((x) => x.kind === `${s}${r + n}`);
-        if (!next) break;
-        run.push(next);
-        const k = RUN_OF[run.length];
-        if (k) take(run.slice(), k);
-      }
+      const a = others.find((x) => x.kind === `${s}${r + 1}`);
+      const b = others.find((x) => x.kind === `${s}${r + 2}`);
+      if (a && b) take([t, a, b], 'chow');
     }
     // four winds
     if (isWind(t.kind)) {

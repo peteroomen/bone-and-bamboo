@@ -65,7 +65,7 @@ const suitTile =
 const isBigKind = (k: SetKind) => k === 'pong' || k === 'kong';
 
 const SET_BONUS: Record<string, SetBonus> = {
-  abacus: (k) => (k === 'chow' || k === 'run4' || k === 'run5' ? 24 : 0),
+  abacus: (k) => (k === 'chow' ? 24 : 0),
   bambooGrove: suitBonus('s', 12),
   coinPurse: suitBonus('p', 12),
   scroll: suitBonus('m', 12),

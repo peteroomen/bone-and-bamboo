@@ -13,8 +13,6 @@ const EXAMPLES: Record<SetKind, string[]> = {
   single: ['p5'],
   pair: ['s7', 's7'],
   chow: ['m3', 'm4', 'm5'],
-  run4: ['p4', 'p5', 'p6', 'p7'],
-  run5: ['s1', 's2', 's3', 's4', 's5'],
   pong: ['p9', 'p9', 'p9'],
   kong: ['s2', 's2', 's2', 's2'],
   winds: ['w1', 'w2', 'w3', 'w4'],
@@ -109,11 +107,10 @@ export function HelpSheet({
             <h4>Sets</h4>
             <Example kinds={['s7', 's7', 'm3', 'm4', 'm5']} base={10} />
             <p>
-              Pick tiles that make a set and tap <b>Play</b>. A chow is three in a row of one suit,
-              and four or five in a row score more; a pair, pong or kong is two, three or four
-              alike. One play can hold <b>two sets</b>: pick the tiles of both. Nothing to play?{' '}
-              <b>Discard</b> up to 5 tiles to dig for better ones. <b>Sort</b> lays your hand out by
-              suit or by number.
+              Pick tiles that make a set and tap <b>Play</b>. A chow is three in a row of one suit;
+              a pair, pong or kong is two, three or four alike. One play can hold <b>two sets</b>:
+              pick the tiles of both. Nothing to play? <b>Discard</b> up to 5 tiles to dig for
+              better ones. <b>Sort</b> lays your hand out by suit or by number.
             </p>
           </section>
           <section>

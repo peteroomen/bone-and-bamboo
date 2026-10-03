@@ -67,7 +67,7 @@ export function afterDeal(t: TwistState, hand: readonly Tile[]): TwistState {
 export function discardProblem(s: RoundState, ids: readonly number[]): string | null {
   const t = s.twist;
   if (!t) return null;
-  if (t.twist.id === 'coil' && !t.uncoiled) return 'No discarding until you play a run.';
+  if (t.twist.id === 'coil' && !t.uncoiled) return 'No discarding until you play a chow.';
   if (t.armour && ids.some((id) => t.tops.includes(id)))
     return 'Armoured tiles stay in your hand until you play a set.';
   return null;
@@ -78,11 +78,10 @@ export function armouredIds(s: RoundState): readonly number[] {
   return s.twist?.armour ? s.twist.tops : [];
 }
 
-/** After a play (one or more sets) or an upgrade: a run uncoils, any set breaks the armour. */
+/** After a play (one or more sets) or an upgrade: a chow uncoils, any set breaks the armour. */
 export function afterSetPlayed(t: TwistState, kinds: readonly string[]): TwistState {
   let next: TwistState = { ...t, played: t.played + 1 };
-  const run = kinds.some((k) => k === 'chow' || k === 'run4' || k === 'run5');
-  if (t.twist.id === 'coil' && run) next = { ...next, uncoiled: true };
+  if (t.twist.id === 'coil' && kinds.includes('chow')) next = { ...next, uncoiled: true };
   if (t.twist.id === 'shell') next = { ...next, armour: false };
   return next;
 }
@@ -165,15 +164,13 @@ export function twistModifiers(s: RoundState): ScoreModifiers | undefined {
       return {
         setMult: {
           chow: w.mult,
-          run4: w.mult,
-          run5: w.mult,
           pong: w.mult,
           kong: w.mult,
           winds: w.mult,
         },
       };
     case 'coil':
-      return { chipsX: { chow: w.chowChipsX, run4: w.chowChipsX, run5: w.chowChipsX } };
+      return { chipsX: { chow: w.chowChipsX } };
     case 'claws':
       return { chipsX: { pong: w.bigChipsX, kong: w.bigChipsX } };
     case 'embers': {

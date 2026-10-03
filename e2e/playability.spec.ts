@@ -37,7 +37,7 @@ test('the introduction shows on the first round, can be replayed, and the set bo
 
   await page.getByTestId('btn-help').click();
   await page.getByTestId('help-tab-sets').click();
-  await expect(page.getByTestId('help-sets').locator('li')).toHaveCount(9);
+  await expect(page.getByTestId('help-sets').locator('li')).toHaveCount(7);
   await page.screenshot({ path: shot('help-sets', info.project.name) });
   await page.getByTestId('help-tab-dragons').click();
   await expect(page.getByTestId('help-dragons').locator('li')).toHaveCount(23);
@@ -144,7 +144,7 @@ test('dragon goals show progress, and a play that breaks a multiplier is warned 
   await page.screenshot({ path: shot('goals-warning', info.project.name) });
 });
 
-test('two sets in one play, a run of four, and sorting the hand', async ({ page }, info) => {
+test('two sets in one play, and sorting the hand', async ({ page }, info) => {
   await freshStart(page);
   const run = prepared(
     { hand: 'p5 p5 p5 s1 s2 s3 m4 m5 m6 m7 w1 w2', stacks: ['p2 s9 m3 p1 s1 m2 p9 s4 m8 p7'] },
@@ -169,11 +169,10 @@ test('two sets in one play, a run of four, and sorting the hand', async ({ page 
   const after = (await hook(page))?.run.round;
   expect(after?.table.map((s) => s.kind).sort()).toEqual(['chow', 'pong']);
   expect(after?.playsLeft).toBe(plays - 1);
-  // four in a row is a set of its own
+  // four in a row is not a set
   await tap('m4', 'm5', 'm6', 'm7');
-  await page.getByTestId('btn-play').click();
-  expect((await hook(page))?.run.round?.table.at(-1)?.kind).toBe('run4');
-  await expect(page.getByTestId('table')).toContainText('Four in a row');
+  await expect(page.getByTestId('btn-play')).toBeDisabled();
+  await page.getByTestId('btn-clear').click();
   // Sort regroups the hand by number, and back by suit
   const order = () =>
     page

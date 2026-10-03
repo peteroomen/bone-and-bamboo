@@ -25,8 +25,8 @@ Set in the browser console (`localStorage`), then reload:
    first guided run). _Pile_: your hand of 12 refills on its own. _Brick wall_: each wind is a
    side of a square wall stacked like bricks; tap a tile once both on top of it are gone. Which
    is clearer, and which is more fun? Both are tuned to the same win rates.
-2. **Sets (3 Oct).** Four and five in a row are sets now, and one play can hold two sets (pick
-   the tiles of both). There are 5 plays a round instead of 8. Sort lays the hand out by number
+2. **Sets (3 Oct).** One play can hold two sets (pick the tiles of both). There are 5 plays a
+   round instead of 8. Sort lays the hand out by number
    or by suit. Does two-at-once feel good, and is 5 plays enough?
 3. **The first run.** Do the tips come at the right moments, and does each wait until the table is
    still? Is "Ask" (the guide's advice) sensible?
