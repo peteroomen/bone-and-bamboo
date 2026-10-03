@@ -1,3 +1,4 @@
+import { FactoryView } from '@/ui/game/FactoryView';
 import { HandChaseView } from '@/ui/game/HandChaseView';
 import { useEffect } from 'react';
 import { GameScreen } from '@/ui/game/GameScreen';
@@ -51,7 +52,9 @@ export function App() {
     else setScene({ kind: 'round', wind });
   }, [screen, phase, wind]);
 
-  if (!new URLSearchParams(window.location.search).has('classic')) return <HandChaseView />;
+  const mode = new URLSearchParams(window.location.search);
+  if (mode.has('chase')) return <HandChaseView />;
+  if (!mode.has('classic')) return <FactoryView />;
 
   if (screen === 'game' && run)
     return <GameScreen onExit={() => setState({ screen: 'title', run: null })} />;

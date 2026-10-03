@@ -104,3 +104,8 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
   `?classic=1`. Engine/content/UI: `handChase.ts` and `HandChaseView.tsx`. Four numbered
   copies plus winds (124 tiles), rack 16, no dragons, named patterns and between-wind upgrades.
   Separate replay save; balance baseline in `docs/balance/2026-10-04-hand-chase.md`.
+
+- **4 Oct factory preview:** default preview is now the isolated toy factory (`factory.ts`,
+  `FactoryView.tsx`); complete-hand prototype moved to `?chase=1`. Friendly 68-tile starter
+  crate, three machines, three holding slots, one configurable automation gate, no loss state.
+  Replay save `bb.factory.v1`; scope and baseline in the 2026-10-04 tile-factory docs.

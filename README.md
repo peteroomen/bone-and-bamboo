@@ -25,10 +25,22 @@ hashed assets are cached for a year.
 
 ## Complete-hand playtest (preview branch)
 
-The default app is the new hand-chasing prototype. Keep tiles in a 16-tile rack, exchange from
+Open `?chase=1` for the previous hand-chasing prototype. Keep tiles in a 16-tile rack, exchange from
 a random pile, and submit complete hands for built-in pattern bonuses. Four copies of every
 numbered tile and wind; no dragons. Three plays, eight exchanges, four winds, and one pattern
 upgrade between winds. Progress saves automatically; replay the same deal to try a new plan.
 
 [Rules, simulation and playtest questions](docs/balance/2026-10-04-hand-chase.md).
 The previous game is still available at `?classic=1`, with its own save.
+
+## Toy factory playtest (preview branch)
+
+The default preview is now **The tile works**, a small wooden tabletop factory. Feed tiles into
+pair, triple and run machines; earn score and brass; buy one configurable sorting gate and try
+automation. No clock or losing. A friendly 68-tile starter crate uses bamboo and dots 1–6.
+Progress saves separately and automatically. This deliberately tests the toy before a full build.
+
+[Prototype rules and scope](docs/work/2026-10-04-tile-factory.md) ·
+[Baseline simulation and questions](docs/balance/2026-10-04-tile-factory.md).
+
+Run the model with `pnpm sim:factory`. The earlier games remain at `?chase=1` and `?classic=1`.

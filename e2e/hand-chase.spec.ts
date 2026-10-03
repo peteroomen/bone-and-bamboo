@@ -29,7 +29,7 @@ test('hand chase: exchange, complete hands, save, bank, upgrade and four winds',
       JSON.stringify({ sfx: 0, music: 0, ambience: 0, speed: 'instant' }),
     );
   }, seed);
-  await page.goto('/');
+  await page.goto('/?chase=1');
   await expect(page.getByRole('region', { name: 'Your rack' }).getByRole('button')).toHaveCount(16);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const sizes = await page.locator('.chase-rack button').evaluateAll((els) =>

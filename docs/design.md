@@ -1,6 +1,7 @@
 # Bone & Bamboo: game design (MVP)
 
-> **Preview branch, 4 Oct:** the default app is now a separate complete-hand playtest: 124 tiles,
+> **Preview branch, 4 Oct:** the default is now the [toy factory](work/2026-10-04-tile-factory.md).
+> The separate complete-hand playtest remains at `?chase=1`: 124 tiles,
 > rack 16, three scoring plays and eight exchanges; built-in patterns, no dragons. See
 > [the preview findings](balance/2026-10-04-hand-chase.md). The MVP rules below remain available
 > at `?classic=1` for comparison. Preview scoring/targets are isolated from these rules.
