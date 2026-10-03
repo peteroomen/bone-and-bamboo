@@ -99,3 +99,8 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 - The art style trial: three colourways exist; colourways become unlocks in M7.
 - **2 Oct (later):** M1-M8 done, plus the planner's twist tuning (Masked +1 per set, Claws without the chow half, the shell lifted by any set with target ×1.25; see `docs/balance/2026-10-02-hosts.md`), a centred hand layout and stacks drawn with depth. Merged to `main`; ready for Vercel import (README). M9 (art) is next, with the planner.
 - **2 Oct (playtest):** the wall is gone. A face-down pile refills the hand on its own after every play and discard: hand 12, 4 discards, targets 1,000 / 3,600 / 8,000 / 16,000, six twists and the Lantern reworked (`docs/work/2026-10-02-draw-pile.md`, `docs/balance/2026-10-02-draw-pile.md`). The engine keeps one stack (`stacks[0]` is the pile); there is no take action.
+
+- **4 Oct preview:** complete-hand playtest is the default on `preview`; original mode at
+  `?classic=1`. Engine/content/UI: `handChase.ts` and `HandChaseView.tsx`. Four numbered
+  copies plus winds (124 tiles), rack 16, no dragons, named patterns and between-wind upgrades.
+  Separate replay save; balance baseline in `docs/balance/2026-10-04-hand-chase.md`.

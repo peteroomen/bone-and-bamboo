@@ -30,7 +30,7 @@ export async function freshStart(
   page: Page,
   settings: Record<string, unknown> = {},
 ): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?classic=1');
   await page.evaluate(() => localStorage.clear());
   await setSettings(page, { speed: 'instant', introSeen: true, ...settings });
   // not a new profile: no guided first run unless a test asks for one

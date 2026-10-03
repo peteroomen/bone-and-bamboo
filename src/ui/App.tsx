@@ -1,3 +1,4 @@
+import { HandChaseView } from '@/ui/game/HandChaseView';
 import { useEffect } from 'react';
 import { GameScreen } from '@/ui/game/GameScreen';
 import { installAudioDebug, setScene, setVolumes, sfx, unlockAudio } from '@/ui/audio/audio';
@@ -49,6 +50,8 @@ export function App() {
     else if (phase === 'won') setScene({ kind: 'won' });
     else setScene({ kind: 'round', wind });
   }, [screen, phase, wind]);
+
+  if (!new URLSearchParams(window.location.search).has('classic')) return <HandChaseView />;
 
   if (screen === 'game' && run)
     return <GameScreen onExit={() => setState({ screen: 'title', run: null })} />;

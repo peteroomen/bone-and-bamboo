@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('the title shows at this size', async ({ page }, info) => {
-  await page.goto('/');
+  await page.goto('/?classic=1');
   const title = page.getByTestId('title');
   await expect(title).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Bone & Bamboo' })).toBeVisible();

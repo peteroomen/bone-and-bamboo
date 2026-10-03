@@ -1,0 +1,335 @@
+.chase {
+  min-height: 100dvh;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  background: var(--table);
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chase button {
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--fg-2) 45%, transparent);
+  border-radius: 7px;
+  background: var(--panel);
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.chase button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+.chase button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.chase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.chase-kicker {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+}
+.chase h1 {
+  font: 28px var(--font-display);
+  margin: 2px 0;
+}
+.chase h2 {
+  font: 26px var(--font-display);
+}
+.chase-header nav {
+  display: flex;
+  gap: 5px;
+}
+.chase-header nav button {
+  font-size: 12px;
+  padding: 7px;
+}
+.chase-intro {
+  max-width: 520px;
+  margin: auto;
+  text-align: center;
+  line-height: 1.6;
+  padding: 24px 4px;
+}
+.chase-demo {
+  display: flex;
+  justify-content: center;
+  --tw: 52px;
+  gap: 4px;
+}
+.chase-note {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.chase button.chase-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 750;
+  border-color: var(--accent);
+}
+.chase-hud {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) repeat(3, auto);
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--panel);
+  align-items: center;
+}
+.chase-hud strong {
+  display: block;
+  font-size: 25px;
+}
+.chase-hud strong span {
+  color: var(--fg-2);
+  font-size: 16px;
+}
+.chase-hud small {
+  display: block;
+  font-size: 10px;
+  color: var(--fg-2);
+}
+.chase-hud b {
+  font-size: 22px;
+}
+.chase progress {
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-top: 5px;
+  accent-color: var(--accent);
+}
+.chase-goal {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 3px;
+}
+.chase-goal > span {
+  color: var(--fg-2);
+  font-size: 12px;
+}
+.chase-goal > button {
+  align-self: flex-start;
+}
+.chase-ready {
+  color: #a3d696;
+}
+.chase-waits {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  min-height: 24px;
+  color: var(--fg-2);
+}
+.chase-waits > span {
+  display: inline-flex;
+  align-items: center;
+  --tw: 19px;
+  gap: 1px;
+}
+.chase-rack {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 9px 0;
+  padding: 8px 0 4px;
+}
+.chase-rack button {
+  padding: 1px;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  min-width: 44px;
+  min-height: 60px;
+  width: 100%;
+  transition: transform 0.12s;
+  --tw: 100%;
+}
+.chase-rack .tile {
+  width: 100%;
+  display: block;
+}
+.chase-rack .tile svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chase-rack button.is-picked {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  transform: translateY(-5px);
+}
+.chase-selection {
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  background: var(--panel);
+  border-radius: 7px;
+}
+.chase-selection strong {
+  font-size: 14px;
+}
+.chase-selection span {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.chase-actions {
+  display: grid;
+  grid-template-columns: 1.35fr 1.2fr 0.8fr 0.65fr;
+  gap: 5px;
+}
+.chase-actions button {
+  padding: 8px 4px;
+  font-size: 12px;
+}
+.chase-message {
+  font-size: 12px;
+  line-height: 1.35;
+  margin: 0;
+  min-height: 32px;
+  color: var(--fg-2);
+}
+.chase button.chase-bank {
+  background: var(--jade-2);
+  border-color: var(--jade);
+  color: white;
+}
+.chase footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  color: var(--fg-2);
+  font-size: 10px;
+}
+.chase footer button {
+  font-size: 12px;
+}
+.chase-history {
+  font-size: 12px;
+}
+.chase-history summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.chase-history p {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.chase-result {
+  padding: 10px 0;
+  line-height: 1.5;
+}
+.chase-result > button {
+  margin: 4px;
+}
+.chase-upgrades {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.chase-upgrades button {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.chase-upgrades span {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.chase-upgrades small {
+  color: var(--accent);
+}
+.chase-error {
+  color: var(--bad);
+}
+.chase-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000b;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chase-modal > div {
+  width: 100%;
+  max-width: 540px;
+  max-height: 90dvh;
+  overflow: auto;
+  border: 1px solid var(--accent);
+  background: var(--panel-solid);
+  padding: 20px;
+  border-radius: 12px;
+  line-height: 1.5;
+}
+.chase-modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+.chase-modal h2 {
+  margin: 0;
+}
+.chase-modal button {
+  margin-right: 5px;
+}
+@media (min-width: 650px) {
+  .chase {
+    padding: 20px 30px;
+    gap: 14px;
+  }
+  .chase-rack {
+    max-width: 600px;
+    width: 100%;
+    align-self: center;
+  }
+  .chase-hud {
+    padding: 14px;
+  }
+}
+@media (max-width: 380px) {
+  .chase {
+    padding-left: 4px;
+    padding-right: 4px;
+    gap: 6px;
+  }
+  .chase-header {
+    padding: 0 4px;
+  }
+  .chase h1 {
+    font-size: 24px;
+  }
+  .chase-kicker {
+    font-size: 9px;
+  }
+  .chase-hud {
+    gap: 9px;
+  }
+  .chase-hud strong {
+    font-size: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chase * {
+    transition: none !important;
+  }
+}
