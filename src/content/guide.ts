@@ -45,7 +45,7 @@ export const TIPS: readonly Tip[] = [
   {
     id: 'preview',
     mood: 'think',
-    text: 'The preview shows what this adds to your table. One play can hold two sets: pick both, then tap Play.',
+    text: 'The preview shows what this adds to your table. One play can hold as many sets as you like: pick them all, then tap Play.',
   },
   {
     id: 'discard',

@@ -41,8 +41,8 @@ the pile.
 |---|---|---|
 | Refills | on their own, from a face-down pile | a tap at a time, from this wind's side of the wall |
 | Hand / discards | 12 / 4 | 10 / 3 |
-| Targets (lantern 1) | 1,000 / 3,400 / 7,500 / 15,000 | 1,000 / 3,600 / 8,000 / 16,000 |
-| Sim: smart / casual win | 65% / 37% | 67% / 32% |
+| Targets (lantern 1) | 1,000 / 4,000 / 9,000 / 18,000 | 1,000 / 4,200 / 9,500 / 19,000 |
+| Sim: smart / casual win | 69% / 34% | 67% / 30% |
 
 ### The pile
 
@@ -72,13 +72,13 @@ the pile.
 
 ## A round
 
-- **Hand and discards by draw (above); 5 plays, each of up to 2 sets** (each discard up to 5
+- **Hand and discards by draw (above); 5 plays, each of any number of sets** (each discard up to 5
   tiles). Drawing blind loses the choice a wall gives, so the pile's hand is bigger. *Changed
   3 Oct after playtesting (was 8 plays of one set): `docs/work/2026-10-03-sets.md`.*
 - Start: your hand is dealt full.
 - Each turn, either:
-  - **Play** one or two sets from your hand onto your table (uses one play): pick the tiles of
-    both and the game splits them the way that scores most, or
+  - **Play** one or more sets from your hand onto your table (uses one play): pick the tiles of
+    them all (three pairs, say) and the game splits them the way that scores most, or
   - **Discard** 1-5 tiles from your hand (uses a discard). Discarded tiles leave the round.
 - Then your hand refills from the pile.
 - If no tile can be discarded (a twist forbids it) and you hold no set, you may play a single.

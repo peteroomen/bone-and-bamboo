@@ -35,14 +35,14 @@ describe('content matches docs/design.md', () => {
       stacks: 1,
       peek: 0,
       plays: 5,
-      setsPerPlay: 2,
+      setsPerPlay: 99,
       discards: 4,
       maxDiscard: 5,
     });
     expect(MONEY.start).toBe(4);
     expect(MONEY.rewards).toEqual([10, 12, 14]);
     expect([MONEY.interestPer, MONEY.interestCap, MONEY.perUnusedDiscard]).toEqual([5, 5, 1]);
-    expect(TARGETS).toEqual([1000, 3400, 7500, 15000]);
+    expect(TARGETS).toEqual([1000, 4000, 9000, 18000]);
     expect(STORM_TARGET_MULT).toBe(1.5);
     expect(GIFT).toEqual({ calmOffers: 2, stormOffers: 3, stormMoney: 5 });
   });

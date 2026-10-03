@@ -176,3 +176,30 @@ describe('a round', () => {
     void tiles;
   });
 });
+
+describe('several sets in one play', () => {
+  it('plays three pairs at once for one play', () => {
+    const s = roundWith({ hand: 'p1 p1 s5 s5 m9 m9 w1', rules: { handSize: 7 } });
+    const ids = s.hand.filter((t) => t.kind !== 'w1').map((t) => t.id);
+    const r = roundReduce(s, { type: 'play', ids });
+    expect(r.events.some((e) => e.type === 'illegal')).toBe(false);
+    expect(r.state.table.map((x) => x.kind)).toEqual(['pair', 'pair', 'pair']);
+    expect(r.state.playsLeft).toBe(s.playsLeft - 1);
+    expect(r.state.hand.map((t) => t.kind)).toEqual(['w1']);
+  });
+  it('splits a mixed selection the way that scores most', () => {
+    // p2 p2 p3 p3 p4 p4 is two chows or three pairs. Bare, three pairs score more:
+    // (9 + 11 + 13) x 3 = 99 against (19 + 19) x 2 = 76
+    const s = roundWith({ hand: 'p2 p2 p3 p3 p4 p4', rules: { handSize: 6 } });
+    const r = roundReduce(s, { type: 'play', ids: s.hand.map((t) => t.id) });
+    expect(r.state.table.map((x) => x.kind)).toEqual(['pair', 'pair', 'pair']);
+    // with Abacus (+2 mult per chow) the two chows score more
+    const ab = roundWith({
+      hand: 'p2 p2 p3 p3 p4 p4',
+      rules: { handSize: 6 },
+      dragons: ['abacus'],
+    });
+    const n = roundReduce(ab, { type: 'play', ids: ab.hand.map((t) => t.id) });
+    expect(n.state.table.map((x) => x.kind)).toEqual(['chow', 'chow']);
+  });
+});

@@ -58,8 +58,8 @@ describe('the hint bot', () => {
     expect(done.phase).toBe('done');
     expect(done.result?.score.total).toBeGreaterThan(300);
   });
-  // The draw pile, hand 12, 4 discards, 5 plays of up to two sets (docs/work/2026-10-03-sets.md).
-  it('plays the base round to a median of about 2,000 (within 10%)', () => {
+  // The draw pile, hand 12, 4 discards, 5 plays of any number of sets (docs/work/2026-10-03-sets.md).
+  it('plays the base round to a median of about 2,400 (within 10%)', () => {
     const scores: number[] = [];
     for (let seed = 0; seed < 600; seed++) {
       const s = startRound({
@@ -74,7 +74,7 @@ describe('the hint bot', () => {
     }
     scores.sort((a, b) => a - b);
     const median = scores[Math.floor(scores.length / 2)] as number;
-    expect(median).toBeGreaterThan(2000 * 0.9);
-    expect(median).toBeLessThan(2000 * 1.1);
+    expect(median).toBeGreaterThan(2400 * 0.9);
+    expect(median).toBeLessThan(2400 * 1.1);
   });
 });

@@ -25,7 +25,7 @@ export const DRAW: Readonly<Record<DrawMode, DrawRules>> = {
     text: 'Your hand refills on its own from a face-down pile.',
     hand: 12,
     discards: 4,
-    targets: [1000, 3400, 7500, 15000],
+    targets: [1000, 4000, 9000, 18000],
     wallRows: 0,
     wallWidth: 0,
   },
@@ -34,7 +34,7 @@ export const DRAW: Readonly<Record<DrawMode, DrawRules>> = {
     text: 'Each wind is a side of the wall. Take a tile once both on top of it are gone.',
     hand: 10,
     discards: 3,
-    targets: [1000, 3600, 8000, 16000],
+    targets: [1000, 4200, 9500, 19000],
     wallRows: 4,
     wallWidth: 8,
   },
@@ -49,8 +49,8 @@ export const ROUND = {
   plays: 5,
   discards: 4,
   maxDiscard: 5,
-  /** Sets one play may hold (pick tiles that split into up to this many sets). */
-  setsPerPlay: 2,
+  /** Sets one play may hold: any number (pick tiles that split into sets, three pairs say). */
+  setsPerPlay: 99,
 } as const;
 
 export const MONEY = {

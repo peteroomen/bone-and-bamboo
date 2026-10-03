@@ -108,9 +108,10 @@ export function HelpSheet({
             <Example kinds={['s7', 's7', 'm3', 'm4', 'm5']} base={10} />
             <p>
               Pick tiles that make a set and tap <b>Play</b>. A chow is three in a row of one suit;
-              a pair, pong or kong is two, three or four alike. One play can hold <b>two sets</b>:
-              pick the tiles of both. Nothing to play? <b>Discard</b> up to 5 tiles to dig for
-              better ones. <b>Sort</b> lays your hand out by suit or by number.
+              a pair, pong or kong is two, three or four alike. One play can hold{' '}
+              <b>as many sets as you like</b>, three pairs say: pick all their tiles. Nothing to
+              play? <b>Discard</b> up to 5 tiles to dig for better ones. <b>Sort</b> lays your hand
+              out by suit or by number.
             </p>
           </section>
           <section>
