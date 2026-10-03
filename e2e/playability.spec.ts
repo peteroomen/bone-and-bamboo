@@ -37,7 +37,7 @@ test('the introduction shows on the first round, can be replayed, and the set bo
 
   await page.getByTestId('btn-help').click();
   await page.getByTestId('help-tab-sets').click();
-  await expect(page.getByTestId('help-sets').locator('li')).toHaveCount(7);
+  await expect(page.getByTestId('help-sets').locator('li')).toHaveCount(9);
   await page.screenshot({ path: shot('help-sets', info.project.name) });
   await page.getByTestId('help-tab-dragons').click();
   await expect(page.getByTestId('help-dragons').locator('li')).toHaveCount(23);
@@ -142,4 +142,49 @@ test('dragon goals show progress, and a play that breaks a multiplier is warned 
   await expect(page.getByTestId('warn')).toContainText('Rice Bowl');
   await expect(page.getByTestId('score-add')).toContainText('→');
   await page.screenshot({ path: shot('goals-warning', info.project.name) });
+});
+
+test('two sets in one play, a run of four, and sorting the hand', async ({ page }, info) => {
+  await freshStart(page);
+  const run = prepared(
+    { hand: 'p5 p5 p5 s1 s2 s3 m4 m5 m6 m7 w1 w2', stacks: ['p2 s9 m3 p1 s1 m2 p9 s4 m8 p7'] },
+    100000,
+  );
+  await resumeFrom(page, run);
+  const hand = (await hook(page))?.run.round?.hand ?? [];
+  const tap = async (...kinds: string[]) => {
+    const used = new Set<number>();
+    for (const k of kinds) {
+      const t = hand.find((x) => x.kind === k && !used.has(x.id));
+      used.add(t?.id as number);
+      await page.getByTestId(`tile-${t?.id}`).click();
+    }
+  };
+  // a pong and a chow together: both go on the table for one play
+  const plays = (await hook(page))?.run.round?.playsLeft ?? 0;
+  await tap('p5', 'p5', 'p5', 's1', 's2', 's3');
+  await expect(page.getByTestId('score-add')).toContainText('→');
+  await page.screenshot({ path: shot('two-sets', info.project.name) });
+  await page.getByTestId('btn-play').click();
+  const after = (await hook(page))?.run.round;
+  expect(after?.table.map((s) => s.kind).sort()).toEqual(['chow', 'pong']);
+  expect(after?.playsLeft).toBe(plays - 1);
+  // four in a row is a set of its own
+  await tap('m4', 'm5', 'm6', 'm7');
+  await page.getByTestId('btn-play').click();
+  expect((await hook(page))?.run.round?.table.at(-1)?.kind).toBe('run4');
+  await expect(page.getByTestId('table')).toContainText('Four in a row');
+  // Sort regroups the hand by number, and back by suit
+  const order = () =>
+    page
+      .getByTestId('hand')
+      .locator('button')
+      .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+  const bySuit = await order();
+  await page.getByTestId('btn-sort').click();
+  const byRank = await order();
+  expect(byRank).not.toEqual(bySuit);
+  expect([...byRank].sort()).toEqual([...bySuit].sort());
+  await page.getByTestId('btn-sort').click();
+  expect(await order()).toEqual(bySuit);
 });

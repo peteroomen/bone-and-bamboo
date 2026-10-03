@@ -1,4 +1,7 @@
-export type SetKind = 'single' | 'pair' | 'chow' | 'pong' | 'kong' | 'winds';
+export type SetKind = 'single' | 'pair' | 'chow' | 'run4' | 'run5' | 'pong' | 'kong' | 'winds';
+
+/** Runs: three, four or five in a row of one suit. */
+export const RUN_KINDS: readonly SetKind[] = ['chow', 'run4', 'run5'];
 
 export interface SetType {
   readonly id: SetKind;
@@ -43,6 +46,26 @@ export const SET_TYPES: Record<SetKind, SetType> = {
     tiles: 3,
     blurb: 'Three in a row, one suit.',
   },
+  run4: {
+    id: 'run4',
+    name: 'Four in a row',
+    chips: 25,
+    mult: 2,
+    levelChips: 15,
+    levelMult: 1,
+    tiles: 4,
+    blurb: 'Four in a row, one suit.',
+  },
+  run5: {
+    id: 'run5',
+    name: 'Five in a row',
+    chips: 50,
+    mult: 3,
+    levelChips: 20,
+    levelMult: 2,
+    tiles: 5,
+    blurb: 'Five in a row, one suit.',
+  },
   pong: {
     id: 'pong',
     name: 'Pong',
@@ -75,7 +98,16 @@ export const SET_TYPES: Record<SetKind, SetType> = {
   },
 };
 
-export const SET_ORDER: readonly SetKind[] = ['kong', 'winds', 'pong', 'chow', 'pair', 'single'];
+export const SET_ORDER: readonly SetKind[] = [
+  'kong',
+  'winds',
+  'run5',
+  'pong',
+  'run4',
+  'chow',
+  'pair',
+  'single',
+];
 
 /** Sets an almanac page can level up. The simulator's pool: Four Winds has a level-up in the
  *  design but no page rolls it until the planner decides. */

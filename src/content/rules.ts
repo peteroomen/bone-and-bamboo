@@ -46,9 +46,11 @@ export const ROUND = {
   stacks: 1,
   /** Tiles of the pile shown face up (the Lantern). */
   peek: 0,
-  plays: 8,
+  plays: 5,
   discards: 4,
   maxDiscard: 5,
+  /** Sets one play may hold (pick tiles that split into up to this many sets). */
+  setsPerPlay: 2,
 } as const;
 
 export const MONEY = {

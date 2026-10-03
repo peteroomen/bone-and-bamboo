@@ -24,7 +24,7 @@ describe('a round', () => {
     expect(s.hand).toHaveLength(12);
     expect(s.stacks).toHaveLength(1);
     expect(s.stacks.flat()).toHaveLength(81 - 12);
-    expect(s.playsLeft).toBe(8);
+    expect(s.playsLeft).toBe(5);
     expect(s.discardsLeft).toBe(4);
     expect(events.filter((e) => e.type === 'draw')).toHaveLength(12);
   });
@@ -56,7 +56,7 @@ describe('a round', () => {
     const r = roundReduce(s, { type: 'play', ids: ids(s, 'p1', 'p2', 'p3') });
     expect(r.state.table).toHaveLength(1);
     expect(r.state.table[0]?.kind).toBe('chow');
-    expect(r.state.playsLeft).toBe(7);
+    expect(r.state.playsLeft).toBe(4);
     expect(r.state.hand.map((t) => t.kind)).toEqual(['s5', 'm1']);
     expect(r.events[0]).toMatchObject({ type: 'play', kind: 'chow' });
   });
@@ -118,7 +118,7 @@ describe('a round', () => {
     const r = roundReduce(s, { type: 'play', ids: ids(s, 'p1', 'p2', 'p3') });
     s = r.state;
     expect(s.phase).toBe('done');
-    expect(s.playsLeft).toBe(7);
+    expect(s.playsLeft).toBe(4);
   });
 
   it('refuses everything once the round is over', () => {

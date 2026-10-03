@@ -65,6 +65,14 @@ export function sortTiles(tiles: readonly Tile[]): Tile[] {
   return tiles.slice().sort((a, b) => compareKinds(a.kind, b.kind) || a.id - b.id);
 }
 
+/** The hand by number: 1s of every suit, then 2s, ..., winds last. */
+export function sortByRank(tiles: readonly Tile[]): Tile[] {
+  const key = (k: TileKind) => (isSuited(k) ? rankOf(k) : 10 + rankOf(k));
+  return tiles
+    .slice()
+    .sort((a, b) => key(a.kind) - key(b.kind) || compareKinds(a.kind, b.kind) || a.id - b.id);
+}
+
 /** The starting set of a tile set, with ids 1..n. */
 export function buildTiles(tileSetId: string): Tile[] {
   const def = tileSetDef(tileSetId);

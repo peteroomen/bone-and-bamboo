@@ -1,10 +1,21 @@
 import type { SetKind } from '@/content/sets';
 import { WINDS } from '@/content/tiles';
-import { type Tile, isSuited, rankOf, suitOf } from './tiles';
+import { type Tile, isSuited, isWind, rankOf, suitOf } from './tiles';
 
 export interface Candidate {
   readonly kind: SetKind;
   readonly tiles: Tile[];
+}
+
+const RUN_OF: Record<number, SetKind> = { 3: 'chow', 4: 'run4', 5: 'run5' };
+
+/** Three to five suited tiles of one suit in a row. */
+function isRun(kinds: readonly string[]): boolean {
+  if (!kinds.every(isSuited)) return false;
+  const suit = suitOf(kinds[0] as string);
+  if (!kinds.every((k) => suitOf(k) === suit)) return false;
+  const r = kinds.map(rankOf).sort((a, b) => a - b);
+  return r.every((x, i) => x === (r[0] as number) + i);
 }
 
 /** Which set these tiles make, or null. Honours are never in a run. */
@@ -16,28 +27,23 @@ export function classify(tiles: readonly Tile[]): SetKind | null {
       return 'single';
     case 2:
       return same ? 'pair' : null;
-    case 3: {
+    case 3:
       if (same) return 'pong';
-      if (kinds.every(isSuited)) {
-        const suit = suitOf(kinds[0] as string);
-        if (kinds.every((k) => suitOf(k) === suit)) {
-          const r = kinds.map(rankOf).sort((a, b) => a - b);
-          if (
-            (r[1] as number) === (r[0] as number) + 1 &&
-            (r[2] as number) === (r[0] as number) + 2
-          )
-            return 'chow';
-        }
-      }
-      return null;
-    }
+      return isRun(kinds) ? 'chow' : null;
     case 4:
       if (same) return 'kong';
       if (WINDS.every((w) => kinds.includes(w))) return 'winds';
-      return null;
+      return isRun(kinds) ? 'run4' : null;
+    case 5:
+      return isRun(kinds) ? 'run5' : null;
     default:
       return null;
   }
+}
+
+/** Runs are kept in rank order. */
+export function isRunKind(k: SetKind): boolean {
+  return k === 'chow' || k === 'run4' || k === 'run5';
 }
 
 /** A chow's tiles in rank order; other sets in kind order. */
@@ -67,10 +73,14 @@ export function findSets(hand: readonly Tile[]): Candidate[] {
     if (isSuited(kind)) {
       const s = suitOf(kind);
       const r = rankOf(kind);
-      const a = by.get(`${s}${r + 1}`);
-      const b = by.get(`${s}${r + 2}`);
-      if (r <= 7 && a && b)
-        out.push({ kind: 'chow', tiles: [list[0] as Tile, a[0] as Tile, b[0] as Tile] });
+      const run: Tile[] = [list[0] as Tile];
+      for (let n = 1; n < 5 && r + n <= 9; n++) {
+        const next = by.get(`${s}${r + n}`);
+        if (!next) break;
+        run.push(next[0] as Tile);
+        const k = RUN_OF[run.length];
+        if (k) out.push({ kind: k, tiles: run.slice() });
+      }
     }
   }
   if (WINDS.every((w) => by.has(w)))
@@ -82,11 +92,71 @@ export function hasSet(hand: readonly Tile[]): boolean {
   return findSets(hand).length > 0;
 }
 
+const SORT_KEY = (t: Tile) => `${isSuited(t.kind) ? suitOf(t.kind) : 'z'}${rankOf(t.kind)}`;
+
+/**
+ * Every way to split these tiles into sets (no singles), each set as a candidate. A play may hold
+ * several sets at once. The first tile left (in suit and rank order) is the lowest of its run or
+ * part of a group of its own kind, so the search only tries sets that start with it.
+ */
+export function partitions(tiles: readonly Tile[], limit = 64): Candidate[][] {
+  const sorted = tiles
+    .slice()
+    .sort((a, b) => SORT_KEY(a).localeCompare(SORT_KEY(b)) || preferred(a, b));
+  const out: Candidate[][] = [];
+  const go = (rest: Tile[], acc: Candidate[]) => {
+    if (out.length >= limit) return;
+    if (rest.length === 0) {
+      out.push(acc);
+      return;
+    }
+    const t = rest[0] as Tile;
+    const others = rest.slice(1);
+    const tried = new Set<string>();
+    const take = (set: Tile[], kind: SetKind) => {
+      const key = `${kind}:${set.map((x) => x.kind).join(',')}`;
+      if (tried.has(key)) return;
+      tried.add(key);
+      const used = new Set(set.map((x) => x.id));
+      go(
+        rest.filter((x) => !used.has(x.id)),
+        [...acc, { kind, tiles: orderSet(set) }],
+      );
+    };
+    // groups of t's own kind
+    const same = others.filter((x) => x.kind === t.kind);
+    if (same.length >= 1) take([t, same[0] as Tile], 'pair');
+    if (same.length >= 2) take([t, ...same.slice(0, 2)], 'pong');
+    if (same.length >= 3) take([t, ...same.slice(0, 3)], 'kong');
+    // runs starting at t
+    if (isSuited(t.kind)) {
+      const s = suitOf(t.kind);
+      const r = rankOf(t.kind);
+      const run: Tile[] = [t];
+      for (let n = 1; n < 5; n++) {
+        const next = others.find((x) => x.kind === `${s}${r + n}`);
+        if (!next) break;
+        run.push(next);
+        const k = RUN_OF[run.length];
+        if (k) take(run.slice(), k);
+      }
+    }
+    // four winds
+    if (isWind(t.kind)) {
+      const set = WINDS.map((w) => (w === t.kind ? t : others.find((x) => x.kind === w)));
+      if (set.every((x) => x)) take(set as Tile[], 'winds');
+    }
+  };
+  go(sorted, []);
+  return out;
+}
+
 /** Why a selection can't be played now, or null if it can. */
 export function playProblem(
   hand: readonly Tile[],
   ids: readonly number[],
   discardsLeft: number,
+  maxSets = 1,
 ): string | null {
   if (ids.length === 0) return 'Pick some tiles.';
   if (new Set(ids).size !== ids.length) return 'Pick each tile once.';
@@ -96,11 +166,14 @@ export function playProblem(
     if (!t) return 'Those tiles are not in your hand.';
     picked.push(t);
   }
-  const kind = classify(picked);
-  if (!kind) return 'That is not a set.';
-  if (kind === 'single') {
+  if (picked.length === 1) {
     if (hasSet(hand)) return 'You hold a set: play it.';
     if (discardsLeft > 0) return 'Discard first: a single is a last resort.';
+    return null;
   }
+  const splits = partitions(picked);
+  if (splits.length === 0) return 'Those tiles do not make sets.';
+  if (splits.every((p) => p.length > maxSets))
+    return maxSets === 1 ? 'One set at a time.' : `Up to ${maxSets} sets in one play.`;
   return null;
 }

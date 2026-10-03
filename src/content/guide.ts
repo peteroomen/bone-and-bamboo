@@ -35,7 +35,7 @@ export const TIPS: readonly Tip[] = [
   {
     id: 'run',
     mood: 'point',
-    text: 'Three in a row of one suit is a run, called a chow. Cheap, but you will make plenty.',
+    text: 'Three in a row of one suit is a run, called a chow. Four or five in a row score more.',
   },
   {
     id: 'pong',
@@ -45,7 +45,7 @@ export const TIPS: readonly Tip[] = [
   {
     id: 'preview',
     mood: 'think',
-    text: 'The preview shows what this set adds to your table. Tap Play when you like it.',
+    text: 'The preview shows what this adds to your table. One play can hold two sets: pick both, then tap Play.',
   },
   {
     id: 'discard',

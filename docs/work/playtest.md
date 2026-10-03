@@ -25,20 +25,23 @@ Set in the browser console (`localStorage`), then reload:
    first guided run). _Pile_: your hand of 12 refills on its own. _Brick wall_: each wind is a
    side of a square wall stacked like bricks; tap a tile once both on top of it are gone. Which
    is clearer, and which is more fun? Both are tuned to the same win rates.
-2. **The first run.** Do the tips come at the right moments, and does each wait until the table is
+2. **Sets (3 Oct).** Four and five in a row are sets now, and one play can hold two sets (pick
+   the tiles of both). There are 5 plays a round instead of 8. Sort lays the hand out by number
+   or by suit. Does two-at-once feel good, and is 5 plays enough?
+3. **The first run.** Do the tips come at the right moments, and does each wait until the table is
    still? Is "Ask" (the guide's advice) sensible?
-3. **A kong upgrade and banking.** Buy a Fourth copy pack or a Rubbing fortune, play a pong, then
+4. **A kong upgrade and banking.** Buy a Fourth copy pack or a Rubbing fortune, play a pong, then
    hold its fourth tile: the Kong button appears. Once the table beats the target a "bank" bar
    replaces the progress bar.
-4. **The eight twists.** Each wind offers Calm and Storm; the banner at the start says the rule.
+5. **The eight twists.** Each wind offers Calm and Storm; the banner at the start says the rule.
    Six were reworked for the pile (`docs/balance/2026-10-02-draw-pile.md`). Swaps has a "Swap it"
    button: pick one tile, then tap it. The shell is still the hardest wind (71% in the sim).
-5. **The teahouse.** Dragons, pages, fortunes (use one from the pocket), a pack, reroll, burn a kind,
+6. **The teahouse.** Dragons, pages, fortunes (use one from the pocket), a pack, reroll, burn a kind,
    sell. Does the money feel right?
-6. **Colourways** (with the unlock flag): tiles, table and accents should all change together.
-7. **Sound.** Untuned by ear: tell me what is too loud, too sharp or too busy. The first tap wakes
+7. **Colourways** (with the unlock flag): tiles, table and accents should all change together.
+8. **Sound.** Untuned by ear: tell me what is too loud, too sharp or too busy. The first tap wakes
    it (browser rule). Hide the tab and it should go silent.
-8. **Offline.** After one online load, switch the network off and reload.
+9. **Offline.** After one online load, switch the network off and reload.
 
 ## Playing it
 

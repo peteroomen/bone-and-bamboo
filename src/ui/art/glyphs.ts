@@ -22,6 +22,8 @@ export const SET_GLYPH: Record<SetKind, string> = {
   single: '單',
   pair: '對',
   chow: '順',
+  run4: '連',
+  run5: '長',
   pong: '碰',
   kong: '槓',
   winds: '風',

@@ -11,7 +11,7 @@ export type Twist =
       readonly mult: number;
     }
   | {
-      /** No discarding until a chow is played; chows score double chips. */
+      /** No discarding until a run is played; runs score double chips. */
       readonly id: 'coil';
       readonly chowChipsX: number;
     }
@@ -83,7 +83,7 @@ export const HOSTS: readonly Host[] = [
     storm: true,
     tile: 'w1',
     title: 'The coil',
-    twistText: 'No discarding until you play a chow. Chows score double chips.',
+    twistText: 'No discarding until you play a run. Runs score double chips.',
     twist: { id: 'coil', chowChipsX: 2 },
   },
   {

@@ -65,7 +65,7 @@ const suitTile =
 const isBigKind = (k: SetKind) => k === 'pong' || k === 'kong';
 
 const SET_BONUS: Record<string, SetBonus> = {
-  abacus: (k) => (k === 'chow' ? 24 : 0),
+  abacus: (k) => (k === 'chow' || k === 'run4' || k === 'run5' ? 24 : 0),
   bambooGrove: suitBonus('s', 12),
   coinPurse: suitBonus('p', 12),
   scroll: suitBonus('m', 12),
@@ -262,6 +262,30 @@ function discardMove(s: RoundState, policy: Policy, reason: string): Move {
  * single is only chosen when no set can be made and there are no discards.
  */
 export function chooseMove(s: RoundState, policy: Policy = 'greedy'): Move | null {
+  const m = chooseOne(s, policy);
+  return m && m.type === 'play' && m.kind !== 'single' ? withMoreSets(s, m, policy) : m;
+}
+
+/**
+ * A play may hold several sets: add the best other set the bot would play anyway, while the play
+ * has room. The table scores at the end, so tabling a set sooner costs nothing, except a pair the
+ * pongs policy is holding to grow.
+ */
+function withMoreSets(s: RoundState, m: Move & { type: 'play' }, policy: Policy): Move {
+  let ids = [...m.ids];
+  for (let n = 1; n < s.rules.maxSets; n++) {
+    const used = new Set(ids);
+    const rest = s.hand.filter((t) => !used.has(t.id));
+    const more = keptSets({ ...s, hand: rest }, findSets(rest)).filter(
+      (c) => !(policy === 'pongs' && c.kind === 'pair') && setValue(s, c.kind, c.tiles) > 0,
+    );
+    if (more.length === 0) break;
+    ids = [...ids, ...best(s, more).tiles.map((t) => t.id)];
+  }
+  return ids.length === m.ids.length ? m : { ...m, ids, reason: `${m.reason} With another set.` };
+}
+
+function chooseOne(s: RoundState, policy: Policy): Move | null {
   if (s.hand.length === 0) return null;
   const all = findSets(s.hand);
   const sets = keptSets(s, all);

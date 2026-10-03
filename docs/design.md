@@ -72,11 +72,13 @@ the pile.
 
 ## A round
 
-- **Hand and discards by draw (above); 8 plays** (each discard up to 5 tiles). Drawing blind loses
-  the choice a wall gives, so the pile's hand is bigger.
+- **Hand and discards by draw (above); 5 plays, each of up to 2 sets** (each discard up to 5
+  tiles). Drawing blind loses the choice a wall gives, so the pile's hand is bigger. *Changed
+  3 Oct after playtesting (was 8 plays of one set): `docs/work/2026-10-03-sets.md`.*
 - Start: your hand is dealt full.
 - Each turn, either:
-  - **Play** one set from your hand onto your table (uses a play), or
+  - **Play** one or two sets from your hand onto your table (uses one play): pick the tiles of
+    both and the game splits them the way that scores most, or
   - **Discard** 1-5 tiles from your hand (uses a discard). Discarded tiles leave the round.
 - Then your hand refills from the pile.
 - If no tile can be discarded (a twist forbids it) and you hold no set, you may play a single.
@@ -105,9 +107,14 @@ the pile.
 | Single | 1 | 5 | +0 | none |
 | Pair | 2 alike | 5 | +1 | +5 chips, +1 mult |
 | Chow | 3 in a row, one suit | 10 | +1 | +10, +1 |
+| Four in a row | 4 in a row, one suit | 25 | +2 | +15, +1 (no page yet) |
+| Five in a row | 5 in a row, one suit | 50 | +3 | +20, +2 (no page yet) |
 | Pong | 3 alike | 40 | +4 | +15, +2 |
 | Kong | 4 alike | 100 | +8 | +30, +3 |
 | Four Winds | one of each wind | 100 | +10 | +30, +3 |
+
+Runs of four and five (added 3 Oct) count as runs for Abacus and the coil, not for Pure
+Straight.
 
 Cheap chows and dear pongs are deliberate: chows come easily (about 6 of 8 plays for a bot),
 pongs need every copy of a tile, and at these prices chasing pongs scores about the same as
@@ -148,7 +155,7 @@ twist's name and rule.
 
 | Wind | Calm: twist | Storm: twist |
 |---|---|---|
-| East 東 | Masked (`fox`): hand size −1; each set of 3 or more tiles gives +1 mult | The coil (`azureDragon`): no discarding until you play a chow; chows score double chips |
+| East 東 | Masked (`fox`): hand size −1; each set of 3 or more tiles gives +1 mult | The coil (`azureDragon`): no discarding until you play a run; runs score double chips |
 | South 南 | Swaps (`monkey`): after every 2nd play a random tile in your hand goes back into the pile and you draw another; once a round you may swap a tile of your choice | Embers (`vermilionBird`): 4 tiles in your set are burning; play a set containing one for +4 mult, or it burns away after 2 turns in your hand |
 | West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles are shuffled back into the pile | Claws (`whiteTiger`): pongs and kongs score double chips |
 | North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): your first hand is armoured (no discarding it) until you play a set; kongs +4 mult; target ×1.25 rather than ×1.5 |
@@ -184,7 +191,7 @@ In code the type is `Dragon` (it was "curio" in the simulators); the ids stay.
 
 | Dragon | Rarity | Effect |
 |---|---|---|
-| `abacus` Abacus | common | +2 mult per chow |
+| `abacus` Abacus | common | +2 mult per run (three, four or five in a row) |
 | `redString` Red String | common | +6 mult |
 | `coinString` Coin String | common | +50 chips |
 | `bambooGrove` Bamboo Grove | common | +12 chips per Bamboo tile on the table |

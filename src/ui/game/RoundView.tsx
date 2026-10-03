@@ -15,7 +15,7 @@ import {
 } from '@/engine/round';
 import type { RunAction, RunEvent, RunState } from '@/engine/runTypes';
 import { findSets, playProblem } from '@/engine/sets';
-import { kindName, sortTiles } from '@/engine/tiles';
+import { kindName, sortByRank, sortTiles } from '@/engine/tiles';
 import { TileView } from '@/ui/art/Tile';
 import { PlayerBar } from './PlayerBar';
 import { useFlip } from './useFlip';
@@ -57,7 +57,11 @@ export function RoundView({
   const root = useRef<HTMLDivElement>(null);
   const stage = useStage();
   useFlip(root);
-  const hand = useMemo(() => (round ? sortTiles(round.hand) : []), [round]);
+  const handSort = useStore((s) => s.settings.handSort);
+  const hand = useMemo(
+    () => (round ? (handSort === 'rank' ? sortByRank(round.hand) : sortTiles(round.hand)) : []),
+    [round, handSort],
+  );
   const goals = useMemo(() => (round ? dragonGoals(round.table, round.dragons) : []), [round]);
   const handGlow = useMemo(() => {
     const glow = new Set<number>();
@@ -95,7 +99,7 @@ export function RoundView({
   const done = round.phase === 'done';
   const pv = preview(round, live);
   const problem = live.length
-    ? playProblem(round.hand, live, usableDiscards(round))
+    ? playProblem(round.hand, live, usableDiscards(round), round.rules.maxSets)
     : 'Pick tiles.';
   const refilling = needsRefill(round);
   const canPlay = !done && !refilling && problem === null;
@@ -420,25 +424,36 @@ export function RoundView({
             Kong {signed(upPreview.after.total - upPreview.now.total)}
             {upPreview.warnings.length ? ' ⚠' : ''}
           </button>
-        ) : wall ? (
+        ) : wall && refilling ? (
           <button
             type="button"
             className="btn"
             data-testid="btn-auto"
-            disabled={done || !refilling}
+            disabled={done}
             onClick={() => dispatch({ type: 'auto' })}
           >
             Auto
+          </button>
+        ) : live.length > 0 ? (
+          <button
+            type="button"
+            className="btn"
+            data-testid="btn-clear"
+            disabled={done}
+            onClick={() => setSelected([])}
+          >
+            Clear
           </button>
         ) : (
           <button
             type="button"
             className="btn"
-            data-testid="btn-clear"
-            disabled={done || live.length === 0}
-            onClick={() => setSelected([])}
+            data-testid="btn-sort"
+            aria-label={`Sort the hand by ${handSort === 'suit' ? 'number' : 'suit'}`}
+            disabled={done}
+            onClick={() => updateSettings({ handSort: handSort === 'suit' ? 'rank' : 'suit' })}
           >
-            Clear
+            {handSort === 'suit' ? 'By 1-9' : 'By suit'}
           </button>
         )}
         <button

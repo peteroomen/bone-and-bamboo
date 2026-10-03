@@ -37,6 +37,8 @@ export interface Settings {
   introSeen: boolean;
   /** How the hand refills in new runs: the pile or the brick wall (chosen on the setup screen). */
   draw: DrawMode;
+  /** How the hand is laid out: grouped by suit, or by number (the Sort button). */
+  handSort: 'suit' | 'rank';
 }
 
 export interface AppState {
@@ -56,6 +58,7 @@ export const DEFAULT_SETTINGS: Settings = {
   haptics: true,
   introSeen: false,
   draw: 'pile',
+  handSort: 'suit',
 };
 
 export const KEYS = {

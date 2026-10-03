@@ -62,8 +62,8 @@ const list: Dragon[] = [
     id: 'abacus',
     name: 'Abacus',
     rarity: 'common',
-    text: '+2 mult per chow',
-    effects: [{ type: 'perSet', sets: ['chow'], mult: 2 }],
+    text: '+2 mult per run (three, four or five in a row)',
+    effects: [{ type: 'perSet', sets: ['chow', 'run4', 'run5'], mult: 2 }],
   },
   {
     id: 'redString',

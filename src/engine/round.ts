@@ -11,7 +11,7 @@ import {
 } from './scoring';
 import type { Twist } from '@/content/hosts';
 import { brokenDragons } from './goals';
-import { classify, orderSet, playProblem } from './sets';
+import { orderSet, partitions, playProblem } from './sets';
 import { type Tile, countKinds } from './tiles';
 import {
   type TwistState,
@@ -37,6 +37,8 @@ export interface RoundRules {
   readonly peek: number;
   readonly stacks: number;
   readonly maxDiscard: number;
+  /** Sets one play may hold. */
+  readonly maxSets: number;
   /** Where refills come from: the pile on its own, or the wall a tap at a time. */
   readonly draw: DrawMode;
   /** wall: the side's rows and its bottom row's width. */
@@ -51,6 +53,7 @@ export const BASE_ROUND_RULES: RoundRules = {
   peek: ROUND.peek,
   stacks: ROUND.stacks,
   maxDiscard: ROUND.maxDiscard,
+  maxSets: ROUND.setsPerPlay,
   draw: 'pile',
   wallRows: 0,
   wallWidth: 0,
@@ -222,6 +225,24 @@ export function scoreContext(s: RoundState): ScoreContext {
   return { dragons: s.dragons, levels: s.levels, ...(modifiers ? { modifiers } : {}) };
 }
 
+/**
+ * The sets these hand tiles make as one play, split the way that scores the table highest, or
+ * null if they make no allowed play. One tile is a single (playProblem says when that is allowed).
+ */
+export function bestSplit(s: RoundState, picked: readonly Tile[]): PlayedSet[] | null {
+  if (picked.length === 0) return null;
+  if (picked.length === 1) return [{ kind: 'single', tiles: [picked[0] as Tile] }];
+  const ctx = scoreContext(s);
+  let best: { sets: PlayedSet[]; total: number } | null = null;
+  for (const split of partitions(picked)) {
+    if (split.length > s.rules.maxSets) continue;
+    const sets = split.map((c) => ({ kind: c.kind, tiles: c.tiles }));
+    const total = scoreTable([...s.table, ...sets], ctx).total;
+    if (!best || total > best.total) best = { sets, total };
+  }
+  return best?.sets ?? null;
+}
+
 /** What the table scores now, and with the selected tiles played as one more set. */
 export function preview(
   s: RoundState,
@@ -232,9 +253,9 @@ export function preview(
   const picked = selectedIds
     .map((id) => s.hand.find((t) => t.id === id))
     .filter((t): t is Tile => t !== undefined);
-  const kind = picked.length === selectedIds.length && picked.length > 0 ? classify(picked) : null;
-  if (!kind) return { now, withSelected: null, warnings: [] };
-  const table = [...s.table, { kind, tiles: orderSet(picked) }];
+  const sets = picked.length === selectedIds.length ? bestSplit(s, picked) : null;
+  if (!sets) return { now, withSelected: null, warnings: [] };
+  const table = [...s.table, ...sets];
   return {
     now,
     withSelected: scoreTable(table, ctx),
@@ -255,11 +276,15 @@ function finishIfOver(s: RoundState, events: RoundEvent[]): RoundState {
 }
 
 /** A turn has ended: the twist's own moves (chows uncoil, embers burn, swaps fall due), then the refill. */
-function withTurnEnd(s: RoundState, events: RoundEvent[], kind: string | null): RoundState {
+function withTurnEnd(
+  s: RoundState,
+  events: RoundEvent[],
+  kinds: readonly string[] | null,
+): RoundState {
   if (!s.twist) return refill(s, events);
   const rng = new Rng(s.rng);
-  const twist = kind ? afterSetPlayed(s.twist, kind) : s.twist;
-  const r = endTurn(twist, s.hand, s.stacks, rng, events, kind !== null);
+  const twist = kinds ? afterSetPlayed(s.twist, kinds) : s.twist;
+  const r = endTurn(twist, s.hand, s.stacks, rng, events, kinds !== null);
   return refill({ ...s, twist: r.twist, hand: r.hand, stacks: r.stacks, rng: rng.state }, events);
 }
 
@@ -357,25 +382,24 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
     }
     case 'play': {
       if (needsRefill(s)) return illegal(s, 'Fill your hand from the wall first.');
-      const problem = playProblem(s.hand, a.ids, usableDiscards(s));
+      const problem = playProblem(s.hand, a.ids, usableDiscards(s), s.rules.maxSets);
       if (problem) return illegal(s, problem);
       const ids = new Set(a.ids);
       const picked = s.hand.filter((t) => ids.has(t.id));
-      const kind = classify(picked);
-      if (!kind) return illegal(s, 'That is not a set.');
-      const tiles = orderSet(picked);
-      events.push({ type: 'play', kind, tiles });
+      const sets = bestSplit(s, picked);
+      if (!sets) return illegal(s, 'Those tiles do not make sets.');
+      for (const set of sets) events.push({ type: 'play', kind: set.kind, tiles: set.tiles });
       const next = finishIfOver(
         withTurnEnd(
           {
             ...s,
             hand: s.hand.filter((t) => !ids.has(t.id)),
-            table: [...s.table, { kind, tiles }],
+            table: [...s.table, ...sets],
             playsLeft: s.playsLeft - 1,
             turns: s.turns + 1,
           },
           events,
-          kind,
+          sets.map((x) => x.kind),
         ),
         events,
       );
@@ -399,7 +423,7 @@ export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, 
             turns: s.turns + 1,
           },
           events,
-          'kong',
+          ['kong'],
         ),
         events,
       );

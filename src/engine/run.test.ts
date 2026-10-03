@@ -60,7 +60,7 @@ describe('a run', () => {
   it('works out the round rules from dragons, tile set and lantern', () => {
     expect(roundRulesFor(free())).toMatchObject({
       handSize: 12,
-      plays: 8,
+      plays: 5,
       discards: 4,
       peek: 0,
       stacks: 1,
@@ -70,7 +70,7 @@ describe('a run', () => {
       tileSet: 'boneBamboo',
       lantern: 1,
     });
-    expect(rules).toMatchObject({ handSize: 13, plays: 9, discards: 6, peek: 3 });
+    expect(rules).toMatchObject({ handSize: 13, plays: 6, discards: 6, peek: 3 });
     expect(roundRulesFor({ dragons: [], tileSet: 'jadeCourt', lantern: 1 })).toMatchObject({
       handSize: 13,
       discards: 3,

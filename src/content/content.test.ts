@@ -34,7 +34,8 @@ describe('content matches docs/design.md', () => {
       hand: 12,
       stacks: 1,
       peek: 0,
-      plays: 8,
+      plays: 5,
+      setsPerPlay: 2,
       discards: 4,
       maxDiscard: 5,
     });
