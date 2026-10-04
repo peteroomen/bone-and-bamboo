@@ -109,3 +109,8 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
   `FactoryView.tsx`); complete-hand prototype moved to `?chase=1`. Friendly 68-tile starter
   crate, three machines, three holding slots, one configurable automation gate, no loss state.
   Replay save `bb.factory.v1`; scope and baseline in the 2026-10-04 tile-factory docs.
+
+- **4 Oct physical conveyors:** default preview is now `ConveyorView.tsx` / `conveyor.ts`.
+  Editable 7×6 board, simultaneous tile movement, one splitter, two collection bays, 40-tile
+  friendly supply. The previous sorting interface is at `?factory=1`. Save: `bb.conveyor.v1`.
+  Play/pause, single-step, rewind with layout preservation, clear/starter layouts. Preview only.

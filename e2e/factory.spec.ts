@@ -18,7 +18,7 @@ test('factory: build sets, hold and recover, automate safely, reload and finish 
       JSON.stringify({ sfx: 0, music: 0, ambience: 0, speed: 'normal' }),
     ),
   );
-  await page.goto('/');
+  await page.goto('/?factory=1');
   await expect(page.getByRole('heading', { name: 'The tile works' })).toBeVisible();
   await page.getByRole('button', { name: 'How to play' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();

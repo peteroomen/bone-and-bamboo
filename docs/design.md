@@ -1,6 +1,7 @@
 # Bone & Bamboo: game design (MVP)
 
-> **Preview branch, 4 Oct:** the default is now the [toy factory](work/2026-10-04-tile-factory.md).
+> **Preview branch, 4 Oct:** the default is now the [physical conveyor board](work/2026-10-04-conveyor-board.md).
+> The earlier sorting-station toy remains at `?factory=1`.
 > The separate complete-hand playtest remains at `?chase=1`: 124 tiles,
 > rack 16, three scoring plays and eight exchanges; built-in patterns, no dragons. See
 > [the preview findings](balance/2026-10-04-hand-chase.md). The MVP rules below remain available

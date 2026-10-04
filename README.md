@@ -35,7 +35,7 @@ The previous game is still available at `?classic=1`, with its own save.
 
 ## Toy factory playtest (preview branch)
 
-The default preview is now **The tile works**, a small wooden tabletop factory. Feed tiles into
+Open `?factory=1` for **The tile works**, the earlier sorting-station experiment. Feed tiles into
 pair, triple and run machines; earn score and brass; buy one configurable sorting gate and try
 automation. No clock or losing. A friendly 68-tile starter crate uses bamboo and dots 1–6.
 Progress saves separately and automatically. This deliberately tests the toy before a full build.
@@ -44,3 +44,16 @@ Progress saves separately and automatically. This deliberately tests the toy bef
 [Baseline simulation and questions](docs/balance/2026-10-04-tile-factory.md).
 
 Run the model with `pnpm sim:factory`. The earlier games remain at `?chase=1` and `?classic=1`.
+
+## Physical conveyor playtest (preview branch)
+
+The default preview now has a **buildable 7×6 conveyor board**. Press Play and watch tiles move
+through real belt pieces, split by suit/number, queue behind blockages, and collect into sets at
+one of two bays. Pause to build with straight belts, left/right bends and one movable splitter.
+Step tests one beat. Rewind clears tiles/score but keeps the route; Clear belts starts a blank board.
+The starter supply contains 40 friendly tiles: bamboo pairs and dots runs. Progress/layout save
+separately, and reloading always pauses. Older experiments keep their own saves.
+
+[Scope and playtest](docs/work/2026-10-04-conveyor-board.md) ·
+[Model and limitations](docs/balance/2026-10-04-conveyor-board.md).
+`pnpm sim:conveyor` runs the starter-layout check across 200 seeds.

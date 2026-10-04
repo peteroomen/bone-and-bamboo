@@ -1,3 +1,4 @@
+import { ConveyorView } from '@/ui/game/ConveyorView';
 import { FactoryView } from '@/ui/game/FactoryView';
 import { HandChaseView } from '@/ui/game/HandChaseView';
 import { useEffect } from 'react';
@@ -54,7 +55,8 @@ export function App() {
 
   const mode = new URLSearchParams(window.location.search);
   if (mode.has('chase')) return <HandChaseView />;
-  if (!mode.has('classic')) return <FactoryView />;
+  if (mode.has('factory')) return <FactoryView />;
+  if (!mode.has('classic')) return <ConveyorView />;
 
   if (screen === 'game' && run)
     return <GameScreen onExit={() => setState({ screen: 'title', run: null })} />;

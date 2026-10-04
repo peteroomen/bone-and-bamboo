@@ -22,7 +22,8 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "sim:chase": "TSX_TSCONFIG_PATH=tsconfig.sim.json node --import tsx src/sim/handChase.ts",
-    "sim:factory": "TSX_TSCONFIG_PATH=tsconfig.sim.json node --import tsx src/sim/factory.ts"
+    "sim:factory": "TSX_TSCONFIG_PATH=tsconfig.sim.json node --import tsx src/sim/factory.ts",
+    "sim:conveyor": "TSX_TSCONFIG_PATH=tsconfig.sim.json node --import tsx src/sim/conveyor.ts"
   },
   "dependencies": {
     "react": "^19.3.0",
