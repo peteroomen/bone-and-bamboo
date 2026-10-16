@@ -13,7 +13,7 @@ export const RULES = {
   /** Fewest dice you may keep when selling. */
   minDice: 3,
   /** Rounds: each wind plays a plain round, then its host's round. */
-  targets: [800, 1300, 2200, 3600, 6000, 10000, 16000, 26000],
+  targets: [1000, 2000, 3000, 4500, 7000, 11000, 17000, 26000],
   money: {
     start: 4,
     /** Base pay for a plain round and a host round. */

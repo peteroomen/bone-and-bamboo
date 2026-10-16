@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { advise, bestPlan, takeFits, takeOptions } from '@/engine/advice';
 import type { RoundState } from '@/engine/round';
 import { playEvents, setScene } from '@/ui/audio/audio';
-import { dispatch, getState, onEvents, setState, useStore } from '@/ui/state/store';
+import { dispatch, getState, onEvents, setState, updateSettings, useStore } from '@/ui/state/store';
 import { DiceLayer } from '@/ui/three/DiceLayer';
 import { RackLayer } from '@/ui/three/RackLayer';
 import { Table } from '@/ui/three/Table';
@@ -68,6 +68,13 @@ export function GameScreen() {
   const [toast, showToast] = useToast();
 
   useEffect(() => onEvents((events) => playEvents(events)), []);
+  // the first time, open how to play
+  useEffect(() => {
+    if (!getState().settings.introSeen) {
+      updateSettings({ introSeen: true });
+      setState({ sheet: { kind: 'help' } });
+    }
+  }, []);
   const phase = run?.phase;
   const wind = run?.current?.wind ?? 1;
   useEffect(() => {

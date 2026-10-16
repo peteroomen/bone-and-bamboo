@@ -137,7 +137,7 @@ export function Table({
   return (
     <Canvas
       className="table-canvas"
-      shadows
+      shadows="percentage"
       dpr={[1, 2]}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
       camera={{ fov: 30, position: [0, 14, 8] }}

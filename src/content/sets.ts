@@ -12,13 +12,13 @@ export interface SetDef {
 export const SETS: Record<SetKind, SetDef> = {
   pair: { id: 'pair', name: 'Pair', text: 'Two alike.', chips: 5, mult: 1 },
   chow: { id: 'chow', name: 'Chow', text: 'Three in a row, one suit.', chips: 10, mult: 1 },
-  pong: { id: 'pong', name: 'Pong', text: 'Three alike.', chips: 30, mult: 3 },
+  pong: { id: 'pong', name: 'Pong', text: 'Three alike.', chips: 25, mult: 2 },
   kong: {
     id: 'kong',
     name: 'Kong',
     text: 'Four alike. Gives a free roll.',
-    chips: 60,
-    mult: 6,
+    chips: 50,
+    mult: 4,
   },
 };
 

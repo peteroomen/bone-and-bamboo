@@ -112,7 +112,53 @@ export interface Candidate {
   readonly tiles: readonly TileKind[];
   /** Chance a full roll of the cup shows it. */
   readonly p: number;
+  /** Rolls it takes on average when you hold the dice that fit, and roll the rest. */
+  readonly rolls: number;
 }
+
+/**
+ * The average number of rolls to make a set if you hold each die once it shows its tile: the
+ * best die for each tile (no die used twice) must each come up, so it is the mean of the largest
+ * of a few waiting times, worked out by inclusion and exclusion.
+ */
+export function rollsToMake(dists: readonly Dist[], tiles: readonly TileKind[]): number {
+  const used = new Set<number>();
+  const q: number[] = [];
+  for (const t of tiles) {
+    let best = -1;
+    let bestQ = 0;
+    dists.forEach((d, i) => {
+      const x = d.get(t) ?? 0;
+      if (!used.has(i) && x > bestQ) {
+        bestQ = x;
+        best = i;
+      }
+    });
+    if (best < 0) return Infinity;
+    used.add(best);
+    q.push(bestQ);
+  }
+  let e = 0;
+  const n = q.length;
+  for (let mask = 1; mask < 1 << n; mask++) {
+    let miss = 1;
+    let bits = 0;
+    for (let i = 0; i < n; i++)
+      if (mask & (1 << i)) {
+        miss *= 1 - (q[i] as number);
+        bits++;
+      }
+    e += (bits % 2 === 1 ? 1 : -1) / (1 - miss);
+  }
+  return e;
+}
+
+/**
+ * Rolls to finish a hand: each open slot is filled by whichever fitting set comes first, so its
+ * wait is about 1 / (the sum of the fitting sets' rates); the scale and start were fitted to the
+ * simulator's hands with the starting dice (docs/balance/).
+ */
+const EST = { scale: 2.4, start: 2 } as const;
 
 /** Every set the cup can make at all, with its chance on a full roll. */
 export function candidates(s: RoundState): Candidate[] {
@@ -123,7 +169,7 @@ export function candidates(s: RoundState): Candidate[] {
   const push = (kind: SetKind, base: TileKind) => {
     const tiles = slotTiles(kind, base);
     const p = chanceOf(dists, tiles);
-    if (p > 0) out.push({ kind, base, tiles, p });
+    if (p > 0) out.push({ kind, base, tiles, p, rolls: rollsToMake(dists, tiles) });
   };
   const kinds = [...holders.keys()].sort(compareKinds);
   for (const k of kinds) {
@@ -145,7 +191,7 @@ export interface Plan {
   readonly variant: Variant;
   /** The sets still to take, best first. */
   readonly missing: readonly Candidate[];
-  /** A rough count of rolls to finish: the sum of 1/p over the missing sets. */
+  /** A rough count of rolls to finish, holding as you go. */
   readonly estRolls: number;
   /** What the finished hand would score, with every pattern it fits. */
   readonly score: number;
@@ -180,15 +226,27 @@ function planVariant(
   const open: Slot[] = v.slots.filter((_, j) => !taken.has(j));
   const usedPairs = new Set(rackSets.filter((r) => r.kind === 'pair').map((r) => r.tiles[0]));
   const missing: Candidate[] = [];
+  const picked = new Set<Candidate>();
+  let wait = 0;
   for (const slot of open) {
+    let rate = 0;
+    // the quickest set for the slot; a different one if nearly as quick (the ghosts read better)
     let best: Candidate | null = null;
+    let bestCost = Infinity;
     for (const c of cands) {
       if (c.kind === 'kong') continue;
       if (v.distinctPairs && usedPairs.has(c.base)) continue;
       if (!slotFits(slot, { kind: c.kind, tiles: c.tiles })) continue;
-      if (!best || c.p > best.p) best = c;
+      rate += 1 / c.rolls;
+      const cost = c.rolls * (picked.has(c) ? 1.25 : 1);
+      if (cost < bestCost) {
+        bestCost = cost;
+        best = c;
+      }
     }
     if (!best) return null;
+    wait += 1 / rate;
+    picked.add(best);
     if (v.distinctPairs) usedPairs.add(best.base);
     missing.push(best);
   }
@@ -196,11 +254,11 @@ function planVariant(
   if (v.whole && !v.whole(full)) return null;
   const rack = [...s.rack, ...ghostRack(missing)];
   const sc = scoreHand(rack, s.shelf, scoreCtx(s));
-  const estRolls = missing.reduce((a, m) => a + 1 / Math.max(m.p, 1e-3), 0);
+  const estRolls = missing.length === 0 ? 0 : EST.start + EST.scale * wait;
   return {
     pattern: v.pattern,
     variant: v,
-    missing: missing.slice().sort((a, b) => b.p - a.p),
+    missing: missing.slice().sort((a, b) => a.rolls - b.rolls),
     estRolls,
     score: sc.total,
     patterns: sc.patterns,
@@ -224,7 +282,8 @@ export function plansFor(s: RoundState, cands = candidates(s)): Map<PatternId, P
 
 /** How good a plan is for the rest of this round: points per roll, discounted if it may not finish. */
 export function planValue(plan: Plan, rollsLeft: number): number {
-  const fin = Math.min(1, rollsLeft / Math.max(plan.estRolls, 0.5));
+  // the estimate is an average: keep a quarter of the rolls in hand for bad luck
+  const fin = Math.min(1, (rollsLeft * 0.75) / Math.max(plan.estRolls, 0.5));
   return (plan.score * fin * fin) / Math.max(plan.estRolls, 0.5);
 }
 

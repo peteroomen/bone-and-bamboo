@@ -101,8 +101,8 @@ export const PATTERNS: readonly PatternDef[] = [
     id: 'allPongs',
     name: 'All Pongs',
     text: 'Four pongs or kongs and a pair.',
-    xmult: 3,
-    step: 1,
+    xmult: 2.5,
+    step: 0.5,
     example: ex('s2,s2,s2 p5,p5,p5 m8,m8,m8 w1,w1,w1 s9,s9'),
   },
   {

@@ -13,7 +13,11 @@ export default defineConfig({
   outputDir: 'test-results/e2e',
   use: {
     baseURL: process.env.PW_BASE_URL ?? 'http://localhost:5199',
-    launchOptions: { executablePath },
+    // WebGL in headless Chromium runs on SwiftShader
+    launchOptions: {
+      executablePath,
+      args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+    },
     trace: 'off',
     screenshot: 'only-on-failure',
   },
