@@ -49,7 +49,6 @@ Out of scope: the rejected wall dragon, over-target cash rewards, target/price n
 host twists, fully scripted M6 guide, M7 collections, audio and production deployment. The host
 screen explicitly distinguishes current target/reward selection from future twist rules.
 
-
 ## Checks the builder should prioritise
 
 - Upgrade preserves unique tile IDs/enhancements, consumes one proposed play, replaces (never

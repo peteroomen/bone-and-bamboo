@@ -1,22 +1,21 @@
 # Bone & Bamboo: Claude Code Instructions
 
-A mobile-first, Balatro-style roguelike with mahjong tiles. You play sets from a hand of tiles,
-refill from a face-down pile, and beat four friendly hosts' scores, one per wind. Sibling
-of Twelve Petals (`peteroomen/hanafuda-roguelike`), which uses the same stack and conventions.
+A mobile-first roguelike: mahjong with dice. Every die face is a tile; roll, hold, take sets onto
+your rack, finish hands (four sets and a pair) and beat the four winds' targets. A 3D table (three.js
+via React Three Fiber). Sibling of Twelve Petals (`peteroomen/hanafuda-roguelike`).
 
 ## Read first
 
 - `docs/design.md`: the rules and every number. Don't change it without a simulator result.
-- `docs/work/2026-10-02-mvp-plan.md`: the milestones, their acceptance checks and how the builder
-  and planner work together.
-- `docs/balance/`: simulator results.
+- `docs/work/2026-10-16-bone-dice.md`: the dice rebuild: what is built, how to test it, what's next.
+- `docs/balance/2026-10-16-dice.md`: simulator results for the dice game. Older files in
+  `docs/balance/` and `docs/work/` are the card-style design (history).
 
 ## How to work here
 
 1. **Plan before code.** Larger pieces of work get a plan in `docs/work/YYYY-MM-DD-{slug}.md`
    (goal, approach, steps, manual test steps, out of scope).
-2. **One focused change at a time.** During the MVP build, milestone by milestone on the `mvp`
-   branch, as the plan describes.
+2. **One focused change at a time.**
 3. **Finish every change with** `pnpm lint`, `pnpm typecheck` and `pnpm test`. If you changed
    balance data, rerun `pnpm sim` and update `docs/balance/`. If you touched the UI, run
    `pnpm e2e` and look at the screenshots it writes to `test-results/`.
@@ -29,13 +28,13 @@ of Twelve Petals (`peteroomen/hanafuda-roguelike`), which uses the same stack an
 ```
 src/
   engine/   Pure TypeScript rules engine. No DOM, no React, no Date, no Math.random.
-            tiles · wall · sets (detection) · scoring · round (reducer) · run (reducer)
-            shop · ai (hint bot, sim shoppers) · rng (seeded, serialisable)
-  content/  Data only: tiles, sets, curios, fortunes, enhancements, packs, hosts, targets,
-            lanterns, tile sets. Every balance number lives here.
-  sim/      Headless simulator (pnpm sim).
-  ui/       React rendering and input only. Reads engine state, dispatches engine actions.
-tools/sim-py/  The Python prototypes the TypeScript simulator must reproduce.
+            tiles · dice (shapes, rolling) · sets (rack) · patterns · scoring · round (reducer)
+            tools · run (reducer, teahouse) · advice (exact odds, plans, the guide) · rng
+  content/  Data only: tiles, shapes, dice, sets, patterns, charms, tools, enhancements, hosts,
+            rules and targets. Every balance number lives here.
+  sim/      Headless simulator (pnpm sim): the guide plays rounds, shoppers shop.
+  ui/       three/ (the 3D table: dice, physics throws, rack) · game/ (the HUD and screens)
+            art/ (tile generator) · audio/ · state/ (store, test hooks)
 art-source/    Tile generator (reference), image prompts, generated originals.
 ```
 
@@ -45,20 +44,21 @@ art-source/    Tile generator (reference), image prompts, generated originals.
 - All game state is plain JSON (including the RNG state), so saves, replays and sims are exact.
 - Reducers never mutate their input; they return `{ state, events }`. The UI animates the events,
   then shows the new state.
+- The engine decides every roll. The 3D throw is physics for looks only: the mesh is turned by a
+  symmetry of the solid so it lands on the engine's face (`src/ui/three/geometry.ts`).
 
 ## Conventions
 
 - TypeScript strict, `noUncheckedIndexedAccess`. No `any`.
-- Content is data: curios, fortunes, hosts and twists go in `src/content/*` with their numbers,
-  never hard-coded in engine logic.
+- Content is data: dice, charms, tools, patterns, hosts and twists go in `src/content/*` with their
+  numbers, never hard-coded in engine logic.
 - Mobile first: portrait, one thumb, 44px minimum touch targets, everything important visible at
   360×640 without scrolling. Check 390×844, 360×640 and desktop 1366×768.
 - Font sizes use the type scale (`--fs-*`). Tile labels scale with the tile.
 - Player-facing text: plain, short, British spelling as in Twelve Petals ("colour").
 - Tiles are drawn from code (`src/ui/art/tiles.ts`); generated art comes in through
   `art-source/` (see its README). Don't copy any printed mahjong set's art.
-- Cultural care: the hosts include living folk and religious figures (the Kitchen God). They are
-  friendly rivals, treated with respect. Nothing mocking.
+- Cultural care: the hosts are the four winds, friendly rivals, treated with respect.
 - No `console.log` in committed code (the simulator CLI may print).
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`).
 
@@ -79,23 +79,12 @@ Node 22. In the Claude Code remote container Chromium is pre-installed at `/opt/
 
 ## Current state
 
-- **2026-10-02:** M1-M4 and the "complete run and teaching slice" are done on the `mvp` branch,
-  rebuilt around the new design (`docs/design.md`): the jokers are **dragons** (23, drawn as tiles
-  with a rarity frame; `src/content/dragons.ts`), winds are the only honours, each round is hosted
-  by its wind tile (Calm or Storm), the eight twists run as data (`src/engine/twists.ts`, M5; per-wind results in `docs/balance/2026-10-02-hosts.md`), traced tile faces and
-  dragon icons come from `art-source/icons/icons.json` split by `scripts/build-icons.ts`, and the
-  tile generator port includes the guide and dragon tiles (byte-identical, tested). Engine: tabled
-  pong to kong upgrade (one play), optional early finish once the target is beaten, live dragon
-  goals with multiplier-loss warnings, signed previews, Ask the dragon (`src/engine/advice.ts`,
-  visible tiles only), hint levels, an introduction sheet and an illustrated set book. Sim results:
-  `docs/balance/2026-10-02-dragons-and-policies.md`. Bamboo Hook is rejected.
-- `localStorage` key `bb.dev.v1` sets a fixed seed or targets for the next run (used by e2e).
-- M6 done: the guided first run (`bb.profile.v1` `guidedDone`; seed 11, a plain East round, the
-  guide's tip queue in `src/content/guide.ts` and `src/ui/game/tips.ts`). - M7 done: title, setup (tile set and lantern), collection, settings, the profile and unlocks
-  (`src/engine/profile.ts`), offline install and save transfer (`BB1.` codes). - M8 done: synthesised sound (`src/ui/audio`: bone clacks, the ban, gong and cymbal, a guzheng
-  and dizi score per wind and a calm teahouse, a wind bed), haptics, volume settings, and instant
-  speed that switches every animation off. The MVP milestones M1-M8 are built; M9 (art) is with
-  the planner. Milestone status is in the PR.
-- The art style trial: three colourways exist; colourways become unlocks in M7.
-- **2 Oct (later):** M1-M8 done, plus the planner's twist tuning (Masked +1 per set, Claws without the chow half, the shell lifted by any set with target ×1.25; see `docs/balance/2026-10-02-hosts.md`), a centred hand layout and stacks drawn with depth. Merged to `main`; ready for Vercel import (README). M9 (art) is next, with the planner.
-- **2 Oct (playtest):** the wall is gone. A face-down pile refills the hand on its own after every play and discard: hand 12, 4 discards, targets 1,000 / 3,600 / 8,000 / 16,000, six twists and the Lantern reworked (`docs/work/2026-10-02-draw-pile.md`, `docs/balance/2026-10-02-draw-pile.md`). The engine keeps one stack (`stacks[0]` is the pile); there is no take action.
+- **16 Oct 2026, branch `ccr-d58fd125-s3h046`:** the game is rebuilt as dice (the card-style game
+  is on `main`). Engine, content, simulator, the 3D table and the whole run (rounds, cash-out,
+  gifts, teahouse with dice editing, end) are playable. Smart bot wins 77%, casual 18%. Plan, test
+  steps and next steps: `docs/work/2026-10-16-bone-dice.md`.
+- `localStorage` key `bb.dev.v1` sets a fixed seed or targets for the next run (used by e2e);
+  `window.__bb` is the e2e hook (`src/ui/state/testHooks.ts`). Headless Chromium needs SwiftShader
+  for WebGL (set in `playwright.config.ts`).
+- Removed with the old UI, to bring back: the scripted first run, collection, profile and unlocks,
+  save transfer and the offline settings panel (the PWA itself still works).

@@ -1,12 +1,11 @@
 # Bone & Bamboo
 
-A mahjong-tile roguelike for phones: play sets from a hand that refills from a face-down pile,
-and beat four friendly hosts' scores, one per wind.
+Mahjong with dice, for phones: every face is a tile. Roll, hold, take your sets onto the rack,
+finish hands and beat the four winds.
 
 - Rules and numbers: [`docs/design.md`](docs/design.md)
-- The MVP plan: [`docs/work/2026-10-02-mvp-plan.md`](docs/work/2026-10-02-mvp-plan.md)
-- Accepted gameplay changes and builder handoff: [`docs/work/2026-10-02-playability.md`](docs/work/2026-10-02-playability.md)
-- Gameplay audit and modelling: [`docs/balance/2026-10-02-gameplay-audit.md`](docs/balance/2026-10-02-gameplay-audit.md)
+- The dice rebuild: [`docs/work/2026-10-16-bone-dice.md`](docs/work/2026-10-16-bone-dice.md)
+- Simulator results: [`docs/balance/2026-10-16-dice.md`](docs/balance/2026-10-16-dice.md)
 - Working in this repo: [`CLAUDE.md`](CLAUDE.md)
 
 Sibling of Twelve Petals, a koi-koi roguelike.

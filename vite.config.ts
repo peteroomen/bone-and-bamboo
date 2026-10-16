@@ -17,7 +17,7 @@ export default defineConfig({
         id: '/',
         name: 'Bone & Bamboo',
         short_name: 'Bone & Bamboo',
-        description: 'A mahjong-tile roguelike. Four winds, four hosts, one wall.',
+        description: 'Mahjong with dice. Roll, hold, take your sets and beat the four winds.',
         theme_color: '#1f1a14',
         background_color: '#1f1a14',
         display: 'standalone',

@@ -1,319 +1,212 @@
-# Bone & Bamboo: game design (MVP)
+# Bone & Bamboo: game design (dice)
 
-The rules and every number for the MVP. The planner owns this file; change a rule or a number
-here only with a simulator result to back it (`docs/balance/`). Numbers marked *tune* are
-first guesses the simulator should check.
+The rules and every number. Change a rule or a number here only with a simulator result to back
+it (`docs/balance/`). Numbers marked *tune* are first guesses. The card-style design this replaced
+is on `main` (and in git history); the plan for this rebuild is
+`docs/work/2026-10-16-bone-dice.md`.
 
 ## The game in one paragraph
 
-A Balatro-style roguelike with mahjong tiles, for phones. You hold a hand of tiles and play sets
-(pairs, runs, pongs, kongs) onto your table. When your plays run out, the whole table scores at
-once: chips × mult. Your tiles are shuffled into a face-down **pile**, and your hand refills from
-it on its own after every play and discard, as in Balatro: a round is just *plays* and *discards*. A run is four rounds, one per wind, each hosted by a friendly spirit who sets the
-score to beat and changes one rule. Between rounds the spirit leaves a gift and the teahouse sells
-**dragons** (the jokers: dragon tiles with a passive power each), fortunes (single use, they change
-your tiles), almanac pages (level up a set type) and tiles. The guide is the Red Dragon tile
-itself, come to life, the way Balatro's Jimbo is a Joker card.
+Mahjong with dice, for phones. Every face of every die is a mahjong tile. You roll your cup of
+dice, hold the ones you like and roll the rest; whenever the faces showing make a set (a pair, a
+chow, a pong, a kong) you take it onto your rack. Four sets and a pair is a hand: Mahjong! It
+scores chips × mult, and every pattern it fits (All Pongs, Full Flush, Pure Straight, the Dragons)
+multiplies the mult. Each round gives you a fixed number of rolls, shared by every hand you play
+in it, so you choose: a few quick hands, or one big one. A run is eight rounds, two per wind.
+Between rounds the teahouse sells charms (the jokers), new dice, tools that edit your dice, and
+hand pages.
 
-## Tiles
+## Tiles and dice
 
-| Kind | Tiles | Copies in a full set | Notes |
-|---|---|---|---|
-| Dots (筒) | 1-9 | 4 | suit `p` |
-| Bamboo (條) | 1-9 | 4 | suit `s`; the 1 is the sparrow |
-| Characters (萬) | 1-9 | 4 | suit `m` |
-| Winds | East, South, West, North | 4 | honours: no rank, never in a run |
-| Dragons | Red, Green, White | none | not in play: the dragon tiles are the jokers (see Dragons) and the guide |
-| Flowers, seasons | 4 + 4 | 1 | bonus tiles; not in the MVP's rules, art exists |
+| Kind | Tiles | Notes |
+|---|---|---|
+| Dots, Bamboo, Characters | 1-9 | suited: chows, pongs, kongs, pairs |
+| Winds | East, South, West, North | honours: pongs, kongs, pairs; never a chow |
+| Dragons | Red, Green, White | honours |
+| Flowers | Plum, Orchid, Chrysanthemum, Bamboo | bonus faces (below) |
+| Seasons | Spring, Summer, Autumn, Winter | bonus faces |
 
-**Starting set: 3 suits, 1-9, 3 copies each = 81 tiles.** With 3 copies a pong needs every copy
-of a tile and a kong is impossible, so 4th copies and winds are things you buy into your
-set. Every physical tile has a unique id and may carry an enhancement.
+A tile is worth its rank in chips (an honour 10).
 
-Tile chips: a suited tile is worth its rank; a wind is worth 10.
+A die has a **shape** and a list of **faces** (`src/content/shapes.ts`, `src/content/dice.ts`).
+Each face is a tile kind, or blank, and may carry an enhancement and lead.
 
-## The pile
+| Shape | Faces | Character |
+|---|---|---|
+| Long die (a bar that rolls on its sides) | 4 | steady, few surprises |
+| Cube | 6 | the standard |
+| Eight-sided | 8 | wider |
+| Twelve-sided | 12 | room for everything, sure of nothing |
 
-*Changed 2 Oct after playtesting: the wall of stacks was confusing. Plan and sim results:
-`docs/work/2026-10-02-draw-pile.md`.*
+Every face has a normal in the shape's own frame. The engine works out which faces are
+neighbours (for the Thumb) and which is opposite (for the Oracle Shell) from those normals, and the
+3D view builds its meshes from the same list, so face *i* is the same face everywhere.
 
-- At the start of each round your whole set is shuffled (seeded) into one face-down pile, and
-  your hand is dealt from its top.
-- After every play, upgrade and discard, the hand refills from the top of the pile on its own.
-- You cannot see into the pile (the Lantern dragon shows its next 3 tiles). The pile shows how
-  many tiles it holds.
+**Starting cup: six bone cubes, each half Bamboo and half Dots, staggered so every run from 1 to 8
+is there** (`STARTING_KITS.bone`). Chosen in the simulator: one-suit cups finish hands in ~7
+rolls but make every hand a Full Flush; this cup takes ~9 rolls for a Chicken hand and leaves the
+big hands to be built (`docs/balance/2026-10-16-dice.md`).
 
 ## A round
 
-- **Hand 12 tiles. 8 plays. 4 discards** (each discard up to 5 tiles). Drawing blind loses the
-  choice the wall gave, so the hand is bigger: at 12 and 4 the sim matches the wall's win rates.
-- Start: your hand is dealt full.
-- Each turn, either:
-  - **Play** one set from your hand onto your table (uses a play), or
-  - **Discard** 1-5 tiles from your hand (uses a discard). Discarded tiles leave the round.
-- Then your hand refills from the pile.
-- If no tile can be discarded (a twist forbids it) and you hold no set, you may play a single.
-- If you hold no set and have no discards, you may play a single tile.
-- **Upgrade a tabled pong:** select its fourth matching tile in your hand, then upgrade that
-  tabled pong to a kong. **Proposed first implementation (validate in the sim):** one play,
-  then refill normally. Replace the original set and score the four physical tiles once using
-  the kong's level and bonuses. No fifth-tile upgrade.
-- **Finish round:** once the current table beats the target, optionally bank it immediately,
-  including before refilling. The proposed initial version uses the normal score count and
-  payout, including unused discards; unused plays have no cash value. Continuing is optional. A capped over-target
-  cash reward is approved for exploration but deferred until separately modelled.
-- Otherwise the round ends after the last play (or when hand and pile are both empty). Then the
-  table scores. Beat the target to win the round.
-- A live preview always shows what the table would score now, and what the selected set or
-  pong upgrade would add, with a proper signed delta. Warn explicitly when it breaks a dragon
-  multiplier. A preview is never a promise that the next play cannot reduce the score.
-- Conditional dragons show live progress: Bell Hall's pongs/kongs, Mahjong!'s four melds and
-  pair, Nine Rings' three runs in a suit, Rice Bowl active/broken, Two Fish's suits, and the
-  repeat counts for Twin Cranes and Great Bell. Empty tables show “not yet”, not success.
+- **Cup 6 dice** (the Second Cup charm adds a seventh). **24 rolls** for the round, **2 returns**.
+- **Roll:** every die not held is thrown (the first roll throws them all). Costs one roll.
+- **Hold:** tap a die showing a face to keep it out of the next roll. Free.
+- **Take:** when dice showing faces make a set, take it: their faces become tiles on your rack
+  and those dice roll again next time. Free. One die showing the tile of a pong on your rack makes
+  it a kong. A kong (taken or made) gives **1 free roll**.
+- **The rack** holds four sets and one pair; or, once you take a second pair with no sets, up to
+  seven different pairs (Seven Pairs).
+- **Mahjong:** the moment the rack is complete the hand scores, the rack clears, and the next hand
+  starts with whatever the dice show.
+- **Return:** send a set from the rack back, to change plans. Each unused return pays $1.
+- **Flowers and seasons:** when a die lands on one it goes to your shelf and the die rolls again
+  (at most 3 times a roll). They count for the hand being built.
+- **Bank:** once the round's score beats the target you may end the round. Each roll left pays
+  $1 (up to $5). A hand left unfinished when the round ends scores nothing.
+- Lose: the rolls run out (and you end the round) below the target. The run ends.
 
-### Sets
+### Scoring a hand
 
-| Set | Tiles | Chips | Mult | Level up (almanac page) |
-|---|---|---|---|---|
-| Single | 1 | 5 | +0 | none |
-| Pair | 2 alike | 5 | +1 | +5 chips, +1 mult |
-| Chow | 3 in a row, one suit | 10 | +1 | +10, +1 |
-| Pong | 3 alike | 40 | +4 | +15, +2 |
-| Kong | 4 alike | 100 | +8 | +30, +3 |
-| Four Winds | one of each wind | 100 | +10 | +30, +3 |
+1. Each set: its chips and mult, plus its tiles' chips.
 
-Cheap chows and dear pongs are deliberate: chows come easily (about 6 of 8 plays for a bot),
-pongs need every copy of a tile, and at these prices chasing pongs scores about the same as
-playing chows, so both are real strategies (`docs/balance/2026-10-02-round.md`).
+   | Set | Chips | Mult |
+   |---|---|---|
+   | Pair | 5 | +1 |
+   | Chow | 10 | +1 |
+   | Pong | 25 | +2 |
+   | Kong | 50 | +4 |
 
-### Scoring
+2. The hand (the Chicken hand): +20 chips, +2 mult; each Chicken page +15 chips, +1 mult.
+3. Enhanced faces in the hand.
+4. Flowers +25 chips, seasons +3 mult; the round's own flower or season counts double; all four
+   flowers (or seasons) in one hand ×2.
+5. Patterns: each one the hand fits multiplies (below).
+6. Value sets: a pong or kong of the round's wind ×2, of a dragon ×1.5 (not with the dragon
+   patterns).
+7. Charms, left to right.
 
-When the round ends:
+Score = chips × mult × every ×mult.
 
-1. chips = for each set: set chips + level chips + tile chips + enhancement chips
-2. mult = for each set: set mult + level mult + enhancement mult
-3. Dragons apply left to right in your dragon row: each may add chips, add mult or multiply mult.
-4. Score = floor(chips × mult × product of the ×mult effects).
+### Patterns (`src/content/patterns.ts`)
 
-Every step is an engine event, so the UI can count it up the way Balatro does.
+| Pattern | Rule | ×mult (+ per page) |
+|---|---|---|
+| Chicken hand | any four sets and a pair | (adds chips and mult) |
+| All Chows | four chows and a pair | ×1.25 (+0.25) |
+| All Simples | no 1s, 9s or honours | ×1.25 (+0.25) |
+| Half Flush | one suit plus honours | ×1.5 (+0.5) |
+| Seven Pairs | seven different pairs | ×1.5 (+0.5) |
+| Outside Hand | every set and the pair hold a 1, 9 or honour | ×2 (+0.5) |
+| Full Flush | one suit only | ×2 (+0.5) |
+| Mixed Triple Chow | the same chow in three suits | ×2.5 (+0.5) |
+| All Pongs | four pongs or kongs and a pair | ×2.5 (+0.5) |
+| Pure Straight | 1-2-3, 4-5-6, 7-8-9 of one suit | ×3 (+1) |
+| Triple Pong | the same number as a pong in three suits | ×4 (+1) |
+| Little Three Dragons | two dragon pongs, the third as the pair | ×4 (+1) |
+| Little Four Winds | three wind pongs, the fourth as the pair | ×6 (+2) |
+| Big Three Dragons | a pong of each dragon | ×8 (+2) |
+| All Honours | only winds and dragons | ×8 (+2) |
+| All Terminals | only 1s and 9s | ×8 (+2) |
+| Big Four Winds | a pong of each wind | ×12 (+3) |
+| Nine Gates | 1112345678999 + one more, one suit | ×20 (+5) |
+
+With dice, a flush is cheap (every die can hold its suit), so Full Flush is worth less than in the
+table game; honour hands are dear (three dice must share each dragon). Values come from how many
+rolls each pattern takes in the simulator.
+
+### Guidance
+
+- **The hand book** lists every pattern, sorted by how close your dice are to it: sets to go, a
+  roll estimate and what it would score. Pick one to aim for; the rack shows its missing sets as
+  ghost tiles and the guide plays towards it.
+- **The guide's line** (hints on) says what it would do and why, with the exact chance for the next
+  roll ("Hold what fits and roll: 29% to make a set you need, most likely s4 s5 s6"). Dice it would
+  hold glow. Everything it uses is on the table: dice faces are public.
+- Hold a die down to see all its faces and their chances.
+
+## Charms (the jokers, `src/content/charms.ts`)
+
+Five slots. Common $4, uncommon $6, rare $8; weights 6 / 3 / 1.
+
+| Charm | Rarity | Effect |
+|---|---|---|
+| Thumb | uncommon | once per roll, tip a die onto a neighbouring face |
+| Mirror | rare | once per hand, a die copies the face another die shows |
+| Red String | uncommon | the two leftmost dice are tied: the second lands on the first's suit if it can |
+| Counting Bead | common | the leftmost die steps to its next face instead of rolling |
+| Paper Fan | common | once per hand, reroll one die for free |
+| Oracle Shell | uncommon | once per hand, turn a die over to its opposite face |
+| Second Cup | rare | a seventh die |
+| Hourglass | common | +3 rolls a round |
+| Ink Stone | common | +2 returns a round |
+| Magpie | uncommon | +1 roll when a flower or season lands |
+| Almanac | uncommon | flowers and seasons count double |
+| Gold Toad | common | +$3 after each round |
+| Lucky Knot | common | +5 mult |
+| Coin String | common | +50 chips |
+| Abacus | common | +2 mult per chow |
+| Sparrow Nest | common | +5 mult per pair |
+| Bamboo Grove / Coin Purse / Scroll | common | +8 chips per Bamboo / Dots / Characters tile |
+| Moon Gate | uncommon | +4 mult per set with a 1, 9 or honour |
+| Wind Chime | uncommon | +10 mult per wind pong or kong |
+| Bell Hall | uncommon | ×2 with two or more pongs or kongs |
+| Rice Bowl | uncommon | ×2 if no 1s, 9s or honours |
+| Stone Lion | rare | +2 mult per tile in pongs and kongs |
+| Great Bell | rare | ×2 per kong |
+| Twin Cranes | rare | ×1.5 per pair of identical sets |
+
+The cup's order matters for the Red String and the Counting Bead: arrange it in the teahouse.
+
+## Tools (dice editing, `src/content/tools.ts`)
+
+Used between rounds; the pocket holds two.
+
+| Tool | Price | Effect |
+|---|---|---|
+| Chisel | $4 | carve a face into any tile you choose |
+| Brush | $3 | change a face's suit |
+| Nudge | $3 | move a face's number up or down one |
+| Rubbing | $3 | copy one face onto another, on any die |
+| Lead Weight | $4 | a face lands twice as often (up to three times) |
+| Jade Leaf / Bone Inlay / Gold Leaf | $3 | +4 mult / +30 chips / +$1 when the face's tile scores |
+| Glaze | $4 | porcelain: ×1.5 mult, 1 in 4 cracks (goes blank) after scoring |
+| Blossom | $3 | a face becomes a random flower or season |
+
+## Dice offers
+
+Templates in `src/content/dice.ts`: run sticks, twin and triple cubes, two-suit cubes, wind and
+dragon dice, terminal cubes, an eight-sided long run, garden and honour dice, the twelve-sided
+whole suit and court die. Prices $4-7. The teahouse offers two; each host's gift is a choice of
+three. With a full cup, a new die replaces one you choose.
 
 ## A run
 
-Four rounds: **East (spring), South (summer), West (autumn), North (winter).**
+Eight rounds, two per wind: a plain round, then the **host's round** with a twist and a gift.
 
-- **Targets (lantern 1): 1,000 / 3,600 / 8,000 / 16,000** (lowered with the pile). Simulated: the
-  smart bot wins 68%, the casual bot 35% (`docs/balance/2026-10-02-draw-pile.md`). Miss a target
-  and the run ends.
-- **Money:** start with $4. After rounds 1-3 you are paid $10 / $12 / $14, + $1 per unused
-  discard, + $1 interest per $5 held (max $5), + dragon income.
-- **After each of rounds 1-3:** the spirit's **gift** (pick 1 of 2 rare dragons, free; if your
-  dragon row is full you may swap one out or decline), then the **teahouse**.
+- **Targets: 1,000 / 2,000 / 3,000 / 4,500 / 7,000 / 11,000 / 17,000 / 26,000.** Simulated: the
+  smart bot wins 77%, the casual (random shopping) bot 18%; round 1 is won 98% of the time.
+- **Money:** start $4. After a round: $3 (host round $5), +$1 a roll left (max $5), +$1 a return
+  left, gold faces, Gold Toad, +$1 interest per $5 held (max $5).
+- **Teahouse:** 2 charms, 2 dice, 2 tools, 1 hand page ($3); reroll the charms and dice $2 (+$1
+  each time); sell a charm for half, a die for $2 (keep at least 3).
 
-### Winds and twists
-
-Each round is hosted by **its wind tile**: 東 East, 南 South, 西 West, 北 North, drawn like every
-tile (code body, traced face). There are no painted spirits for now; the wind tiles may later
-become little characters like the guide. Before each round you choose how that wind blows:
-**calm** (a gentle twist) or **storm** (a sharper twist, target ×1.5 *tune*, and its gift offers
-3 rare dragons instead of 2 plus $5). Each choice changes one rule for its round. Twists are data
-(`src/content/hosts.ts`, ids unchanged), not engine special cases. The names in brackets are the
-twists' old spirit names, kept as ids only; the UI shows the wind tile, Calm or Storm, and the
-twist's name and rule.
-
-| Wind | Calm: twist | Storm: twist |
-|---|---|---|
-| East 東 | Masked (`fox`): hand size −1; each set of 3 or more tiles gives +1 mult | The coil (`azureDragon`): no discarding until you play a chow; chows score double chips |
-| South 南 | Swaps (`monkey`): after every 2nd play a random tile in your hand goes back into the pile and you draw another; once a round you may swap a tile of your choice | Embers (`vermilionBird`): 4 tiles in your set are burning; play a set containing one for +4 mult, or it burns away after 2 turns in your hand |
-| West 西 | Moon tide (`rabbit`): hand size +1, but discarded tiles are shuffled back into the pile | Claws (`whiteTiger`): pongs and kongs score double chips |
-| North 北 | The report (`kitchenGod`): each discard costs 25 points at the end; if you finish with no discards used, ×2 mult | The shell (`blackTortoise`): your first hand is armoured (no discarding it) until you play a set; kongs +4 mult; target ×1.25 rather than ×1.5 |
-
-All twists are *tune*: the run simulator does not model them yet (milestone M5 adds them). Until
-M5, the choice screen shows the wind, the target and the reward, and labels the twist as coming
-soon (see the accepted gameplay review below).
-
-### The teahouse (shop)
-
-Every visit offers:
-
-- **3 dragons** (weights: common 6, uncommon 3, rare 1; never one you own)
-- **2 almanac pages** ($3 each, a random set type each)
-- **2 fortunes** ($3 each)
-- **1 pack** ($4, or $5 for an honour pack): open it and choose 1 of its offers
-- **Reroll** the dragons ($2, +$1 each time this visit)
-- **Burn a kind** ($5, once a visit): remove every copy of one tile kind from your set
-- Sell a dragon for half its price (rounded down)
-
-Dragon row: **5 slots**. Fortune pocket: **2 slots** (fortunes are used from the pocket at any
-time outside a scoring animation: in the shop, or between turns in a round).
-
-### Dragons (the jokers, 23)
-
-Balatro's jokers are cards; ours are tiles called **dragons**, and they do exactly the jokers' job.
-Each is a plain mahjong tile with a picture of its thing on the face (an abacus, a lantern, three
-bells), and a frame from one of the three dragon tiles shows its rarity: **White Dragon 白 =
-common ($4), Green Dragon 發 = uncommon ($6), Red Dragon 中 = rare ($8)**. No faces or limbs: only
-the guide is a character. The game draws the tile and frame (`tiles.ts`); the face picture is
-generated art, traced.
-In code the type is `Dragon` (it was "curio" in the simulators); the ids stay.
-
-| Dragon | Rarity | Effect |
-|---|---|---|
-| `abacus` Abacus | common | +2 mult per chow |
-| `redString` Red String | common | +6 mult |
-| `coinString` Coin String | common | +50 chips |
-| `bambooGrove` Bamboo Grove | common | +12 chips per Bamboo tile on the table |
-| `coinPurse` Coin Purse | common | +12 chips per Dots tile on the table |
-| `scroll` Scroll | common | +12 chips per Characters tile on the table |
-| `sparrowNest` Nest | common | pairs +6 mult |
-| `goldToad` Gold Toad | common | +$4 after each round |
-| `pongHall` Bell Hall | uncommon | ×2 mult with 2+ pongs or kongs |
-| `outside` Moon Gate | uncommon | +4 mult per set with a 1, 9 or wind |
-| `ironTeapot` Iron Teapot | uncommon | +2 discards |
-| `longSleeves` Long Sleeves | uncommon | +1 hand size |
-| `lantern` Lantern | uncommon | see the next 3 tiles of the pile |
-| `mahjong` Mahjong! | uncommon | ×2 mult with 4+ sets and a pair |
-| `twoSuits` Two Fish | uncommon | ×1.5 mult if the table uses 2 suits or fewer |
-| `allSimples` Rice Bowl | rare | ×2 mult if no 1s, 9s or winds on the table |
-| `pureStraight` Nine Rings | rare | ×3 mult with 1-2-3, 4-5-6, 7-8-9 of one suit |
-| `nightOwl` Night Owl | rare | +1 play |
-| `kongBell` Great Bell | rare | ×2 mult per kong |
-| `windChime` Wind Chime | rare | +12 mult per wind set (Four Winds, or a wind pong or kong) |
-| `twinCranes` Twin Cranes | rare | ×1.5 mult per pair of identical sets |
-| `threeTreasures` Three Treasures | rare | ×1.5 mult per pong *tune* |
-| `stoneLion` Stone Lion | rare | +3 mult per tile in pongs and kongs *tune* |
-
-Known from the simulator: Iron Teapot and Bell Hall are weak, Night Owl and Nest are strong,
-and the original rares rewarded chows more than pongs. Three Treasures and Stone Lion are new rare
-pong builds to balance that; they are untested, so M5's simulator pass must include them.
-
-### Fortunes (single use)
-
-Used from the pocket. Those that change tiles open the **set picker** (your whole set as a grid,
-filterable by suit), or act on tiles selected in your hand during a round.
-
-| Fortune | Effect |
+| Wind | Host twist |
 |---|---|
-| `rubbing` Rubbing | copy 1 tile in your set (a 4th copy makes kongs possible) |
-| `fire` Fire | destroy up to 6 tiles from your set |
-| `brush` Brush | change up to 3 tiles to one suit (choose the suit) |
-| `jade` Jade | give 2 tiles the Jade enhancement |
-| `bone` Bone | give 2 tiles the Bone enhancement |
-| `gold` Gold Leaf | give 1 tile the Gold enhancement |
+| East | Gusts: hold at most two dice |
+| South | Summer heat: 4 fewer rolls, every finished hand gives 2 back |
+| West | Falling leaves: each finished hand blanks a random face for the rest of the round |
+| North | Frost: a die you held can't be held on the next roll |
 
-### Enhancements (MVP)
+## Look and feel
 
-| Enhancement | Effect when the tile is on the table at scoring |
-|---|---|
-| Jade | +4 mult |
-| Bone | +30 chips |
-| Gold | +$2 at the end of the round if played |
-| Porcelain | ×2 mult; 1 in 4 chance it cracks (is destroyed) after scoring (from packs only) |
-
-The art kit also draws iron, wild, blank, lucky, the four editions and the four chops. They are
-post-MVP.
-
-### Packs
-
-| Pack | Price | Choose 1 of |
-|---|---|---|
-| Fourth copy | $4 | 3 random tile kinds you own exactly 3 of: add a 4th |
-| Winds | $4 | add one of each wind, or add 2 of one wind |
-| Wind triple | $5 | 3 offered winds: add 3 copies of one |
-| Almanac | $4 | 3 almanac pages |
-
-## Difficulty: lanterns
-
-Each tile set has 4 lanterns, lit one at a time by winning. Lantern 1 is the base. *tune*
-
-| Lantern | Change |
-|---|---|
-| 2 | targets ×1.25 |
-| 3 | + no interest |
-| 4 | + targets ×1.5 (not ×1.25) and 3 discards |
-
-## Tile sets (decks)
-
-| Set | Rule | Unlock |
-|---|---|---|
-| Bone & Bamboo | the starting 81 | from the start |
-| Two Rivers | Dots and Bamboo only, 1-9, 4 copies (72), + one of each wind | win a run |
-| Jade Court | the 81, hand 13, 3 discards | win with 3 different hosts |
-
-## Colourways (unlocks)
-
-The colourway is the whole look: the tiles' colours, the table, the interface accents and the
-generated art for hosts and backdrops. You start with one and unlock the others by playing; the
-Settings picker lists only those you have, and the collection shows the locked ones as
-silhouettes with their condition. *tune*
-
-| Colourway | Unlock |
-|---|---|
-| Shadow theatre (bone faces, jade backs) | from the start |
-| Porcelain (white glaze, cobalt) | win a run |
-| Papercut (cream and red) | calm all four great beasts (choose and beat each wind's beast, across runs) |
-
-More tile-only palettes (for example jade, midnight, gilded) can follow as lantern rewards after
-the MVP; each is just a new entry in the tile generator's theme table. A development flag unlocks
-every colourway for testing and screenshots.
-
-## The guide (teaching)
-
-The guide is **the Red Dragon tile itself**, the way Balatro's Jimbo is the Joker card: the real
-tile, red 中 on ivory, with eyes, a mouth, little arms and feet. It is drawn in code by the same
-generator as every tile (`guide({ theme, mood, blink })` in `tiles.ts`), so it always matches the
-colourway and can be animated: it blinks, hops onto the table to give a tip, points at what it
-means, and changes mood (idle, point, happy, think, wow, sad). The 1 of Bamboo keeps its sparrow.
-
-- **Guided first run:** the first East round is scripted: a fixed seed and a queue of tips (your
-  hand and the pile, a pair, a run, a pong, the preview, discarding to dig, the score count). The Rain
-  Man's tip queue from Twelve Petals carries over: tips wait until the table is still and hold
-  play until dismissed.
-- **Hints (Settings), three levels:** off; *sets* (tiles in your hand that form a set glow);
-  *full* (also outline the move the guide would make).
-- **Ask the dragon:** show a legal action and its reason (play, discard, upgrade or bank),
-  highlight the relevant tiles, and leave execution to the player. Final-play hints
-  compare actual complete-table scores; earlier hints avoid breaking a multiplier when a
-  scoring alternative is available. Advice uses visible tiles only, never the hidden pile.
-- **The set book:** every set type and dragon rule with a picture, and your levels.
-
-## Around the game
-
-- Title: Continue, New run (tile set + lantern), Collection, Settings.
-- Collection: tile sets and their lanterns, every dragon (seen / owned / locked), hosts met,
-  records (best round, best run, biggest single set).
-- Settings: speed (normal, fast, instant), hints, sound, music, ambience, haptics, colourway
-  (among those unlocked), credits, play offline, move your progress.
-- Saves: the run state after every action (resume anywhere), plus the profile. Plain JSON.
-- Offline: a PWA that precaches everything; Settings has the install panel and save transfer from
-  Twelve Petals.
-
-## Art and sound
-
-- **Tiles** are drawn from code: `art-source/tiles/tiles.js` (port to TypeScript at
-  `src/ui/art/tiles.ts`). Three colourways, unlocked by playing (see Colourways).
-- **Icons** (the pictures on the dragons, fortunes, packs and shop services) are generated once
-  in one neutral style, traced into vector shapes that keep a colour slot each (ink, red, blue,
-  green, gold, brown, pink, ivory), and painted by the game with the colourway's palette, like the
-  tiles. One icon set serves every colourway.
-- **Paintings** (hosts, great beasts, backdrops) are shelved for now: hosts are wind tiles and the
-  table is a flat colourway colour. If paintings return they are per colourway, and come from the planner and the
-  user, through `art-source/prompts/`. Until it lands, use the placeholders described in
-  `docs/work/2026-10-02-mvp-plan.md`.
-- **Sound** is synthesised as in Twelve Petals: bone-on-wood clacks for tiles, Chinese opera
-  percussion (gong, cymbal, ban clapper) for plays and scoring, a sparse guzheng and dizi score.
-
-## Accepted gameplay review (2 October 2026)
-
-User decisions: **Bamboo Hook rejected**; live build goals, upgrading tabled pongs, optional early
-finish, and more teaching/hints accepted. No stack-swapping dragon is to be built from the audit.
-“Hunts” was interpreted as “hints” in the teaching request; no new hunt system is specified.
-Evidence and limitations: `docs/balance/2026-10-02-gameplay-audit.md`. Implementation handoff:
-`docs/work/2026-10-02-playability.md`. Include early-finish and upgrade experiments before
-making win-rate claims.
-
-The next slice completes the four-wind run, gifts, shops and save/resume. It adds a replayable
-introductory teaching sheet and illustrated set book, plus persistent off/sets/full hint levels.
-The full scripted first-run lesson queue remains M6 work. M5 host twists remain unimplemented;
-the prototype host screen must say so instead of advertising inactive rules as working.
-
-*Twists reworked for the pile (2 Oct): results in `docs/balance/2026-10-02-draw-pile.md`.*
+- A 3D table (three.js through React Three Fiber): a felt dice tray, the rack of tiles, wooden
+  table. The interface over it is HTML, styled as lacquer, gold and bone.
+- **The engine decides every roll; the physics (cannon-es) only animates it.** A throw is
+  simulated in full before it is shown; when a body comes to rest on some face, the mesh is drawn
+  turned by a symmetry of the solid so the engine's face is on top, and a slow turn about the
+  vertical brings its tile upright. Saves and replays stay exact.
+- Dice faces and rack tiles are drawn by the tile generator (`src/ui/art/tiles.ts`) into textures,
+  so colourways keep working.
+- Sound: bone dice knocking (from the physics' collisions), the cup's shake, opera percussion
+  for sets and the count.
