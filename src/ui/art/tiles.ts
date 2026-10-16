@@ -101,6 +101,10 @@ export function specOf(kind: TileKind): TileSpec {
       return { suit: 'chars', rank };
     case 'w':
       return { suit: 'wind', rank };
+    case 'f':
+      return { suit: 'flower', rank };
+    case 'q':
+      return { suit: 'season', rank };
     default:
       return { suit: 'dragon', rank };
   }

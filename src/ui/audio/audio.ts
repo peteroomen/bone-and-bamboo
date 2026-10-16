@@ -1,4 +1,4 @@
-import type { RunEvent, RunState } from '@/engine/runTypes';
+import type { RunEvent } from '@/engine/run';
 import { au, currentVolumes, setVolumes, stats, unlockAudio } from './core';
 import { haptics } from './haptics';
 import { sfx } from './sfx';
@@ -36,48 +36,39 @@ export function installAudioDebug(): void {
   });
 }
 
-/** The sounds and buzzes for what the engine just did. */
-export function playEvents(events: readonly RunEvent[], _run?: RunState): void {
-  let drew = false;
+/** The sounds and buzzes for what the engine just did (the dice themselves knock as they land). */
+export function playEvents(events: readonly RunEvent[]): void {
   for (const e of events) {
     if (e.type === 'money') {
       if (e.delta > 0) sfx.coin();
       continue;
     }
+    if (e.type === 'bought' || e.type === 'level' || e.type === 'tool') {
+      sfx.tock();
+      continue;
+    }
     if (e.type !== 'round') continue;
     const ev = e.event;
     switch (ev.type) {
-      case 'draw':
-        // a refill is many draws at once: one clack for the lot
-        if (!drew) {
-          sfx.take();
-          haptics.take();
-        }
-        drew = true;
-        break;
-      case 'play':
-        sfx.play(ev.tiles.length);
+      case 'take':
+        if (ev.set.kind === 'kong') sfx.kong();
+        else sfx.play(ev.set.tiles.length);
         haptics.play();
         break;
-      case 'discard':
-        sfx.discard(ev.tiles.length);
+      case 'hold':
+        sfx.pick();
+        break;
+      case 'return':
+        sfx.discard(ev.set.tiles.length);
         haptics.discard();
         break;
-      case 'upgrade':
-        sfx.kong();
-        haptics.play();
-        break;
-      case 'finish':
-        sfx.bank();
-        break;
-      case 'swap':
-        sfx.swap();
-        break;
-      case 'burn':
+      case 'crack':
+      case 'blank':
         sfx.burn();
         break;
-      case 'tide':
-        sfx.swap();
+      case 'end':
+        if (ev.won) sfx.bank();
+        else sfx.lose();
         break;
       default:
         break;

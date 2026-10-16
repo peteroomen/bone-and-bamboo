@@ -1,4 +1,4 @@
-import { DRAGONS } from '@/content/dragons';
+import { CHARMS } from '@/content/charms';
 import generatedFaces from './generated/faces.json';
 import generatedIcons from './generated/icons.json';
 import { type Icon, type ThemeId, THEMES, dragonTile, setFaces } from './tiles';
@@ -52,12 +52,12 @@ export function iconSvg(id: string, theme: ThemeId): string | null {
 
 const dragonCache = new Map<string, string>();
 
-/** A dragon as a tile with its rarity frame; its face is the traced icon, else its initial. */
-export function dragonTileSvg(id: string, theme: ThemeId): string {
+/** A charm as a token with its rarity frame; its face is the traced icon, else its initial. */
+export function charmSvg(id: string, theme: ThemeId): string {
   const key = `${theme}|${id}`;
   let s = dragonCache.get(key);
   if (!s) {
-    const d = DRAGONS[id];
+    const d = CHARMS[id];
     const icon = ICONS[id];
     s = dragonTile({
       theme,

@@ -126,7 +126,26 @@ function now(f: (c: Ctx, t: number) => void): void {
   f(c, c.currentTime + 0.005);
 }
 
+/** A bone die on felt: a duller knock than a tile on wood. */
+function knock(c: Ctx, when: number, strength: number): void {
+  const pitch = 0.75 + Math.random() * 0.3;
+  clack(c, when, pitch, 0.18 + strength * 0.42);
+}
+
 export const sfx = {
+  /** The cup shaken before a throw. */
+  shake: (dice: number) =>
+    now((c, t) => {
+      for (let i = 0; i < 4 + dice; i++)
+        clack(c, t + i * 0.035 + Math.random() * 0.02, 1.2 + Math.random() * 0.3, 0.12);
+    }),
+  /** A die knocking on the tray or another die. */
+  dieHit: (strength: number) => now((c, t) => knock(c, t, strength)),
+  /** An instant roll: one rattle for the lot. */
+  roll: (dice: number) =>
+    now((c, t) => {
+      for (let i = 0; i < dice; i++) knock(c, t + i * 0.05, 0.6);
+    }),
   /** Tiles drawn from the pile. */
   take: () => now((c, t) => clack(c, t, 1.05, 0.45)),
   /** A tile picked in your hand. */

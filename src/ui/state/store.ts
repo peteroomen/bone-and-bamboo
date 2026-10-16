@@ -1,74 +1,82 @@
 /**
- * App-level state: which screen, settings and the current run. A tiny external store read with
- * useSyncExternalStore. The run is saved after every action (plain JSON), so a reload resumes
- * exactly where you were.
+ * App state: the screen, settings and the current run, in a tiny external store read with
+ * useSyncExternalStore. Every run action goes through `dispatch`: the engine returns the new
+ * state and its events; the events go to the 3D table and the sound (which animate them) and the
+ * run is saved (plain JSON), so a reload resumes exactly where you were.
  */
 import { useSyncExternalStore } from 'react';
-import type { ColourwayId } from '@/content/colourways';
-import {
-  DEFAULT_PROFILE,
-  type Profile,
-  migrateProfile,
-  unlockedColourways,
-} from '@/engine/profile';
-import type { RunState } from '@/engine/runTypes';
+import type { PatternId } from '@/content/patterns';
+import { type RunAction, type RunEvent, type RunState, newRun, runReducer } from '@/engine/run';
 import type { ThemeId } from '@/ui/art/tiles';
 
-export { DEFAULT_PROFILE };
-export type { Profile };
-
-export type Screen = 'title' | 'setup' | 'game' | 'collection' | 'settings';
+export type Screen = 'title' | 'game';
 export type Speed = 'normal' | 'fast' | 'instant';
-/** Help drawn on tiles: off; tiles that make a set glow; also the guide's pick outlined. */
-export type HintLevel = 'off' | 'sets' | 'full';
 
 export interface Settings {
   speed: Speed;
-  /** The tile colourway, until the art style trial decides. */
   colourway: ThemeId;
-  hints: HintLevel;
+  /** Show the guide's hints: odds, the glow on dice to hold, the target's missing tiles. */
+  hints: boolean;
   sfx: number;
   music: number;
-  /** The soundscape under the music. */
   ambience: number;
   haptics: boolean;
-  /** The introduction has been shown once (it can always be replayed from Help). */
   introSeen: boolean;
 }
+
+export type Sheet =
+  | { kind: 'book' }
+  | { kind: 'settings' }
+  | { kind: 'die'; dieId: number }
+  | { kind: 'charm'; id: string }
+  | { kind: 'help' }
+  | { kind: 'rack'; index: number }
+  | { kind: 'tool'; slot: number }
+  | null;
+
+/** A charm being used: pick a die (and then a face, or a die to copy). */
+export type CharmMode =
+  | { kind: 'tip'; dieId?: number }
+  | { kind: 'flip' }
+  | { kind: 'fan' }
+  | { kind: 'mirror'; dieId?: number }
+  | null;
 
 export interface AppState {
   screen: Screen;
   settings: Settings;
-  profile: Profile;
   run: RunState | null;
+  /** The hand the player is aiming for this hand (guidance only), or null for the guide's pick. */
+  target: PatternId | null;
+  sheet: Sheet;
+  charmMode: CharmMode;
+  /** Animations still playing: the HUD waits for 0. */
+  busy: number;
+  /** Bumped by each dispatch, so views can tell a new event batch. */
+  tick: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   speed: 'normal',
   colourway: 'theatre',
-  hints: 'sets',
+  hints: true,
   sfx: 0.8,
-  music: 0.5,
-  ambience: 0.5,
+  music: 0.4,
+  ambience: 0.4,
   haptics: true,
   introSeen: false,
 };
 
 export const KEYS = {
-  settings: 'bb.settings.v1',
-  profile: 'bb.profile.v1',
-  run: 'bb.run.v1',
+  settings: 'bb.dice.settings.v1',
+  run: 'bb.dice.run.v1',
   dev: 'bb.dev.v1',
 };
 
-/** Options for the next new run, for tests and tuning: a fixed seed, targets, tile set, lantern. */
+/** For tests and tuning: a fixed seed and targets for the next run. */
 export interface DevOverrides {
   seed?: number;
   targets?: number[];
-  tileSet?: string;
-  lantern?: number;
-  /** Unlock every colourway, tile set and lantern (for tests and screenshots; never on by default). */
-  unlockAll?: boolean;
 }
 
 export function devOverrides(): DevOverrides {
@@ -95,7 +103,7 @@ function save(key: string, value: unknown): void {
     if (value === null) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Storage can be full or blocked (private mode); the game still runs.
+    // storage can be full or blocked (private mode); the game still runs
   }
 }
 
@@ -104,7 +112,7 @@ function loadRun(): RunState | null {
     const raw = localStorage.getItem(KEYS.run);
     if (!raw) return null;
     const run = JSON.parse(raw) as RunState;
-    if (run.version !== 1 || run.phase === 'over' || run.phase === 'won') return null;
+    if (!run.targets || run.phase === 'over' || run.phase === 'won') return null;
     return run;
   } catch {
     return null;
@@ -114,8 +122,12 @@ function loadRun(): RunState | null {
 let state: AppState = {
   screen: 'title',
   settings: load(KEYS.settings, DEFAULT_SETTINGS),
-  profile: migrateProfile(load<Partial<Profile>>(KEYS.profile, {})),
   run: loadRun(),
+  target: null,
+  sheet: null,
+  charmMode: null,
+  busy: 0,
+  tick: 0,
 };
 
 const listeners = new Set<() => void>();
@@ -129,7 +141,6 @@ export function setState(patch: Partial<AppState> | ((s: AppState) => Partial<Ap
   const prev = state;
   state = { ...state, ...next };
   if (next.settings && next.settings !== prev.settings) save(KEYS.settings, state.settings);
-  if (next.profile && next.profile !== prev.profile) save(KEYS.profile, state.profile);
   if ('run' in next && next.run !== prev.run) save(KEYS.run, state.run);
   for (const l of listeners) l();
 }
@@ -147,55 +158,76 @@ export function useStore<T>(select: (s: AppState) => T): T {
   );
 }
 
-export function updateProfile(patch: Partial<Profile>): void {
-  setState((s) => ({ profile: { ...s.profile, ...patch } }));
-}
-
 export function updateSettings(patch: Partial<Settings>): void {
   setState((s) => ({ settings: { ...s.settings, ...patch } }));
 }
 
-/**
- * Animation timing multiplier for a speed setting. Timings in the code are written at 'normal'.
- * 'instant' skips animation waits entirely.
- */
+type EventListener = (events: readonly RunEvent[], before: RunState, after: RunState) => void;
+const eventListeners = new Set<EventListener>();
+
+/** Hear every batch of engine events (the table animates them, the sound plays them). */
+export function onEvents(l: EventListener): () => void {
+  eventListeners.add(l);
+  return () => eventListeners.delete(l);
+}
+
+/** Apply a run action. Returns the problem instead if the engine refuses it. */
+export function dispatch(action: RunAction): string | null {
+  const run = state.run;
+  if (!run) return 'No run.';
+  let result;
+  try {
+    result = runReducer(run, action);
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+  const patch: Partial<AppState> = { run: result.state, tick: state.tick + 1 };
+  // a finished hand or a new round clears the player's target
+  if (result.events.some((e) => e.type === 'round' && e.event.type === 'mahjong'))
+    patch.target = null;
+  if (result.events.some((e) => e.type === 'phase')) {
+    patch.target = null;
+    patch.charmMode = null;
+  }
+  setState(patch);
+  for (const l of eventListeners) l(result.events, run, result.state);
+  return null;
+}
+
+export function startRun(seed?: number): void {
+  const dev = devOverrides();
+  const s = seed ?? dev.seed ?? Math.floor(Math.random() * 1e9);
+  const run = newRun({ seed: s, ...(dev.targets ? { targets: dev.targets } : {}) });
+  setState({
+    run,
+    screen: 'game',
+    target: null,
+    sheet: null,
+    charmMode: null,
+    tick: state.tick + 1,
+  });
+}
+
+export function abandonRun(): void {
+  setState({ run: null, screen: 'title', sheet: null, charmMode: null });
+}
+
+/** Count an animation in, and out when it is done. */
+export function busyStart(): void {
+  setState((s) => ({ busy: s.busy + 1 }));
+}
+export function busyEnd(): void {
+  setState((s) => ({ busy: Math.max(0, s.busy - 1) }));
+}
+
 export function speedFactorOf(speed: Speed): number {
-  return speed === 'instant' ? 0 : speed === 'fast' ? 0.5 : 1;
+  return speed === 'instant' ? 0 : speed === 'fast' ? 0.55 : 1;
 }
 
 export function speedFactor(): number {
   return speedFactorOf(state.settings.speed);
 }
 
-/** Every colourway, tile set and lantern is open (the development flag). */
-export function allUnlocked(): boolean {
-  return devOverrides().unlockAll === true;
-}
-
-/** The colourway in use: the chosen one if it is unlocked, else the first. */
-export function effectiveColourway(settings: Settings, profile: Profile): ColourwayId {
-  const open = unlockedColourways(profile, allUnlocked());
-  return open.includes(settings.colourway) ? settings.colourway : 'theatre';
-}
-
 export function useTheme(): ThemeId {
-  const settings = useStore((s) => s.settings);
-  const profile = useStore((s) => s.profile);
-  return effectiveColourway(settings, profile);
-}
-
-export function updateProfileWith(fn: (p: Profile) => Profile): void {
-  setState((s) => {
-    const next = fn(s.profile);
-    return next === s.profile ? {} : { profile: next };
-  });
-}
-
-/** Replaces settings, profile and the current run with a transferred save. */
-export function replaceSave(data: Pick<AppState, 'settings' | 'profile' | 'run'>): void {
-  setState({ ...data, screen: 'title' });
-}
-
-export function resetProgress(): void {
-  setState({ profile: { ...DEFAULT_PROFILE }, run: null, screen: 'title' });
+  return useStore((s) => s.settings.colourway);
 }
