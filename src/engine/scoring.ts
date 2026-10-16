@@ -1,280 +1,229 @@
-import { DRAGONS, type DragonEffect, type TableCondition } from '@/content/dragons';
+import { CHARMS } from '@/content/charms';
 import { ENHANCEMENTS } from '@/content/enhancements';
-import { SET_TYPES, type SetKind } from '@/content/sets';
-import { type Tile, isOutside, isSuited, isWind, rankOf, suitOf, tileChips } from './tiles';
+import { CHICKEN, PATTERN_BY_ID, type PatternId, VALUE_SETS } from '@/content/patterns';
+import { RULES } from '@/content/rules';
+import { SETS } from '@/content/sets';
+import { suitOf, isOutside, isSuited, isTerminal, isWind, isDragon, tileChips } from './tiles';
+import { type PSet, patternsOf } from './patterns';
+import type { RackSet } from './sets';
+import type { TileKind } from '@/content/tiles';
 
-/** A set on the table. */
-export interface PlayedSet {
-  readonly kind: SetKind;
-  readonly tiles: readonly Tile[];
-}
-
-export type Levels = Partial<Record<SetKind, number>>;
-
-/** Everything scoring needs to know besides the table. */
-export interface ScoreContext {
-  readonly dragons: readonly string[];
-  readonly levels: Levels;
-  /** Extra rules from a host's twist, as data the engine understands. */
-  readonly modifiers?: ScoreModifiers;
-}
-
-/** Twist effects on scoring. Filled in by src/engine/twists.ts. */
-export interface ScoreModifiers {
-  /** Chips multiplier per set kind (the set's own chips, level chips and tile chips). */
-  readonly chipsX?: Partial<Record<SetKind, number>>;
-  /** Extra mult per set kind. */
-  readonly setMult?: Partial<Record<SetKind, number>>;
-  /** Extra mult per tile id on the table. */
-  readonly tileMult?: Readonly<Record<number, number>>;
-  /** Points taken off the final score. */
-  readonly penalty?: number;
-  /** A final ×mult. */
+/** One step of the score count, in the order the UI counts it up. */
+export interface ScoreStep {
+  readonly source: 'set' | 'hand' | 'pattern' | 'value' | 'enh' | 'bonus' | 'charm';
+  /** What it is: a set index, a pattern id, a charm id, a kind. */
+  readonly ref: string;
+  readonly label: string;
+  readonly chips?: number;
+  readonly mult?: number;
   readonly xmult?: number;
+  readonly money?: number;
 }
 
-export interface SetStep {
-  readonly type: 'set';
-  readonly index: number;
-  readonly kind: SetKind;
-  readonly setChips: number;
-  readonly levelChips: number;
-  readonly tileChips: number;
-  readonly enhChips: number;
-  readonly setMult: number;
-  readonly levelMult: number;
-  readonly enhMult: number;
-  readonly twistMult: number;
-  /** Porcelain and other enhancement multipliers on this set. */
-  readonly enhX: number;
-  /** Running totals after this step. */
-  readonly chips: number;
-  readonly mult: number;
-  readonly x: number;
-}
-
-export interface DragonStep {
-  readonly type: 'dragon';
-  readonly id: string;
-  readonly addChips: number;
-  readonly addMult: number;
-  readonly x: number;
-  readonly chips: number;
-  readonly mult: number;
-  readonly xTotal: number;
-}
-
-export interface TwistStep {
-  readonly type: 'twist';
-  readonly addMult: number;
-  readonly x: number;
-  readonly penalty: number;
-  readonly chips: number;
-  readonly mult: number;
-  readonly xTotal: number;
-}
-
-export type ScoreStep = SetStep | DragonStep | TwistStep;
-
-export interface ScoreResult {
+export interface HandScore {
   readonly steps: readonly ScoreStep[];
+  readonly patterns: readonly PatternId[];
   readonly chips: number;
   readonly mult: number;
-  readonly x: number;
+  readonly xmult: number;
   readonly total: number;
+  readonly money: number;
 }
 
-/** The number a dragon's condition is asked about. */
-function suitsOn(table: readonly PlayedSet[]): number {
-  const s = new Set<string>();
-  for (const set of table) for (const t of set.tiles) if (isSuited(t.kind)) s.add(suitOf(t.kind));
-  return s.size;
+export interface ScoreContext {
+  /** The round's wind, 1-4. */
+  readonly wind: number;
+  readonly charms: readonly string[];
+  /** Pattern levels (0 = unlevelled). */
+  readonly levels: Partial<Record<PatternId, number>>;
 }
 
-function isBig(k: SetKind): boolean {
-  return k === 'pong' || k === 'kong';
+export function toPSets(rack: readonly RackSet[]): PSet[] {
+  return rack.map((s) => ({ kind: s.kind, tiles: s.tiles.map((t) => t.kind) }));
 }
 
-function straightDone(table: readonly PlayedSet[]): boolean {
-  for (const suit of ['p', 's', 'm']) {
-    const starts = new Set<number>();
-    for (const s of table) {
-      if (s.kind !== 'chow') continue;
-      const first = s.tiles.reduce((a, b) => (rankOf(a.kind) <= rankOf(b.kind) ? a : b));
-      if (suitOf(first.kind) === suit) starts.add(rankOf(first.kind));
-    }
-    if (starts.has(1) && starts.has(4) && starts.has(7)) return true;
-  }
-  return false;
+function round2(x: number): number {
+  return Math.round(x * 100) / 100;
 }
 
-/** Sets with the same tiles, for Twin Cranes: pairs of identical sets (not singles). */
-export function identicalPairs(table: readonly PlayedSet[]): number {
-  const count = new Map<string, number>();
-  for (const s of table) {
-    if (s.kind === 'single') continue;
-    const key = `${s.kind}:${s.tiles
-      .map((t) => t.kind)
-      .sort()
-      .join(',')}`;
-    count.set(key, (count.get(key) ?? 0) + 1);
-  }
-  let n = 0;
-  for (const v of count.values()) n += Math.floor(v / 2);
-  return n;
-}
-
-export function conditionHolds(c: TableCondition, table: readonly PlayedSet[]): boolean {
-  switch (c.kind) {
-    case 'bigSets':
-      return table.filter((s) => isBig(s.kind)).length >= c.min;
-    case 'setsAndPair':
-      return (
-        table.filter((s) => s.kind !== 'pair' && s.kind !== 'single').length >= c.sets &&
-        table.some((s) => s.kind === 'pair')
-      );
-    case 'maxSuits':
-      return suitsOn(table) <= c.n;
-    case 'noOutside':
-      return table.length > 0 && !table.some((s) => s.tiles.some((t) => isOutside(t.kind)));
-    case 'pureStraight':
-      return straightDone(table);
-  }
-}
-
-/** A dragon effect's contribution to a table: chips, mult and a ×mult. */
-export function effectValue(
-  e: DragonEffect,
-  table: readonly PlayedSet[],
-): { chips: number; mult: number; x: number } {
-  let chips = 0;
-  let mult = 0;
-  let x = 1;
-  switch (e.type) {
-    case 'flat':
-      chips = e.chips ?? 0;
-      mult = e.mult ?? 0;
-      break;
-    case 'perSet': {
-      const n = table.filter((s) => e.sets.includes(s.kind)).length;
-      chips = (e.chips ?? 0) * n;
-      mult = (e.mult ?? 0) * n;
-      break;
-    }
-    case 'perTileSuit':
-      chips =
-        e.chips *
-        table.reduce((n, s) => n + s.tiles.filter((t) => suitOf(t.kind) === e.suit).length, 0);
-      break;
-    case 'perOutsideSet':
-      mult =
-        e.mult *
-        table.filter((s) => s.kind !== 'single' && s.tiles.some((t) => isOutside(t.kind))).length;
-      break;
-    case 'perWindSet':
-      mult =
-        e.mult *
-        table.filter(
-          (s) => s.kind === 'winds' || (isBig(s.kind) && isWind((s.tiles[0] as Tile).kind)),
-        ).length;
-      break;
-    case 'perSetTile':
-      mult = e.mult * table.reduce((n, s) => n + (e.sets.includes(s.kind) ? s.tiles.length : 0), 0);
-      break;
-    case 'xIf':
-      if (conditionHolds(e.when, table)) x = e.x;
-      break;
-    case 'xPerSet':
-      x = e.x ** table.filter((s) => e.sets.includes(s.kind)).length;
-      break;
-    case 'xPerIdenticalPair':
-      x = e.x ** identicalPairs(table);
-      break;
-    case 'mod':
-    case 'income':
-      break;
-  }
-  return { chips, mult, x };
-}
-
-/**
- * Score a table: each set adds its chips and mult, then the dragons apply left to right, then
- * score = floor(chips × mult × product of the ×mult effects). Every step is returned so the UI can
- * count it up.
- */
-export function scoreTable(table: readonly PlayedSet[], ctx: ScoreContext): ScoreResult {
+/** Score a finished hand: its sets, the flowers and seasons on the shelf, and your charms. */
+export function scoreHand(
+  rack: readonly RackSet[],
+  shelf: readonly TileKind[],
+  ctx: ScoreContext,
+): HandScore {
   const steps: ScoreStep[] = [];
-  const mods = ctx.modifiers ?? {};
+  const sets = toPSets(rack);
+  const tiles = rack.flatMap((s) => s.tiles);
+
+  // 1. each set: its own chips and mult, plus its tiles' chips
+  rack.forEach((s, i) => {
+    const def = SETS[s.kind];
+    const chips = def.chips + s.tiles.reduce((a, t) => a + tileChips(t.kind), 0);
+    steps.push({ source: 'set', ref: String(i), label: def.name, chips, mult: def.mult });
+  });
+
+  // 2. the hand itself (the Chicken hand, levelled)
+  const lv = ctx.levels.chicken ?? 0;
+  steps.push({
+    source: 'hand',
+    ref: 'chicken',
+    label: 'Mahjong!',
+    chips: CHICKEN.chips + lv * CHICKEN.levelChips,
+    mult: CHICKEN.mult + lv * CHICKEN.levelMult,
+  });
+
+  // 3. enhanced faces
+  for (const t of tiles) {
+    if (!t.enh) continue;
+    const e = ENHANCEMENTS[t.enh];
+    steps.push({
+      source: 'enh',
+      ref: t.enh,
+      label: e.name,
+      ...(e.chips ? { chips: e.chips } : {}),
+      ...(e.mult ? { mult: e.mult } : {}),
+      ...(e.xmult !== 1 ? { xmult: e.xmult } : {}),
+      ...(e.money ? { money: e.money } : {}),
+    });
+  }
+
+  // 4. flowers and seasons
+  const double = ctx.charms.some((c) => CHARMS[c]?.effect.type === 'bonusDouble') ? 2 : 1;
+  for (const k of shelf) {
+    const own = Number(k.slice(1)) === ctx.wind ? RULES.bonus.ownWind : 1;
+    if (suitOf(k) === 'f')
+      steps.push({
+        source: 'bonus',
+        ref: k,
+        label: 'Flower',
+        chips: RULES.bonus.flowerChips * own * double,
+      });
+    else
+      steps.push({
+        source: 'bonus',
+        ref: k,
+        label: 'Season',
+        mult: RULES.bonus.seasonMult * own * double,
+      });
+  }
+  for (const suit of ['f', 'q'] as const) {
+    const have = new Set(shelf.filter((k) => suitOf(k) === suit));
+    if (have.size === 4)
+      steps.push({
+        source: 'bonus',
+        ref: suit,
+        label: suit === 'f' ? 'Four flowers' : 'Four seasons',
+        xmult: RULES.bonus.fullSetX,
+      });
+  }
+
+  // 5. patterns
+  const patterns = patternsOf(sets).filter((p) => p !== 'chicken');
+  for (const id of patterns) {
+    const def = PATTERN_BY_ID[id];
+    const x = round2(def.xmult + (ctx.levels[id] ?? 0) * def.step);
+    steps.push({ source: 'pattern', ref: id, label: def.name, xmult: x });
+  }
+
+  // 6. value sets: the round's wind and the dragons, as pongs or kongs
+  const dragonsCounted = !patterns.includes('bigDragons') && !patterns.includes('littleDragons');
+  sets.forEach((s, i) => {
+    if (s.kind !== 'pong' && s.kind !== 'kong') return;
+    const k = s.tiles[0] as TileKind;
+    if (isWind(k) && Number(k.slice(1)) === ctx.wind)
+      steps.push({
+        source: 'value',
+        ref: String(i),
+        label: 'Round wind',
+        xmult: VALUE_SETS.roundWind,
+      });
+    if (isDragon(k) && dragonsCounted)
+      steps.push({ source: 'value', ref: String(i), label: 'Dragon', xmult: VALUE_SETS.dragon });
+  });
+
+  // 7. charms, left to right
+  for (const id of ctx.charms) {
+    const c = CHARMS[id];
+    if (!c) continue;
+    const e = c.effect;
+    const step = (x: Partial<ScoreStep>) =>
+      steps.push({ source: 'charm', ref: id, label: c.name, ...x });
+    switch (e.type) {
+      case 'chips':
+        step({ chips: e.amount });
+        break;
+      case 'mult':
+        step({ mult: e.amount });
+        break;
+      case 'multPerSet': {
+        const n = sets.filter((s) => s.kind === e.set).length;
+        if (n) step({ mult: e.amount * n });
+        break;
+      }
+      case 'chipsPerSuitTile': {
+        const n = tiles.filter((t) => suitOf(t.kind) === e.suit).length;
+        if (n) step({ chips: e.amount * n });
+        break;
+      }
+      case 'multPerOutsideSet': {
+        const n = sets.filter((s) => s.tiles.some(isOutside)).length;
+        if (n) step({ mult: e.amount * n });
+        break;
+      }
+      case 'multPerWindSet': {
+        const n = sets.filter(
+          (s) => (s.kind === 'pong' || s.kind === 'kong') && isWind(s.tiles[0] as string),
+        ).length;
+        if (n) step({ mult: e.amount * n });
+        break;
+      }
+      case 'multPerPongTile': {
+        const n = sets
+          .filter((s) => s.kind === 'pong' || s.kind === 'kong')
+          .reduce((a, s) => a + s.tiles.length, 0);
+        if (n) step({ mult: e.amount * n });
+        break;
+      }
+      case 'xmultIfPongs': {
+        const n = sets.filter((s) => s.kind === 'pong' || s.kind === 'kong').length;
+        if (n >= e.count) step({ xmult: e.amount });
+        break;
+      }
+      case 'xmultIfSimples':
+        if (tiles.every((t) => isSuited(t.kind) && !isTerminal(t.kind))) step({ xmult: e.amount });
+        break;
+      case 'xmultPerKong': {
+        const n = sets.filter((s) => s.kind === 'kong').length;
+        if (n) step({ xmult: round2(e.amount ** n) });
+        break;
+      }
+      case 'xmultPerTwin': {
+        const keys = sets
+          .filter((s) => s.kind !== 'pair')
+          .map((s) => `${s.kind}:${s.tiles.slice().sort().join(',')}`);
+        const counts = new Map<string, number>();
+        for (const k of keys) counts.set(k, (counts.get(k) ?? 0) + 1);
+        let twins = 0;
+        for (const n of counts.values()) twins += Math.floor(n / 2);
+        if (twins) step({ xmult: round2(e.amount ** twins) });
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
   let chips = 0;
   let mult = 0;
-  let x = 1;
-  table.forEach((set, index) => {
-    const type = SET_TYPES[set.kind];
-    const lv = ctx.levels[set.kind] ?? 0;
-    const tc = set.tiles.reduce((n, t) => n + tileChips(t.kind), 0);
-    const cx = mods.chipsX?.[set.kind] ?? 1;
-    const setChips = type.chips * cx;
-    const levelChips = type.levelChips * lv * cx;
-    const tileC = tc * cx;
-    let enhChips = 0;
-    let enhMult = 0;
-    let enhX = 1;
-    let twistMult = mods.setMult?.[set.kind] ?? 0;
-    for (const t of set.tiles) {
-      twistMult += mods.tileMult?.[t.id] ?? 0;
-      if (!t.enh) continue;
-      const en = ENHANCEMENTS[t.enh];
-      enhChips += en.chips;
-      enhMult += en.mult;
-      enhX *= en.xmult;
-    }
-    chips += setChips + levelChips + tileC + enhChips;
-    const sm = type.mult;
-    const lm = type.levelMult * lv;
-    mult += sm + lm + enhMult + twistMult;
-    x *= enhX;
-    steps.push({
-      type: 'set',
-      index,
-      kind: set.kind,
-      setChips,
-      levelChips,
-      tileChips: tileC,
-      enhChips,
-      setMult: sm,
-      levelMult: lm,
-      enhMult,
-      twistMult,
-      enhX,
-      chips,
-      mult,
-      x,
-    });
-  });
-  for (const id of ctx.dragons) {
-    const dragon = DRAGONS[id];
-    if (!dragon) continue;
-    let addChips = 0;
-    let addMult = 0;
-    let cx = 1;
-    for (const e of dragon.effects) {
-      const v = effectValue(e, table);
-      addChips += v.chips;
-      addMult += v.mult;
-      cx *= v.x;
-    }
-    if (addChips === 0 && addMult === 0 && cx === 1) continue;
-    chips += addChips;
-    mult += addMult;
-    x *= cx;
-    steps.push({ type: 'dragon', id, addChips, addMult, x: cx, chips, mult, xTotal: x });
+  let xmult = 1;
+  let money = 0;
+  for (const s of steps) {
+    chips += s.chips ?? 0;
+    mult += s.mult ?? 0;
+    xmult *= s.xmult ?? 1;
+    money += s.money ?? 0;
   }
-  const penalty = mods.penalty ?? 0;
-  const tx = mods.xmult ?? 1;
-  if (tx !== 1 || penalty !== 0) {
-    x *= tx;
-    steps.push({ type: 'twist', addMult: 0, x: tx, penalty, chips, mult, xTotal: x });
-  }
-  const total = Math.max(0, Math.floor(chips * mult * x) - penalty);
-  return { steps, chips, mult, x, total };
+  const total = Math.floor(chips * mult * xmult + 1e-9);
+  return { steps, patterns, chips, mult, xmult: round2(xmult), total, money };
 }

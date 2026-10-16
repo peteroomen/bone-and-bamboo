@@ -4,16 +4,17 @@ export interface Enhancement {
   readonly id: EnhancementId;
   readonly name: string;
   readonly text: string;
-  /** Added to the score when the tile is on the table at scoring. */
+  /** Added to a completed hand that holds a tile from this face. */
   readonly chips: number;
   readonly mult: number;
   readonly xmult: number;
-  /** Money at the end of the round if the tile was played. */
+  /** Money when a completed hand holds a tile from this face. */
   readonly money: number;
-  /** Chance (0-1) that the tile is destroyed after scoring. */
+  /** Chance (0-1) that the face cracks (goes blank) after its hand scores. */
   readonly crack: number;
 }
 
+/** Enhancements sit on die faces; the tile a face makes carries it into the hand. */
 export const ENHANCEMENTS: Record<EnhancementId, Enhancement> = {
   jade: {
     id: 'jade',
@@ -38,20 +39,20 @@ export const ENHANCEMENTS: Record<EnhancementId, Enhancement> = {
   gold: {
     id: 'gold',
     name: 'Gold',
-    text: '+$2 if played',
+    text: '+$1 when its hand scores',
     chips: 0,
     mult: 0,
     xmult: 1,
-    money: 2,
+    money: 1,
     crack: 0,
   },
   porcelain: {
     id: 'porcelain',
     name: 'Porcelain',
-    text: '×2 mult; 1 in 4 cracks after scoring',
+    text: '×1.5 mult; 1 in 4 cracks after its hand',
     chips: 0,
     mult: 0,
-    xmult: 2,
+    xmult: 1.5,
     money: 0,
     crack: 0.25,
   },

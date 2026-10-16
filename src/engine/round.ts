@@ -1,412 +1,499 @@
-import { ROUND } from '@/content/rules';
-import type { TileKind } from '@/content/tiles';
-import { ENHANCEMENTS } from '@/content/enhancements';
-import { Rng } from './rng';
-import {
-  type PlayedSet,
-  type ScoreContext,
-  type ScoreResult,
-  scoreTable,
-  type Levels,
-} from './scoring';
+import { CHARMS, type CharmEffect } from '@/content/charms';
 import type { Twist } from '@/content/hosts';
-import { brokenDragons } from './goals';
-import { classify, orderSet, playProblem } from './sets';
-import { type Tile, countKinds } from './tiles';
-import {
-  type TwistState,
-  afterDeal,
-  afterDiscard,
-  afterSetPlayed,
-  discardProblem,
-  endTurn,
-  initTwist,
-  intoPile,
-  swapProblem,
-  twistModifiers,
-  twistRules,
-} from './twists';
-import { type Stacks, deal, wallCount } from './wall';
+import type { PatternId } from '@/content/patterns';
+import { RULES } from '@/content/rules';
+import type { SetKind } from '@/content/sets';
+import type { TileKind } from '@/content/tiles';
+import { type Die, type Face, neighbours, opposite, rollFace, withFace } from './dice';
+import { Rng, type RngState } from './rng';
+import { type HandScore, scoreHand } from './scoring';
+import { type RackSet, type RackTile, baseKind, classify, isComplete, rackProblem } from './sets';
+import { isBonus, suitOf } from './tiles';
 
-/** The numbers a round is played with, after dragons, tile set and lantern. */
-export interface RoundRules {
-  readonly handSize: number;
-  readonly plays: number;
-  readonly discards: number;
-  readonly peek: number;
-  readonly stacks: number;
-  readonly maxDiscard: number;
+/** One die in the cup, as it lies on the table. */
+export interface CupDie {
+  readonly dieId: number;
+  /** The face showing, or null before its first roll. */
+  readonly face: number | null;
+  /** The Mirror: the face this die copies (a face it doesn't have). */
+  readonly copy?: Face;
+  readonly held: boolean;
+  /** Its face went onto your rack (or the shelf): it rolls again next time. */
+  readonly spent: boolean;
+  /** Frost: held for the last roll, so it can't be held for the next. */
+  readonly frozen?: boolean;
 }
 
-export const BASE_ROUND_RULES: RoundRules = {
-  handSize: ROUND.hand,
-  plays: ROUND.plays,
-  discards: ROUND.discards,
-  peek: ROUND.peek,
-  stacks: ROUND.stacks,
-  maxDiscard: ROUND.maxDiscard,
-};
+export interface HandRecord {
+  readonly total: number;
+  readonly patterns: readonly PatternId[];
+}
 
-export interface RoundResult {
-  readonly score: ScoreResult;
-  /** Money from gold tiles that were played. */
-  readonly gold: number;
-  /** Porcelain tiles that cracked: destroyed from the set. */
-  readonly cracked: readonly number[];
-  readonly unusedDiscards: number;
+export interface RoundUses {
+  /** Per roll. */
+  readonly thumb: boolean;
+  /** Per hand. */
+  readonly mirror: boolean;
+  readonly shell: boolean;
+  readonly fan: boolean;
 }
 
 export interface RoundState {
-  readonly rules: RoundRules;
-  readonly stacks: Stacks;
-  readonly hand: readonly Tile[];
-  readonly table: readonly PlayedSet[];
-  readonly discarded: readonly Tile[];
-  readonly playsLeft: number;
-  readonly discardsLeft: number;
-  readonly dragons: readonly string[];
-  readonly levels: Levels;
-  /** The score to beat this round: banking early needs the table to reach it. */
+  readonly index: number;
+  readonly wind: number;
+  readonly host: boolean;
+  readonly twist: Twist | null;
   readonly target: number;
-  /** The host's twist, as it stands this round. */
-  readonly twist: TwistState | null;
-  /** Copies of each tile kind in the whole set (the bot's reading of what can still come). */
-  readonly copies: Readonly<Record<TileKind, number>>;
-  readonly rng: number;
-  readonly phase: 'play' | 'done';
-  readonly turns: number;
-  readonly result?: RoundResult;
+  readonly rng: RngState;
+  /** Your dice for this round (a West blank or a cracked face shows here). */
+  readonly dice: readonly Die[];
+  readonly cup: readonly CupDie[];
+  readonly charms: readonly string[];
+  readonly levels: Partial<Record<PatternId, number>>;
+  readonly rollsLeft: number;
+  readonly returnsLeft: number;
+  readonly rollsUsed: number;
+  readonly rack: readonly RackSet[];
+  /** Flowers and seasons for the hand being built. */
+  readonly shelf: readonly TileKind[];
+  readonly score: number;
+  readonly hands: readonly HandRecord[];
+  readonly uses: RoundUses;
+  /** Porcelain faces that cracked: they stay blank after the round. */
+  readonly cracked: readonly { readonly dieId: number; readonly face: number }[];
+  /** Money earned in the round (gold faces). */
+  readonly money: number;
+  readonly over: boolean;
 }
 
 export type RoundAction =
-  | { readonly type: 'play'; readonly ids: readonly number[] }
-  | { readonly type: 'discard'; readonly ids: readonly number[] }
-  /** Upgrade the pong at table index `setIndex` to a kong with its fourth tile from the hand. */
-  | { readonly type: 'upgrade'; readonly setIndex: number; readonly tileId: number }
-  /** Bank the table now: allowed once it beats the target. */
-  | { readonly type: 'finish' }
-  /** The monkey's gift: put a hand tile back into the pile and draw another. */
-  | { readonly type: 'swap'; readonly id: number };
+  | { readonly type: 'roll' }
+  | { readonly type: 'hold'; readonly dieId: number }
+  | { readonly type: 'take'; readonly dieIds: readonly number[] }
+  | { readonly type: 'return'; readonly index: number }
+  | { readonly type: 'tip'; readonly dieId: number; readonly face: number }
+  | { readonly type: 'flip'; readonly dieId: number }
+  | { readonly type: 'fan'; readonly dieId: number }
+  | { readonly type: 'mirror'; readonly dieId: number; readonly fromDieId: number }
+  | { readonly type: 'end' };
+
+export interface Landing {
+  readonly dieId: number;
+  readonly face: number;
+  /** Flowers and seasons it landed on first (each set aside, then the die rolled again). */
+  readonly bonus: readonly TileKind[];
+  /** It stopped on a flower or season after the last reroll: nothing to use this roll. */
+  readonly spent: boolean;
+}
 
 export type RoundEvent =
-  | { readonly type: 'draw'; readonly tile: Tile }
-  | { readonly type: 'play'; readonly kind: PlayedSet['kind']; readonly tiles: readonly Tile[] }
-  | { readonly type: 'discard'; readonly tiles: readonly Tile[] }
+  | { readonly type: 'roll'; readonly landings: readonly Landing[]; readonly rollsLeft: number }
   | {
-      readonly type: 'upgrade';
-      readonly setIndex: number;
-      readonly tile: Tile;
-      readonly tiles: readonly Tile[];
+      readonly type: 'move';
+      readonly how: 'tip' | 'flip' | 'fan' | 'mirror';
+      readonly landing: Landing;
     }
-  | { readonly type: 'finish' }
-  | { readonly type: 'swap'; readonly tile: Tile; readonly auto: boolean }
-  | { readonly type: 'burn'; readonly tile: Tile }
-  | { readonly type: 'tide'; readonly tile: Tile }
-  | { readonly type: 'score'; readonly result: ScoreResult }
-  | { readonly type: 'crack'; readonly tile: Tile }
-  | { readonly type: 'end'; readonly result: RoundResult }
-  | { readonly type: 'illegal'; readonly reason: string };
+  | { readonly type: 'hold'; readonly dieId: number; readonly held: boolean }
+  | { readonly type: 'take'; readonly set: RackSet; readonly upgrade: number | null }
+  | { readonly type: 'freeRoll'; readonly amount: number; readonly why: 'kong' | 'bonus' | 'hand' }
+  | {
+      readonly type: 'mahjong';
+      readonly rack: readonly RackSet[];
+      readonly shelf: readonly TileKind[];
+      readonly score: HandScore;
+      readonly roundScore: number;
+    }
+  | { readonly type: 'crack'; readonly dieId: number; readonly face: number }
+  | { readonly type: 'blank'; readonly dieId: number; readonly face: number }
+  | { readonly type: 'return'; readonly set: RackSet }
+  | { readonly type: 'end'; readonly won: boolean; readonly score: number };
 
-export interface Reduced<S, E> {
-  readonly state: S;
-  readonly events: E[];
+export interface RoundResult {
+  readonly state: RoundState;
+  readonly events: RoundEvent[];
 }
 
 export interface RoundSetup {
-  readonly tiles: readonly Tile[];
-  readonly rules: RoundRules;
-  readonly dragons: readonly string[];
-  readonly levels: Levels;
+  readonly index: number;
+  readonly wind: number;
+  readonly host: boolean;
+  readonly twist: Twist | null;
   readonly target: number;
-  readonly twist?: Twist | null;
-  /** The RNG state to shuffle and play the round from. */
-  readonly rng: number;
+  readonly seed: RngState;
+  readonly dice: readonly Die[];
+  readonly charms: readonly string[];
+  readonly levels: Partial<Record<PatternId, number>>;
 }
 
-/** Deal a new round: the whole set shuffled into the pile, and the first hand drawn. */
-export function startRound(setup: RoundSetup, events: RoundEvent[] = []): RoundState {
-  const rng = new Rng(setup.rng);
-  const rules = twistRules(setup.rules, setup.twist ?? null);
-  const stacks = deal(setup.tiles, rules.stacks, rng);
-  const twist = setup.twist ? initTwist(setup.twist, stacks, rng) : null;
-  const s = refill(
-    {
-      rules,
-      twist,
-      stacks,
-      hand: [],
-      table: [],
-      discarded: [],
-      playsLeft: rules.plays,
-      discardsLeft: rules.discards,
-      dragons: setup.dragons,
-      levels: setup.levels,
-      target: setup.target,
-      copies: Object.fromEntries(countKinds(setup.tiles)),
-      rng: rng.state,
-      phase: 'play',
-      turns: 0,
-    },
-    events,
-  );
-  return s.twist ? { ...s, twist: afterDeal(s.twist, s.hand) } : s;
-}
-
-/** Draw from the top of the pile until the hand is full or the pile is empty. */
-export function refill(s: RoundState, events: RoundEvent[]): RoundState {
-  if (s.phase === 'done') return s;
-  const pile = (s.stacks[0] ?? []).slice();
-  const hand = s.hand.slice();
-  while (hand.length < s.rules.handSize && pile.length > 0) {
-    const tile = pile.pop() as Tile;
-    hand.push(tile);
-    events.push({ type: 'draw', tile });
-  }
-  return { ...s, hand, stacks: [pile, ...s.stacks.slice(1)] };
-}
-
-/** Discards you can actually use now: none while a twist blocks every tile in the hand. */
-export function usableDiscards(s: RoundState): number {
-  if (s.discardsLeft <= 0) return 0;
-  return s.hand.some((t) => discardProblem(s, [t.id]) === null) ? s.discardsLeft : 0;
-}
-
-/** The tiles of the pile shown face up (the Lantern), next first. */
-export function nextTiles(s: RoundState): readonly Tile[] {
-  const pile = s.stacks[0] ?? [];
-  return pile.slice(Math.max(0, pile.length - s.rules.peek)).reverse();
-}
-
-export function scoreContext(s: RoundState): ScoreContext {
-  const modifiers = twistModifiers(s);
-  return { dragons: s.dragons, levels: s.levels, ...(modifiers ? { modifiers } : {}) };
-}
-
-/** What the table scores now, and with the selected tiles played as one more set. */
-export function preview(
-  s: RoundState,
-  selectedIds: readonly number[] = [],
-): { now: ScoreResult; withSelected: ScoreResult | null; warnings: string[] } {
-  const ctx = scoreContext(s);
-  const now = scoreTable(s.table, ctx);
-  const picked = selectedIds
-    .map((id) => s.hand.find((t) => t.id === id))
-    .filter((t): t is Tile => t !== undefined);
-  const kind = picked.length === selectedIds.length && picked.length > 0 ? classify(picked) : null;
-  if (!kind) return { now, withSelected: null, warnings: [] };
-  const table = [...s.table, { kind, tiles: orderSet(picked) }];
-  return {
-    now,
-    withSelected: scoreTable(table, ctx),
-    warnings: brokenDragons(s.table, table, s.dragons),
-  };
-}
-
-function illegal(s: RoundState, reason: string): Reduced<RoundState, RoundEvent> {
-  return { state: s, events: [{ type: 'illegal', reason }] };
-}
-
-/** The round is over when the plays run out, or hand and wall are both empty. */
-function finishIfOver(s: RoundState, events: RoundEvent[]): RoundState {
-  if (s.phase === 'done') return s;
-  const stuck = s.hand.length === 0 && wallCount(s.stacks) === 0;
-  if (s.playsLeft > 0 && !stuck) return s;
-  return settle(s, events);
-}
-
-/** A turn has ended: the twist's own moves (chows uncoil, embers burn, swaps fall due), then the refill. */
-function withTurnEnd(s: RoundState, events: RoundEvent[], kind: string | null): RoundState {
-  if (!s.twist) return refill(s, events);
-  const rng = new Rng(s.rng);
-  const twist = kind ? afterSetPlayed(s.twist, kind) : s.twist;
-  const r = endTurn(twist, s.hand, s.stacks, rng, events, kind !== null);
-  return refill({ ...s, twist: r.twist, hand: r.hand, stacks: r.stacks, rng: rng.state }, events);
-}
-
-/** Score the table and close the round (once). */
-function settle(s: RoundState, events: RoundEvent[]): RoundState {
-  const ctx = scoreContext(s);
-  const score = scoreTable(s.table, ctx);
-  const rng = new Rng(s.rng);
-  const cracked: number[] = [];
-  let gold = 0;
-  for (const set of s.table) {
-    for (const t of set.tiles) {
-      if (!t.enh) continue;
-      const en = ENHANCEMENTS[t.enh];
-      gold += en.money;
-      if (en.crack > 0 && rng.next() < en.crack) cracked.push(t.id);
-    }
-  }
-  const result: RoundResult = { score, gold, cracked, unusedDiscards: s.discardsLeft };
-  events.push({ type: 'score', result: score });
-  for (const id of cracked) {
-    const tile = s.table.flatMap((x) => x.tiles).find((t) => t.id === id);
-    if (tile) events.push({ type: 'crack', tile });
-  }
-  events.push({ type: 'end', result });
-  return { ...s, rng: rng.state, phase: 'done', result };
-}
-
-/** Why a tabled pong can't be upgraded with this hand tile, or null. */
-export function upgradeProblem(s: RoundState, setIndex: number, tileId: number): string | null {
-  const set = s.table[setIndex];
-  if (!set) return 'No such set.';
-  if (set.kind !== 'pong') return 'Only a pong can be upgraded to a kong.';
-  const tile = s.hand.find((t) => t.id === tileId);
-  if (!tile) return 'That tile is not in your hand.';
-  if (tile.kind !== (set.tiles[0] as Tile).kind) return "That is not the pong's fourth tile.";
-  if (s.playsLeft <= 0) return 'No plays left.';
-  return null;
-}
-
-/** The tabled pongs your hand can upgrade now: [table index, hand tile id]. */
-export function upgrades(s: RoundState): { setIndex: number; tileId: number }[] {
-  const out: { setIndex: number; tileId: number }[] = [];
-  s.table.forEach((set, setIndex) => {
-    if (set.kind !== 'pong') return;
-    const tile = s.hand.find((t) => t.kind === (set.tiles[0] as Tile).kind);
-    if (tile) out.push({ setIndex, tileId: tile.id });
+export function charmEffects(charms: readonly string[]): CharmEffect[] {
+  return charms.flatMap((id) => {
+    const c = CHARMS[id];
+    return c ? [c.effect] : [];
   });
-  return out;
 }
 
-/** What upgrading would score, and the multipliers it would break. */
-export function previewUpgrade(
-  s: RoundState,
-  setIndex: number,
-  tileId: number,
-): { now: ScoreResult; after: ScoreResult; warnings: string[] } | null {
-  if (upgradeProblem(s, setIndex, tileId) !== null) return null;
-  const set = s.table[setIndex] as PlayedSet;
-  const tile = s.hand.find((t) => t.id === tileId) as Tile;
-  const table = s.table.map((x, i) =>
-    i === setIndex ? { kind: 'kong' as const, tiles: orderSet([...set.tiles, tile]) } : x,
-  );
-  const ctx = scoreContext(s);
+export function hasCharm(charms: readonly string[], type: CharmEffect['type']): boolean {
+  return charmEffects(charms).some((e) => e.type === type);
+}
+
+function sumEffect(
+  charms: readonly string[],
+  type: 'rolls' | 'returns' | 'cup' | 'rollOnBonus',
+): number {
+  let n = 0;
+  for (const e of charmEffects(charms)) if (e.type === type) n += e.amount;
+  return n;
+}
+
+export function cupSize(charms: readonly string[]): number {
+  return RULES.cup + sumEffect(charms, 'cup');
+}
+
+export function createRound(setup: RoundSetup): RoundState {
+  const dice = setup.dice.slice(0, cupSize(setup.charms));
   return {
-    now: scoreTable(s.table, ctx),
-    after: scoreTable(table, ctx),
-    warnings: brokenDragons(s.table, table, s.dragons),
+    index: setup.index,
+    wind: setup.wind,
+    host: setup.host,
+    twist: setup.twist,
+    target: setup.target,
+    rng: setup.seed,
+    dice,
+    cup: dice.map((d) => ({ dieId: d.id, face: null, held: false, spent: false })),
+    charms: setup.charms,
+    levels: setup.levels,
+    rollsLeft: Math.max(
+      1,
+      RULES.rolls + sumEffect(setup.charms, 'rolls') + (setup.twist?.rolls ?? 0),
+    ),
+    returnsLeft: RULES.returns + sumEffect(setup.charms, 'returns'),
+    rollsUsed: 0,
+    rack: [],
+    shelf: [],
+    score: 0,
+    hands: [],
+    uses: { thumb: false, mirror: false, shell: false, fan: false },
+    cracked: [],
+    money: 0,
+    over: false,
   };
 }
 
-/** Why you can't bank the table yet, or null. */
-export function finishProblem(s: RoundState): string | null {
-  if (s.phase === 'done') return 'The round is over.';
-  if (s.table.length === 0) return 'Play a set first.';
-  const total = scoreTable(s.table, scoreContext(s)).total;
-  if (total < s.target) return 'The table has not beaten the target yet.';
-  return null;
+export function dieOf(s: RoundState, dieId: number): Die | undefined {
+  return s.dice.find((d) => d.id === dieId);
 }
 
-export function roundReduce(s: RoundState, a: RoundAction): Reduced<RoundState, RoundEvent> {
-  if (s.phase === 'done') return illegal(s, 'The round is over.');
-  const events: RoundEvent[] = [];
+/** The face a cup die shows (its own face, or the one it copies), or null. */
+export function shownFace(s: RoundState, c: CupDie): Face | null {
+  if (c.copy) return c.copy;
+  if (c.face === null) return null;
+  return dieOf(s, c.dieId)?.faces[c.face] ?? null;
+}
+
+/** The tile kind a cup die offers right now, or null (unrolled, spent, blank). */
+export function offered(s: RoundState, c: CupDie): TileKind | null {
+  if (c.spent) return null;
+  return shownFace(s, c)?.kind ?? null;
+}
+
+/** What a set of dice would take, or why not. */
+export function takeCheck(
+  s: RoundState,
+  dieIds: readonly number[],
+): { kind: SetKind; kinds: TileKind[]; upgrade: number | null } | { problem: string } {
+  if (s.over) return { problem: 'The round is over.' };
+  if (dieIds.length === 0) return { problem: 'Pick some dice.' };
+  if (new Set(dieIds).size !== dieIds.length) return { problem: 'Pick each die once.' };
+  const kinds: TileKind[] = [];
+  for (const id of dieIds) {
+    const c = s.cup.find((x) => x.dieId === id);
+    const k = c ? offered(s, c) : null;
+    if (!k) return { problem: 'Those dice show nothing you can take.' };
+    kinds.push(k);
+  }
+  if (kinds.length === 1) {
+    const i = s.rack.findIndex((r) => r.kind === 'pong' && r.tiles[0]?.kind === kinds[0]);
+    if (i >= 0) return { kind: 'kong', kinds, upgrade: i };
+    return { problem: 'One die only takes a tile to make a pong a kong.' };
+  }
+  const kind = classify(kinds);
+  if (!kind) return { problem: 'That is not a set.' };
+  const problem = rackProblem(s.rack, kind, baseKind(kinds));
+  if (problem) return { problem };
+  return { kind, kinds, upgrade: null };
+}
+
+type Draft = {
+  -readonly [K in keyof RoundState]: RoundState[K];
+};
+
+function draftOf(s: RoundState): { d: Draft; rng: Rng; events: RoundEvent[] } {
+  return { d: { ...s, cup: s.cup.slice(), dice: s.dice.slice() }, rng: new Rng(s.rng), events: [] };
+}
+
+function done(d: Draft, rng: Rng, events: RoundEvent[]): RoundResult {
+  d.rng = rng.state;
+  return { state: d, events };
+}
+
+function setCup(d: Draft, i: number, patch: Partial<CupDie>): void {
+  const c = d.cup[i];
+  if (c) d.cup = d.cup.map((x, j) => (j === i ? { ...c, ...patch } : x));
+}
+
+/**
+ * A die has come to rest on `face`. A flower or season goes to the shelf and the die rolls again,
+ * at most RULES.bonusRerolls times; it then stays spent on the last one.
+ */
+function settle(d: Draft, rng: Rng, i: number, face: number, events: RoundEvent[]): Landing {
+  const c = d.cup[i] as CupDie;
+  const die = dieOf(d, c.dieId) as Die;
+  const bonus: TileKind[] = [];
+  let f = face;
+  let spent = false;
+  for (;;) {
+    const kind = die.faces[f]?.kind;
+    if (!kind || !isBonus(kind)) break;
+    bonus.push(kind);
+    d.shelf = [...d.shelf, kind];
+    const extra = sumEffect(d.charms, 'rollOnBonus');
+    if (extra > 0) {
+      d.rollsLeft += extra;
+      events.push({ type: 'freeRoll', amount: extra, why: 'bonus' });
+    }
+    if (bonus.length > RULES.bonusRerolls) {
+      spent = true;
+      break;
+    }
+    f = rollFace(die, rng);
+  }
+  const { copy: _copy, ...rest } = c;
+  d.cup = d.cup.map((x, j) => (j === i ? { ...rest, face: f, spent } : x));
+  return { dieId: c.dieId, face: f, bonus, spent };
+}
+
+function cupIndex(s: RoundState, dieId: number): number {
+  return s.cup.findIndex((c) => c.dieId === dieId);
+}
+
+/** Why an action is not allowed now, or null. */
+export function actionProblem(s: RoundState, a: RoundAction): string | null {
+  if (s.over) return 'The round is over.';
   switch (a.type) {
-    case 'play': {
-      const problem = playProblem(s.hand, a.ids, usableDiscards(s));
-      if (problem) return illegal(s, problem);
-      const ids = new Set(a.ids);
-      const picked = s.hand.filter((t) => ids.has(t.id));
-      const kind = classify(picked);
-      if (!kind) return illegal(s, 'That is not a set.');
-      const tiles = orderSet(picked);
-      events.push({ type: 'play', kind, tiles });
-      const next = finishIfOver(
-        withTurnEnd(
-          {
-            ...s,
-            hand: s.hand.filter((t) => !ids.has(t.id)),
-            table: [...s.table, { kind, tiles }],
-            playsLeft: s.playsLeft - 1,
-            turns: s.turns + 1,
-          },
-          events,
-          kind,
-        ),
-        events,
-      );
-      return { state: next, events };
+    case 'roll':
+      if (s.rollsLeft <= 0) return 'No rolls left.';
+      if (s.cup.every((c) => c.held && !c.spent)) return 'Every die is held.';
+      return null;
+    case 'hold': {
+      const c = s.cup.find((x) => x.dieId === a.dieId);
+      if (!c || c.face === null || c.spent) return 'Only a die showing a face can be held.';
+      if (c.held) return null;
+      if (c.frozen) return 'Frost: that die was held last roll.';
+      const limit = s.twist?.holdLimit;
+      if (limit !== undefined && s.cup.filter((x) => x.held).length >= limit)
+        return `Gusts: you can hold only ${limit} dice.`;
+      return null;
     }
-    case 'upgrade': {
-      const problem = upgradeProblem(s, a.setIndex, a.tileId);
-      if (problem) return illegal(s, problem);
-      const set = s.table[a.setIndex] as PlayedSet;
-      const tile = s.hand.find((t) => t.id === a.tileId) as Tile;
-      const tiles = orderSet([...set.tiles, tile]);
-      events.push({ type: 'upgrade', setIndex: a.setIndex, tile, tiles });
-      const next = finishIfOver(
-        withTurnEnd(
-          {
-            ...s,
-            hand: s.hand.filter((t) => t.id !== a.tileId),
-            table: s.table.map((x, i) => (i === a.setIndex ? { kind: 'kong' as const, tiles } : x)),
-            playsLeft: s.playsLeft - 1,
-            turns: s.turns + 1,
-          },
-          events,
-          'kong',
-        ),
-        events,
-      );
-      return { state: next, events };
+    case 'take': {
+      const r = takeCheck(s, a.dieIds);
+      return 'problem' in r ? r.problem : null;
     }
-    case 'finish': {
-      const problem = finishProblem(s);
-      if (problem) return illegal(s, problem);
-      events.push({ type: 'finish' });
-      return { state: settle(s, events), events };
+    case 'return':
+      if (s.returnsLeft <= 0) return 'No returns left.';
+      return s.rack[a.index] ? null : 'Nothing there.';
+    case 'tip':
+    case 'flip':
+    case 'fan':
+    case 'mirror': {
+      const need = { tip: 'thumb', flip: 'shell', fan: 'fan', mirror: 'mirror' } as const;
+      if (!hasCharm(s.charms, need[a.type])) return 'You need the charm for that.';
+      if (s.uses[need[a.type]]) return a.type === 'tip' ? 'Once per roll.' : 'Once per hand.';
+      const c = s.cup.find((x) => x.dieId === a.dieId);
+      if (!c || c.face === null || c.spent) return 'Pick a die showing a face.';
+      const die = dieOf(s, a.dieId);
+      if (!die) return 'No such die.';
+      if (a.type === 'tip') {
+        if (c.copy) return 'A mirrored die can’t be tipped.';
+        return neighbours(die.shape, c.face).includes(a.face)
+          ? null
+          : 'Tip it onto a neighbouring face.';
+      }
+      if (a.type === 'flip' && c.copy) return 'A mirrored die can’t be turned over.';
+      if (a.type === 'mirror') {
+        if (a.fromDieId === a.dieId) return 'Pick another die to copy.';
+        const from = s.cup.find((x) => x.dieId === a.fromDieId);
+        if (!from || !offered(s, from)) return 'Copy a die that shows a tile.';
+      }
+      return null;
     }
-    case 'swap': {
-      const problem = swapProblem(s, a.id);
-      if (problem) return illegal(s, problem);
-      const tile = s.hand.find((t) => t.id === a.id) as Tile;
-      events.push({ type: 'swap', tile, auto: false });
-      const rng = new Rng(s.rng);
-      const twist = s.twist as TwistState;
-      const next = refill(
-        {
-          ...s,
-          hand: s.hand.filter((t) => t.id !== a.id),
-          stacks: intoPile(s.stacks, tile, rng),
-          twist: { ...twist, swapsLeft: twist.swapsLeft - 1 },
-          rng: rng.state,
-        },
-        events,
-      );
-      return { state: next, events };
+    case 'end':
+      return null;
+  }
+}
+
+export function roundReducer(s: RoundState, a: RoundAction): RoundResult {
+  const problem = actionProblem(s, a);
+  if (problem) throw new Error(problem);
+  const { d, rng, events } = draftOf(s);
+  switch (a.type) {
+    case 'roll': {
+      const landings: Landing[] = [];
+      const bead = hasCharm(d.charms, 'bead');
+      const tied = hasCharm(d.charms, 'redString');
+      const wasHeld = d.cup.map((c) => c.held && !c.spent);
+      for (let i = 0; i < d.cup.length; i++) {
+        const c = d.cup[i] as CupDie;
+        if (c.held && !c.spent) continue;
+        const die = dieOf(d, c.dieId) as Die;
+        let face: number;
+        if (i === 0 && bead && c.face !== null && !c.copy) {
+          face = (c.face + 1) % die.faces.length;
+        } else if (i === 1 && tied) {
+          const first = d.cup[0] ? shownFace(d, d.cup[0]) : null;
+          const suit = first?.kind ? suitOf(first.kind) : null;
+          face = rollFace(die, rng, suit ? (f) => !!f.kind && suitOf(f.kind) === suit : undefined);
+        } else {
+          face = rollFace(die, rng);
+        }
+        landings.push(settle(d, rng, i, face, events));
+      }
+      if (d.twist?.frost) {
+        d.cup = d.cup.map((c, i) => ({ ...c, held: false, frozen: !!wasHeld[i] }));
+      }
+      d.rollsLeft -= 1;
+      d.rollsUsed += 1;
+      d.uses = { ...d.uses, thumb: false };
+      events.unshift({ type: 'roll', landings, rollsLeft: d.rollsLeft });
+      return done(d, rng, events);
     }
-    case 'discard': {
-      if (s.discardsLeft <= 0) return illegal(s, 'No discards left.');
-      if (a.ids.length < 1 || a.ids.length > s.rules.maxDiscard)
-        return illegal(s, `Discard 1 to ${s.rules.maxDiscard} tiles.`);
-      const ids = new Set(a.ids);
-      if (ids.size !== a.ids.length) return illegal(s, 'Pick each tile once.');
-      const tiles = s.hand.filter((t) => ids.has(t.id));
-      if (tiles.length !== ids.size) return illegal(s, 'Those tiles are not in your hand.');
-      const blocked = discardProblem(s, a.ids);
-      if (blocked) return illegal(s, blocked);
-      events.push({ type: 'discard', tiles });
-      const rng = new Rng(s.rng);
-      const d = afterDiscard(s, tiles, rng, events);
-      const next = finishIfOver(
-        withTurnEnd(
-          {
-            ...s,
-            hand: s.hand.filter((t) => !ids.has(t.id)),
-            stacks: d.stacks,
-            discarded: d.discarded,
-            discardsLeft: s.discardsLeft - 1,
-            turns: s.turns + 1,
-            rng: rng.state,
-          },
-          events,
-          null,
-        ),
-        events,
-      );
-      return { state: next, events };
+    case 'hold': {
+      const i = cupIndex(d, a.dieId);
+      const held = !(d.cup[i] as CupDie).held;
+      setCup(d, i, { held });
+      events.push({ type: 'hold', dieId: a.dieId, held });
+      return done(d, rng, events);
+    }
+    case 'take': {
+      const r = takeCheck(d, a.dieIds) as {
+        kind: SetKind;
+        kinds: TileKind[];
+        upgrade: number | null;
+      };
+      const tiles: RackTile[] = a.dieIds.map((id) => {
+        const c = d.cup[cupIndex(d, id)] as CupDie;
+        const f = shownFace(d, c) as Face;
+        return {
+          kind: f.kind as TileKind,
+          ...(f.enh && !c.copy ? { enh: f.enh } : {}),
+          dieId: id,
+          face: c.face ?? 0,
+        };
+      });
+      for (const id of a.dieIds) setCup(d, cupIndex(d, id), { spent: true, held: false });
+      let set: RackSet;
+      if (r.upgrade !== null) {
+        const old = d.rack[r.upgrade] as RackSet;
+        set = { kind: 'kong', tiles: [...old.tiles, ...tiles] };
+        d.rack = d.rack.map((x, j) => (j === r.upgrade ? set : x));
+      } else {
+        set = { kind: r.kind, tiles };
+        d.rack = [...d.rack, set];
+      }
+      events.push({ type: 'take', set, upgrade: r.upgrade });
+      if (set.kind === 'kong') {
+        d.rollsLeft += RULES.kongRolls;
+        events.push({ type: 'freeRoll', amount: RULES.kongRolls, why: 'kong' });
+      }
+      if (isComplete(d.rack)) finishHand(d, rng, events);
+      return done(d, rng, events);
+    }
+    case 'return': {
+      const set = d.rack[a.index] as RackSet;
+      d.rack = d.rack.filter((_, j) => j !== a.index);
+      d.returnsLeft -= 1;
+      events.push({ type: 'return', set });
+      return done(d, rng, events);
+    }
+    case 'tip':
+    case 'flip':
+    case 'fan':
+    case 'mirror': {
+      const i = cupIndex(d, a.dieId);
+      const c = d.cup[i] as CupDie;
+      const die = dieOf(d, c.dieId) as Die;
+      if (a.type === 'mirror') {
+        const from = d.cup[cupIndex(d, a.fromDieId)] as CupDie;
+        const f = shownFace(d, from) as Face;
+        setCup(d, i, { copy: { kind: f.kind } });
+        d.uses = { ...d.uses, mirror: true };
+        events.push({
+          type: 'move',
+          how: 'mirror',
+          landing: { dieId: a.dieId, face: c.face ?? 0, bonus: [], spent: false },
+        });
+        return done(d, rng, events);
+      }
+      const face =
+        a.type === 'tip'
+          ? a.face
+          : a.type === 'flip'
+            ? opposite(die.shape, c.face as number)
+            : rollFace(die, rng);
+      const use = a.type === 'tip' ? 'thumb' : a.type === 'flip' ? 'shell' : 'fan';
+      d.uses = { ...d.uses, [use]: true };
+      const landing = settle(d, rng, i, face, events);
+      events.push({ type: 'move', how: a.type, landing });
+      return done(d, rng, events);
+    }
+    case 'end': {
+      d.over = true;
+      events.push({ type: 'end', won: d.score >= d.target, score: d.score });
+      return done(d, rng, events);
     }
   }
+}
+
+/** The rack is a finished hand: score it, then clear the rack for the next one. */
+function finishHand(d: Draft, rng: Rng, events: RoundEvent[]): void {
+  const score = scoreHand(d.rack, d.shelf, { wind: d.wind, charms: d.charms, levels: d.levels });
+  d.score += score.total;
+  d.money += score.money;
+  d.hands = [...d.hands, { total: score.total, patterns: score.patterns }];
+  events.push({ type: 'mahjong', rack: d.rack, shelf: d.shelf, score, roundScore: d.score });
+  // porcelain may crack
+  for (const t of d.rack.flatMap((s) => s.tiles)) {
+    if (t.enh !== 'porcelain') continue;
+    if (rng.next() < 0.25) {
+      const die = dieOf(d, t.dieId);
+      if (!die) continue;
+      d.dice = d.dice.map((x) => (x.id === die.id ? withFace(x, t.face, { kind: null }) : x));
+      d.cracked = [...d.cracked, { dieId: t.dieId, face: t.face }];
+      events.push({ type: 'crack', dieId: t.dieId, face: t.face });
+    }
+  }
+  // West: falling leaves
+  for (let n = 0; n < (d.twist?.blankPerHand ?? 0); n++) {
+    const options = d.dice.flatMap((die) =>
+      die.faces.flatMap((f, i) => (f.kind ? [{ dieId: die.id, face: i }] : [])),
+    );
+    if (options.length === 0) break;
+    const pick = rng.pick(options);
+    d.dice = d.dice.map((x) => (x.id === pick.dieId ? withFace(x, pick.face, { kind: null }) : x));
+    events.push({ type: 'blank', dieId: pick.dieId, face: pick.face });
+  }
+  const back = d.twist?.rollsPerHand ?? 0;
+  if (back > 0) {
+    d.rollsLeft += back;
+    events.push({ type: 'freeRoll', amount: back, why: 'hand' });
+  }
+  d.rack = [];
+  d.shelf = [];
+  d.uses = { thumb: d.uses.thumb, mirror: false, shell: false, fan: false };
+}
+
+/** Is there anything left to do but end? */
+export function canAct(s: RoundState): boolean {
+  if (s.over) return false;
+  if (s.rollsLeft > 0) return true;
+  return false;
 }

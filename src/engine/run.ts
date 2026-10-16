@@ -1,524 +1,499 @@
-import { DRAGONS, DRAGON_IDS, DRAGON_SLOTS } from '@/content/dragons';
-import { FORTUNE_SLOTS } from '@/content/fortunes';
-import { type Twist, hostFor } from '@/content/hosts';
-import { PACK_IDS, type PackId } from '@/content/packs';
-import { STORM_TARGET_MULT, LANTERNS, TARGETS } from '@/content/targets';
-import { GIFT, MONEY, SHOP } from '@/content/rules';
-import { tileSetDef } from '@/content/tilesets';
-import { intoPile } from './twists';
-import { applyFortune, fortuneProblem } from './fortunes';
-import { Rng, deriveSeed, hashSeed } from './rng';
+import { CHARMS, CHARM_IDS, CHARM_SLOTS, RARITY_WEIGHT, charmPrice } from '@/content/charms';
 import {
-  BASE_ROUND_RULES,
+  DIE_TEMPLATES,
+  GIFT_TEMPLATES,
+  OFFERED_TEMPLATES,
+  STARTING_KIT,
+  STARTING_KITS,
+} from '@/content/dice';
+import { hostOf } from '@/content/hosts';
+import { PATTERNS, type PatternId } from '@/content/patterns';
+import { RULES } from '@/content/rules';
+import { TOOLS, TOOL_IDS, TOOL_POCKET } from '@/content/tools';
+import { type Die, fixedDie, makeDie, withFace } from './dice';
+import { Rng, type RngState, deriveSeed, hashSeed } from './rng';
+import {
+  type RoundAction,
   type RoundEvent,
-  type RoundRules,
   type RoundState,
-  refill,
-  roundReduce,
-  startRound,
+  charmEffects,
+  createRound,
+  cupSize,
+  roundReducer,
 } from './round';
-import type { FortuneArgs, GiftState, Payout, RunAction, RunEvent, RunState } from './runTypes';
-import { openPack, rerollPrice, rollDragons, rollShop, sellPrice } from './shop';
-import { type Tile, buildTiles, countKinds } from './tiles';
-import type { Reduced } from './round';
-import type { ScoreStep } from './scoring';
+import { type ToolArg, applyTool, toolProblem } from './tools';
 
-export interface NewRunOptions {
-  readonly seed: number | string;
-  readonly tileSet?: string;
-  readonly lantern?: number;
-  /** Override the base targets (the simulator tries ladders). */
-  readonly targets?: readonly number[];
-  readonly packPool?: readonly PackId[];
-  readonly guided?: boolean;
-  readonly twistOverrides?: Readonly<Record<string, Twist>>;
-  readonly stormMult?: number;
+export type Phase = 'round' | 'cashout' | 'gift' | 'shop' | 'over' | 'won';
+
+export interface ShopOffer<T> {
+  readonly item: T;
+  readonly price: number;
+  readonly sold: boolean;
 }
 
-export function newRun(opts: NewRunOptions): RunState {
-  const seed = typeof opts.seed === 'number' ? opts.seed >>> 0 : hashSeed(opts.seed);
-  const tiles = buildTiles(opts.tileSet ?? 'boneBamboo');
-  return {
-    version: 1,
+export interface ShopState {
+  readonly charms: readonly ShopOffer<string>[];
+  readonly dice: readonly ShopOffer<Die>[];
+  readonly tools: readonly ShopOffer<string>[];
+  readonly pages: readonly ShopOffer<PatternId>[];
+  readonly rerolls: number;
+}
+
+export interface CashLine {
+  readonly label: string;
+  readonly amount: number;
+}
+
+export interface RoundRecord {
+  readonly index: number;
+  readonly target: number;
+  readonly score: number;
+  readonly hands: number;
+  readonly best: number;
+  readonly patterns: readonly PatternId[];
+}
+
+export interface RunState {
+  readonly seed: RngState;
+  readonly rng: RngState;
+  /** The score to beat in each round. */
+  readonly targets: readonly number[];
+  readonly round: number;
+  readonly phase: Phase;
+  readonly money: number;
+  readonly dice: readonly Die[];
+  readonly nextId: number;
+  readonly charms: readonly string[];
+  readonly tools: readonly string[];
+  readonly levels: Partial<Record<PatternId, number>>;
+  readonly current: RoundState | null;
+  readonly cashout: readonly CashLine[] | null;
+  readonly gift: readonly Die[] | null;
+  readonly shop: ShopState | null;
+  readonly history: readonly RoundRecord[];
+  /** Ids of the charms and dice templates you have seen, for the collection. */
+  readonly seen: readonly string[];
+}
+
+export type RunAction =
+  | { readonly type: 'round'; readonly action: RoundAction }
+  | { readonly type: 'collect' }
+  | { readonly type: 'pickGift'; readonly index: number; readonly replace?: number }
+  | { readonly type: 'skipGift' }
+  | { readonly type: 'buyCharm'; readonly index: number; readonly replace?: string }
+  | { readonly type: 'buyDie'; readonly index: number; readonly replace?: number }
+  | { readonly type: 'buyTool'; readonly index: number }
+  | { readonly type: 'buyPage'; readonly index: number }
+  | { readonly type: 'reroll' }
+  | { readonly type: 'sellCharm'; readonly id: string }
+  | { readonly type: 'sellDie'; readonly dieId: number }
+  | {
+      readonly type: 'useTool';
+      readonly slot: number;
+      readonly dieId: number;
+      readonly face: number;
+      readonly arg?: ToolArg;
+    }
+  | { readonly type: 'moveDie'; readonly dieId: number; readonly to: number }
+  | { readonly type: 'next' };
+
+export type RunEvent =
+  | { readonly type: 'round'; readonly event: RoundEvent }
+  | { readonly type: 'money'; readonly delta: number; readonly why: string }
+  | { readonly type: 'phase'; readonly phase: Phase }
+  | {
+      readonly type: 'tool';
+      readonly toolId: string;
+      readonly dieId: number;
+      readonly face: number;
+    }
+  | {
+      readonly type: 'bought';
+      readonly what: 'charm' | 'die' | 'tool' | 'page';
+      readonly id: string;
+    }
+  | { readonly type: 'level'; readonly pattern: PatternId; readonly level: number };
+
+export interface RunResult {
+  readonly state: RunState;
+  readonly events: RunEvent[];
+}
+
+export function roundsOf(run: RunState): number {
+  return run.targets.length;
+}
+
+export function windOf(round: number): number {
+  return Math.floor(round / 2) + 1;
+}
+export function isHostRound(round: number): boolean {
+  return round % 2 === 1;
+}
+
+export interface RunOptions {
+  readonly seed: number | string;
+  readonly kit?: string;
+  readonly targets?: readonly number[];
+}
+
+export function targetOf(run: RunState, round: number): number {
+  return run.targets[round] ?? run.targets[run.targets.length - 1] ?? 0;
+}
+
+function startRound(run: RunState): RoundState {
+  const wind = windOf(run.round);
+  const host = isHostRound(run.round);
+  return createRound({
+    index: run.round,
+    wind,
+    host,
+    twist: host ? hostOf(wind).twist : null,
+    target: targetOf(run, run.round),
+    seed: deriveSeed(run.seed, `round${run.round}`),
+    dice: run.dice,
+    charms: run.charms,
+    levels: run.levels,
+  });
+}
+
+export function newRun(opts: RunOptions): RunState {
+  const seed = hashSeed(opts.seed);
+  const kit = STARTING_KITS[opts.kit ?? STARTING_KIT] ?? STARTING_KITS[STARTING_KIT] ?? [];
+  const dice = kit.map((d, i) => fixedDie(i + 1, d));
+  const base: RunState = {
     seed,
     rng: deriveSeed(seed, 'run'),
-    tileSet: opts.tileSet ?? 'boneBamboo',
-    lantern: opts.lantern ?? 1,
-    targets: opts.targets ?? TARGETS,
-    packPool: opts.packPool ?? PACK_IDS,
-    tiles,
-    nextTileId: tiles.length + 1,
-    money: MONEY.start,
-    dragons: [],
-    fortunes: [],
+    targets: opts.targets ?? RULES.targets,
+    round: 0,
+    phase: 'round',
+    money: RULES.money.start,
+    dice,
+    nextId: dice.length + 1,
+    charms: [],
+    tools: [],
     levels: {},
-    roundIndex: 0,
-    phase: 'host',
-    hostId: null,
-    storm: false,
-    target: targetFor(opts.lantern ?? 1, 0, false, opts.targets ?? TARGETS),
-    round: null,
-    payout: null,
+    current: null,
+    cashout: null,
     gift: null,
     shop: null,
-    scores: [],
-    stats: { bestRound: 0, roundsWon: 0, bigSet: 0 },
-    hostIds: [],
-    hostsBeaten: [],
-    recorded: false,
-    ...(opts.twistOverrides ? { twistOverrides: opts.twistOverrides } : {}),
-    ...(opts.stormMult ? { stormMult: opts.stormMult } : {}),
-    guided: opts.guided ?? false,
-    tipsSeen: [],
+    history: [],
+    seen: [],
   };
+  return { ...base, current: startRound(base) };
 }
 
-// ---- derived numbers ---------------------------------------------------------------------------
-export function targetFor(
-  lantern: number,
-  roundIndex: number,
-  storm: boolean,
-  targets: readonly number[] = TARGETS,
-  stormMult: number = STORM_TARGET_MULT,
-): number {
-  const l = LANTERNS[Math.max(0, Math.min(LANTERNS.length - 1, lantern - 1))];
-  const base = (targets[roundIndex] ?? 0) * (l?.targetMult ?? 1) * (storm ? stormMult : 1);
-  return Math.round(base / 50) * 50;
-}
+type Draft = { -readonly [K in keyof RunState]: RunState[K] };
 
-/** The round's numbers: the base rules, the tile set, the lantern and your dragons. */
-export function roundRulesFor(run: Pick<RunState, 'dragons' | 'tileSet' | 'lantern'>): RoundRules {
-  const set = tileSetDef(run.tileSet);
-  const lantern = LANTERNS[run.lantern - 1];
-  let hand = set.hand ?? BASE_ROUND_RULES.handSize;
-  let discards = set.discards ?? BASE_ROUND_RULES.discards;
-  if (lantern?.discards !== undefined) discards = Math.min(discards, lantern.discards);
-  let plays = BASE_ROUND_RULES.plays;
-  let peek = BASE_ROUND_RULES.peek;
-  for (const id of run.dragons) {
-    for (const e of DRAGONS[id]?.effects ?? []) {
-      if (e.type !== 'mod') continue;
-      hand += e.hand ?? 0;
-      discards += e.discards ?? 0;
-      plays += e.plays ?? 0;
-      peek += e.peek ?? 0;
-    }
-  }
-  return { ...BASE_ROUND_RULES, handSize: hand, discards, plays, peek };
-}
-
-export function dragonIncome(dragons: readonly string[]): number {
-  let n = 0;
-  for (const id of dragons)
-    for (const e of DRAGONS[id]?.effects ?? []) if (e.type === 'income') n += e.money;
-  return n;
-}
-
-export function interestFor(run: Pick<RunState, 'money' | 'lantern'>): number {
-  const l = LANTERNS[run.lantern - 1];
-  if (l && !l.interest) return 0;
-  return Math.min(Math.floor(run.money / MONEY.interestPer), MONEY.interestCap);
-}
-
-export function roundSetup(
-  run: RunState,
-  rngState: number,
-  target = run.target,
-  twist: Twist | null = null,
-) {
-  return {
-    tiles: run.tiles,
-    rules: roundRulesFor(run),
-    dragons: run.dragons,
-    levels: run.levels,
-    target,
-    twist,
-    rng: rngState,
-  };
-}
-
-/** A new round for this run's current set, dragons and levels (also used by the simulator). */
-export function dealRound(
-  run: RunState,
-  rngState = deriveSeed(run.seed, `round${run.roundIndex}`),
-  target = run.target,
-  twist: Twist | null = null,
-): RoundState {
-  return startRound(roundSetup(run, rngState, target, twist));
-}
-
-/** The points of the best single set in a score count: its chips × its mult. */
-function biggestSet(steps: readonly ScoreStep[]): number {
-  let best = 0;
-  for (const st of steps) {
-    if (st.type !== 'set') continue;
-    const chips = st.setChips + st.levelChips + st.tileChips + st.enhChips;
-    const mult = st.setMult + st.levelMult + st.enhMult + st.twistMult;
-    best = Math.max(best, Math.floor(chips * mult * st.enhX));
-  }
-  return best;
-}
-
-// ---- the reducer -------------------------------------------------------------------------------
-type R = Reduced<RunState, RunEvent>;
-
-function illegal(s: RunState, reason: string): R {
-  return { state: s, events: [{ type: 'illegal', reason }] };
-}
-
-function wrap(events: RoundEvent[]): RunEvent[] {
-  return events.map((event) => ({ type: 'round', event }));
-}
-
-export function runReduce(s: RunState, a: RunAction): R {
+/** Why the action can't be done now, or null. */
+export function runProblem(run: RunState, a: RunAction): string | null {
   switch (a.type) {
-    case 'chooseHost':
-      return chooseHost(s, a.storm);
     case 'round':
-      return roundAction(s, a.action);
-    case 'continue':
-      return proceed(s);
-    case 'gift':
-      return takeGift(s, a.pick, a.replace);
-    case 'buy':
-      return buy(s, a.what, a.index);
-    case 'pack':
-      return choosePack(s, a.pick);
+      return run.phase === 'round' && run.current ? null : 'No round is being played.';
+    case 'collect':
+      return run.phase === 'cashout' ? null : 'Nothing to collect.';
+    case 'pickGift': {
+      if (run.phase !== 'gift' || !run.gift?.[a.index]) return 'No gift there.';
+      return dieRoomProblem(run, a.replace);
+    }
+    case 'skipGift':
+      return run.phase === 'gift' ? null : 'No gift to skip.';
+    case 'buyCharm': {
+      const o = run.shop?.charms[a.index];
+      if (run.phase !== 'shop' || !o || o.sold) return 'Not for sale.';
+      if (run.money < o.price) return 'Not enough money.';
+      if (run.charms.length >= CHARM_SLOTS) {
+        if (!a.replace || !run.charms.includes(a.replace)) return 'Your charm slots are full.';
+      }
+      return null;
+    }
+    case 'buyDie': {
+      const o = run.shop?.dice[a.index];
+      if (run.phase !== 'shop' || !o || o.sold) return 'Not for sale.';
+      if (run.money < o.price) return 'Not enough money.';
+      return dieRoomProblem(run, a.replace);
+    }
+    case 'buyTool': {
+      const o = run.shop?.tools[a.index];
+      if (run.phase !== 'shop' || !o || o.sold) return 'Not for sale.';
+      if (run.money < o.price) return 'Not enough money.';
+      return run.tools.length >= TOOL_POCKET ? 'Your pocket is full.' : null;
+    }
+    case 'buyPage': {
+      const o = run.shop?.pages[a.index];
+      if (run.phase !== 'shop' || !o || o.sold) return 'Not for sale.';
+      return run.money < o.price ? 'Not enough money.' : null;
+    }
     case 'reroll':
-      return reroll(s);
-    case 'burn':
-      return burn(s, a.kind);
-    case 'sell':
-      return sell(s, a.index);
-    case 'fortune':
-      return useFortune(s, a.index, a.args);
-    case 'leave':
-      return leave(s);
-    case 'record':
-      return { state: { ...s, recorded: true }, events: [] };
-    case 'tip':
-      return s.tipsSeen.includes(a.id)
-        ? { state: s, events: [] }
-        : { state: { ...s, tipsSeen: [...s.tipsSeen, a.id] }, events: [] };
-  }
-}
-
-function chooseHost(s: RunState, storm: boolean): R {
-  if (s.phase !== 'host') return illegal(s, 'Not choosing a host.');
-  const host = hostFor(s.roundIndex, storm);
-  const target = targetFor(
-    s.lantern,
-    s.roundIndex,
-    storm,
-    s.targets,
-    host.targetMult ?? s.stormMult,
-  );
-  // The lesson's first round is a plain one: no twist to explain yet.
-  const plain = s.guided && s.roundIndex === 0;
-  const round = dealRound(
-    s,
-    undefined,
-    target,
-    plain ? null : (s.twistOverrides?.[host.id] ?? host.twist),
-  );
-  return {
-    state: {
-      ...s,
-      phase: 'round',
-      storm,
-      hostId: host.id,
-      hostIds: [...s.hostIds, host.id],
-      target,
-      round,
-    },
-    events: [{ type: 'phase', phase: 'round' }],
-  };
-}
-
-function roundAction(s: RunState, action: Parameters<typeof roundReduce>[1]): R {
-  if (s.phase !== 'round' || !s.round) return illegal(s, 'No round is being played.');
-  const r = roundReduce(s.round, action);
-  return afterRound(s, r.state, r.events);
-}
-
-/** Fold a round's new state into the run, and settle the round if it just ended. */
-function afterRound(s: RunState, round: RoundState, events: RoundEvent[]): R {
-  const out: RunEvent[] = wrap(events);
-  if (round.phase !== 'done' || !round.result) return { state: { ...s, round }, events: out };
-  const result = round.result;
-  const score = result.score.total;
-  const cracked = new Set(result.cracked);
-  const tiles = s.tiles.filter((t) => !cracked.has(t.id));
-  const won = score >= s.target;
-  const scores = [...s.scores, score];
-  const stats = {
-    ...s.stats,
-    bestRound: Math.max(s.stats.bestRound, score),
-    roundsWon: s.stats.roundsWon + (won ? 1 : 0),
-    bigSet: Math.max(s.stats.bigSet, biggestSet(result.score.steps)),
-  };
-  const hostsBeaten = won && s.hostId ? [...s.hostsBeaten, s.hostId] : s.hostsBeaten;
-  const base = { ...s, round, tiles, scores, stats, hostsBeaten };
-  if (!won) {
-    out.push({ type: 'phase', phase: 'over' });
-    return { state: { ...base, phase: 'over' }, events: out };
-  }
-  if (s.roundIndex >= s.targets.length - 1) {
-    out.push({ type: 'phase', phase: 'won' });
-    return { state: { ...base, phase: 'won' }, events: out };
-  }
-  const reward = MONEY.rewards[s.roundIndex] ?? 0;
-  const discards = result.unusedDiscards * MONEY.perUnusedDiscard;
-  const interest = interestFor(s);
-  const income = dragonIncome(s.dragons);
-  const total = reward + discards + interest + income + result.gold;
-  const payout: Payout = { reward, discards, interest, income, gold: result.gold, total };
-  out.push({ type: 'phase', phase: 'payout' }, { type: 'money', delta: total });
-  return { state: { ...base, phase: 'payout', payout, money: s.money + total }, events: out };
-}
-
-/** payout -> gift (or straight to the shop when there is nothing to give). */
-function proceed(s: RunState): R {
-  if (s.phase !== 'payout') return illegal(s, 'Nothing to continue.');
-  const pool = DRAGON_IDS.filter((id) => DRAGONS[id]?.rarity === 'rare' && !s.dragons.includes(id));
-  if (pool.length === 0) return enterShop({ ...s, payout: null });
-  const rng = new Rng(s.rng);
-  const n = s.storm ? GIFT.stormOffers : GIFT.calmOffers;
-  const offers = rng.shuffle(pool).slice(0, n);
-  const bonus = s.storm ? GIFT.stormMoney : 0;
-  const gift: GiftState = { offers, bonus };
-  return {
-    state: { ...s, rng: rng.state, phase: 'gift', gift, payout: null, money: s.money + bonus },
-    events: [
-      { type: 'phase', phase: 'gift' },
-      ...(bonus ? [{ type: 'money' as const, delta: bonus }] : []),
-    ],
-  };
-}
-
-function enterShop(s: RunState): R {
-  const rng = new Rng(s.rng);
-  const shop = rollShop(s, rng);
-  return {
-    state: { ...s, rng: rng.state, phase: 'shop', gift: null, shop },
-    events: [{ type: 'phase', phase: 'shop' }],
-  };
-}
-
-function takeGift(s: RunState, pick: number | null, replace?: number): R {
-  if (s.phase !== 'gift' || !s.gift) return illegal(s, 'No gift to take.');
-  let dragons = s.dragons;
-  if (pick !== null) {
-    const id = s.gift.offers[pick];
-    if (id === undefined) return illegal(s, 'No such gift.');
-    if (dragons.length >= DRAGON_SLOTS) {
-      if (replace === undefined || replace < 0 || replace >= dragons.length)
-        return illegal(s, 'Your dragons are full: swap one out or decline.');
-      dragons = dragons.map((c, i) => (i === replace ? id : c));
-    } else dragons = [...dragons, id];
-  }
-  return enterShop({ ...s, dragons });
-}
-
-// ---- the teahouse ------------------------------------------------------------------------------
-function buy(s: RunState, what: 'dragon' | 'almanac' | 'fortune' | 'pack', index: number): R {
-  const shop = s.shop;
-  if (s.phase !== 'shop' || !shop) return illegal(s, 'The teahouse is closed.');
-  if (shop.open) return illegal(s, 'Finish opening the pack first.');
-  switch (what) {
-    case 'dragon': {
-      const o = shop.dragons[index];
-      if (!o || o.sold) return illegal(s, 'Sold.');
-      if (s.money < o.price) return illegal(s, 'Not enough money.');
-      if (s.dragons.length >= DRAGON_SLOTS) return illegal(s, 'Your dragon row is full.');
-      const dragons = shop.dragons.map((x, i) => (i === index ? { ...x, sold: true } : x));
-      return ok(
-        {
-          ...s,
-          money: s.money - o.price,
-          dragons: [...s.dragons, o.item],
-          shop: { ...shop, dragons },
-        },
-        -o.price,
-      );
+      if (run.phase !== 'shop' || !run.shop) return 'Not in the teahouse.';
+      return run.money < rerollPrice(run) ? 'Not enough money.' : null;
+    case 'sellCharm':
+      if (run.phase !== 'shop' && run.phase !== 'gift') return 'Sell in the teahouse.';
+      if (!run.charms.includes(a.id)) return 'You don’t have that.';
+      if (CHARMS[a.id]?.effect.type === 'cup' && run.dice.length > RULES.cup)
+        return 'Sell a die first: the Second Cup is holding it.';
+      return null;
+    case 'sellDie':
+      if (run.phase !== 'shop' && run.phase !== 'gift') return 'Sell in the teahouse.';
+      if (!run.dice.some((d) => d.id === a.dieId)) return 'You don’t have that die.';
+      return run.dice.length <= RULES.minDice ? `Keep at least ${RULES.minDice} dice.` : null;
+    case 'useTool': {
+      if (run.phase !== 'shop' && run.phase !== 'gift') return 'Use tools between rounds.';
+      const id = run.tools[a.slot];
+      if (!id) return 'No tool there.';
+      return toolProblem(id, run.dice, a.dieId, a.face, a.arg);
     }
-    case 'almanac': {
-      const o = shop.almanac[index];
-      if (!o || o.sold) return illegal(s, 'Sold.');
-      if (s.money < o.price) return illegal(s, 'Not enough money.');
-      const almanac = shop.almanac.map((x, i) => (i === index ? { ...x, sold: true } : x));
-      const levels = { ...s.levels, [o.item]: (s.levels[o.item] ?? 0) + 1 };
-      return ok({ ...s, money: s.money - o.price, levels, shop: { ...shop, almanac } }, -o.price);
-    }
-    case 'fortune': {
-      const o = shop.fortunes[index];
-      if (!o || o.sold) return illegal(s, 'Sold.');
-      if (s.money < o.price) return illegal(s, 'Not enough money.');
-      if (s.fortunes.length >= FORTUNE_SLOTS) return illegal(s, 'Your fortune pocket is full.');
-      const fortunes = shop.fortunes.map((x, i) => (i === index ? { ...x, sold: true } : x));
-      return ok(
-        {
-          ...s,
-          money: s.money - o.price,
-          fortunes: [...s.fortunes, o.item],
-          shop: { ...shop, fortunes },
-        },
-        -o.price,
-      );
-    }
-    case 'pack': {
-      const o = shop.pack;
-      if (o.sold) return illegal(s, 'Sold.');
-      if (s.money < o.price) return illegal(s, 'Not enough money.');
-      const rng = new Rng(s.rng);
-      const open = openPack(o.item, s, rng);
-      return ok(
-        {
-          ...s,
-          rng: rng.state,
-          money: s.money - o.price,
-          shop: { ...shop, pack: { ...o, sold: true }, open },
-        },
-        -o.price,
-      );
-    }
+    case 'moveDie':
+      if (run.phase === 'round' || run.phase === 'over' || run.phase === 'won')
+        return 'Arrange your cup between rounds.';
+      return run.dice.some((d) => d.id === a.dieId) ? null : 'No such die.';
+    case 'next':
+      return run.phase === 'shop' ? null : 'Not in the teahouse.';
   }
 }
 
-function ok(state: RunState, delta = 0): R {
-  return { state, events: delta ? [{ type: 'money', delta }] : [] };
+function dieRoomProblem(run: RunState, replace?: number): string | null {
+  if (run.dice.length < cupSize(run.charms)) return null;
+  if (replace === undefined || !run.dice.some((d) => d.id === replace))
+    return 'Your cup is full: choose a die to give up.';
+  return null;
 }
 
-function choosePack(s: RunState, pick: number | null): R {
-  const shop = s.shop;
-  if (s.phase !== 'shop' || !shop?.open) return illegal(s, 'No pack is open.');
-  let next: RunState = { ...s, shop: { ...shop, open: undefined } };
-  if (pick !== null) {
-    const offer = shop.open.offers[pick];
-    if (!offer) return illegal(s, 'No such offer.');
-    if (offer.type === 'page') {
-      next = {
-        ...next,
-        levels: { ...next.levels, [offer.set]: (next.levels[offer.set] ?? 0) + 1 },
+export function rerollPrice(run: RunState): number {
+  return RULES.shop.reroll + (run.shop?.rerolls ?? 0);
+}
+
+function addDie(d: Draft, die: Die, replace?: number): void {
+  const fresh = { ...die, id: d.nextId };
+  d.nextId += 1;
+  if (replace !== undefined && d.dice.length >= cupSize(d.charms)) {
+    d.dice = d.dice.map((x) => (x.id === replace ? fresh : x));
+  } else {
+    d.dice = [...d.dice, fresh];
+  }
+}
+
+function pickCharms(rng: Rng, owned: readonly string[], n: number): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const pool = CHARM_IDS.filter((id) => !owned.includes(id) && !out.includes(id));
+    if (pool.length === 0) break;
+    out.push(rng.weighted(pool, (id) => RARITY_WEIGHT[CHARMS[id]?.rarity ?? 'common']));
+  }
+  return out;
+}
+
+function dicePrice(die: Die, templateId: string): number {
+  const t = DIE_TEMPLATES[templateId];
+  return (t?.price ?? 5) + die.faces.filter((f) => f.enh).length;
+}
+
+function makeShop(d: Draft, rng: Rng, rerolls = 0): ShopState {
+  const charms = pickCharms(rng, d.charms, RULES.shop.charms).map((id) => ({
+    item: id,
+    price: charmPrice(id),
+    sold: false,
+  }));
+  const dice = Array.from({ length: RULES.shop.dice }, () => {
+    const t = rng.pick(OFFERED_TEMPLATES);
+    const die = makeDie(0, t, rng);
+    return { item: die, price: dicePrice(die, t), sold: false };
+  });
+  const tools = Array.from({ length: RULES.shop.tools }, () => {
+    const id = rng.pick(TOOL_IDS);
+    return { item: id, price: TOOLS[id]?.price ?? 3, sold: false };
+  });
+  const pages = Array.from({ length: RULES.shop.pages }, () => {
+    const id = rng.weighted(PATTERNS, (p) => (p.id === 'chicken' ? 4 : 1)).id;
+    return { item: id, price: RULES.shop.pagePrice, sold: false };
+  });
+  d.seen = [...new Set([...d.seen, ...charms.map((c) => c.item)])];
+  return { charms, dice, tools, pages, rerolls };
+}
+
+function makeGift(rng: Rng): Die[] {
+  const ids = rng.shuffle(GIFT_TEMPLATES).slice(0, RULES.gift.dice);
+  return ids.map((t) => makeDie(0, t, rng));
+}
+
+/** What a won round pays. */
+export function cashLines(run: RunState, r: RoundState): CashLine[] {
+  const m = RULES.money;
+  const lines: CashLine[] = [
+    { label: r.host ? 'Host round' : 'Round', amount: r.host ? m.host : m.plain },
+  ];
+  const rolls = Math.min(r.rollsLeft, m.maxRollPay) * m.perRoll;
+  if (rolls > 0) lines.push({ label: `Rolls left (${r.rollsLeft})`, amount: rolls });
+  if (r.returnsLeft > 0)
+    lines.push({ label: `Returns left (${r.returnsLeft})`, amount: r.returnsLeft * m.perReturn });
+  if (r.money > 0) lines.push({ label: 'Gold faces', amount: r.money });
+  for (const e of charmEffects(run.charms))
+    if (e.type === 'money') lines.push({ label: 'Gold Toad', amount: e.amount });
+  const interest = Math.min(Math.floor(run.money / m.interestPer), m.maxInterest);
+  if (interest > 0) lines.push({ label: 'Interest', amount: interest });
+  return lines;
+}
+
+export function runReducer(run: RunState, a: RunAction): RunResult {
+  const problem = runProblem(run, a);
+  if (problem) throw new Error(problem);
+  const d: Draft = { ...run };
+  const rng = new Rng(run.rng);
+  const events: RunEvent[] = [];
+  const setPhase = (p: Phase) => {
+    d.phase = p;
+    events.push({ type: 'phase', phase: p });
+  };
+  const pay = (delta: number, why: string) => {
+    if (delta === 0) return;
+    d.money += delta;
+    events.push({ type: 'money', delta, why });
+  };
+  switch (a.type) {
+    case 'round': {
+      const r = roundReducer(run.current as RoundState, a.action);
+      d.current = r.state;
+      for (const e of r.events) events.push({ type: 'round', event: e });
+      if (r.state.over) {
+        const rs = r.state;
+        // cracked porcelain stays cracked
+        for (const c of rs.cracked)
+          d.dice = d.dice.map((x) => (x.id === c.dieId ? withFace(x, c.face, { kind: null }) : x));
+        d.history = [
+          ...d.history,
+          {
+            index: rs.index,
+            target: rs.target,
+            score: rs.score,
+            hands: rs.hands.length,
+            best: Math.max(0, ...rs.hands.map((h) => h.total)),
+            patterns: rs.hands.flatMap((h) => h.patterns),
+          },
+        ];
+        if (rs.score < rs.target) setPhase('over');
+        else if (rs.index >= roundsOf(d) - 1) setPhase('won');
+        else {
+          d.cashout = cashLines(d, rs);
+          setPhase('cashout');
+        }
+      }
+      break;
+    }
+    case 'collect': {
+      const total = (d.cashout ?? []).reduce((s, l) => s + l.amount, 0);
+      pay(total, 'cashout');
+      d.cashout = null;
+      if (isHostRound(d.round)) {
+        d.gift = makeGift(rng);
+        setPhase('gift');
+      } else {
+        d.shop = makeShop(d, rng);
+        setPhase('shop');
+      }
+      break;
+    }
+    case 'pickGift': {
+      addDie(d, (d.gift as Die[])[a.index] as Die, a.replace);
+      d.gift = null;
+      d.shop = makeShop(d, rng);
+      setPhase('shop');
+      break;
+    }
+    case 'skipGift':
+      d.gift = null;
+      d.shop = makeShop(d, rng);
+      setPhase('shop');
+      break;
+    case 'buyCharm': {
+      const shop = d.shop as ShopState;
+      const o = shop.charms[a.index] as ShopOffer<string>;
+      pay(-o.price, 'charm');
+      d.charms =
+        d.charms.length >= CHARM_SLOTS && a.replace
+          ? d.charms.map((c) => (c === a.replace ? o.item : c))
+          : [...d.charms, o.item];
+      d.shop = {
+        ...shop,
+        charms: shop.charms.map((x, i) => (i === a.index ? { ...x, sold: true } : x)),
       };
-    } else {
-      let id = s.nextTileId;
-      const added = offer.kinds.map((kind) => ({ id: id++, kind }));
-      next = { ...next, tiles: [...next.tiles, ...added], nextTileId: id };
+      events.push({ type: 'bought', what: 'charm', id: o.item });
+      break;
+    }
+    case 'buyDie': {
+      const shop = d.shop as ShopState;
+      const o = shop.dice[a.index] as ShopOffer<Die>;
+      pay(-o.price, 'die');
+      addDie(d, o.item, a.replace);
+      d.shop = {
+        ...shop,
+        dice: shop.dice.map((x, i) => (i === a.index ? { ...x, sold: true } : x)),
+      };
+      events.push({ type: 'bought', what: 'die', id: o.item.name });
+      break;
+    }
+    case 'buyTool': {
+      const shop = d.shop as ShopState;
+      const o = shop.tools[a.index] as ShopOffer<string>;
+      pay(-o.price, 'tool');
+      d.tools = [...d.tools, o.item];
+      d.shop = {
+        ...shop,
+        tools: shop.tools.map((x, i) => (i === a.index ? { ...x, sold: true } : x)),
+      };
+      events.push({ type: 'bought', what: 'tool', id: o.item });
+      break;
+    }
+    case 'buyPage': {
+      const shop = d.shop as ShopState;
+      const o = shop.pages[a.index] as ShopOffer<PatternId>;
+      pay(-o.price, 'page');
+      const level = (d.levels[o.item] ?? 0) + 1;
+      d.levels = { ...d.levels, [o.item]: level };
+      d.shop = {
+        ...shop,
+        pages: shop.pages.map((x, i) => (i === a.index ? { ...x, sold: true } : x)),
+      };
+      events.push({ type: 'level', pattern: o.item, level });
+      break;
+    }
+    case 'reroll': {
+      pay(-rerollPrice(d), 'reroll');
+      const old = d.shop as ShopState;
+      const fresh = makeShop(d, rng, old.rerolls + 1);
+      // a reroll changes the charms and dice; tools and pages stay
+      d.shop = { ...fresh, tools: old.tools, pages: old.pages };
+      break;
+    }
+    case 'sellCharm': {
+      pay(Math.floor(charmPrice(a.id) / 2), 'sell');
+      d.charms = d.charms.filter((c) => c !== a.id);
+      break;
+    }
+    case 'sellDie':
+      pay(RULES.shop.dieSell, 'sell');
+      d.dice = d.dice.filter((x) => x.id !== a.dieId);
+      break;
+    case 'useTool': {
+      const id = d.tools[a.slot] as string;
+      d.dice = applyTool(id, d.dice, a.dieId, a.face, rng, a.arg);
+      d.tools = d.tools.filter((_, i) => i !== a.slot);
+      events.push({ type: 'tool', toolId: id, dieId: a.dieId, face: a.face });
+      break;
+    }
+    case 'moveDie': {
+      const die = d.dice.find((x) => x.id === a.dieId) as Die;
+      const rest = d.dice.filter((x) => x.id !== a.dieId);
+      const to = Math.max(0, Math.min(rest.length, a.to));
+      d.dice = [...rest.slice(0, to), die, ...rest.slice(to)];
+      break;
+    }
+    case 'next': {
+      d.shop = null;
+      d.round += 1;
+      d.current = startRound(d);
+      setPhase('round');
+      break;
     }
   }
-  return ok(next);
-}
-
-function reroll(s: RunState): R {
-  const shop = s.shop;
-  if (s.phase !== 'shop' || !shop) return illegal(s, 'The teahouse is closed.');
-  if (shop.open) return illegal(s, 'Finish opening the pack first.');
-  const price = rerollPrice(shop);
-  if (s.money < price) return illegal(s, 'Not enough money.');
-  const rng = new Rng(s.rng);
-  const dragons = rollDragons(s.dragons, rng);
-  return ok(
-    {
-      ...s,
-      rng: rng.state,
-      money: s.money - price,
-      shop: { ...shop, dragons, rerolls: shop.rerolls + 1 },
-    },
-    -price,
-  );
-}
-
-function burn(s: RunState, kind: string): R {
-  const shop = s.shop;
-  if (s.phase !== 'shop' || !shop) return illegal(s, 'The teahouse is closed.');
-  if (shop.burned) return illegal(s, 'You already burned a kind this visit.');
-  if (s.money < SHOP.burnPrice) return illegal(s, 'Not enough money.');
-  if (!countKinds(s.tiles).has(kind)) return illegal(s, 'You have none of that tile.');
-  return ok(
-    {
-      ...s,
-      money: s.money - SHOP.burnPrice,
-      tiles: s.tiles.filter((t) => t.kind !== kind),
-      shop: { ...shop, burned: true },
-    },
-    -SHOP.burnPrice,
-  );
-}
-
-function sell(s: RunState, index: number): R {
-  if (s.phase !== 'shop' && s.phase !== 'gift') return illegal(s, 'Nothing to sell to.');
-  const id = s.dragons[index];
-  if (id === undefined) return illegal(s, 'No such dragon.');
-  const price = sellPrice(id);
-  return ok(
-    { ...s, money: s.money + price, dragons: s.dragons.filter((_, i) => i !== index) },
-    price,
-  );
-}
-
-function leave(s: RunState): R {
-  if (s.phase !== 'shop' || !s.shop) return illegal(s, 'Not in the teahouse.');
-  if (s.shop.open) return illegal(s, 'Finish opening the pack first.');
-  return {
-    state: {
-      ...s,
-      phase: 'host',
-      roundIndex: s.roundIndex + 1,
-      shop: null,
-      round: null,
-      hostId: null,
-      storm: false,
-      target: targetFor(s.lantern, s.roundIndex + 1, false, s.targets),
-    },
-    events: [{ type: 'phase', phase: 'host' }],
-  };
-}
-
-// ---- fortunes ----------------------------------------------------------------------------------
-/** The tiles a fortune may act on: the whole set in the teahouse, your hand in a round. */
-export function fortunePool(s: RunState): readonly Tile[] {
-  if (s.phase === 'round' && s.round?.phase === 'play') return s.round.hand;
-  if (s.phase === 'shop') return s.tiles;
-  return [];
-}
-
-function useFortune(s: RunState, index: number, args: FortuneArgs): R {
-  const id = s.fortunes[index];
-  if (id === undefined) return illegal(s, 'No such fortune.');
-  const inRound = s.phase === 'round' && s.round?.phase === 'play';
-  if (!inRound && !(s.phase === 'shop' && !s.shop?.open)) return illegal(s, 'Not now.');
-  const pool = fortunePool(s);
-  const problem = fortuneProblem(id, pool, args);
-  if (problem) return illegal(s, problem);
-  const out = applyFortune(id, s.tiles, s.nextTileId, args);
-  let round = s.round;
-  if (inRound && round) {
-    const byId = new Map(out.tiles.map((t) => [t.id, t]));
-    const removed = new Set(out.removed);
-    let stacks = round.stacks;
-    const rng = new Rng(round.rng);
-    // A copy made in a round goes into the pile at a random depth.
-    for (const t of out.added) stacks = intoPile(stacks, t, rng);
-    round = refill(
-      {
-        ...round,
-        rng: rng.state,
-        stacks,
-        copies: Object.fromEntries(countKinds(out.tiles)),
-        hand: round.hand.filter((t) => !removed.has(t.id)).map((t) => byId.get(t.id) ?? t),
-      },
-      [],
-    );
-  }
-  return {
-    state: {
-      ...s,
-      tiles: out.tiles,
-      nextTileId: out.nextTileId,
-      fortunes: s.fortunes.filter((_, i) => i !== index),
-      round,
-    },
-    events: [],
-  };
+  d.rng = rng.state;
+  return { state: d, events };
 }
