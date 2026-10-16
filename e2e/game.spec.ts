@@ -88,7 +88,7 @@ test('the score count shows a finished hand', async ({ page }, info) => {
   await freshGame(page, 7, 'normal');
   for (let i = 0; i < 400; i++) {
     const a = await page.evaluate(() => window.__bb!.advise());
-    if (!a || a.action.type === 'end') break;
+    if (!a || (a.type === 'round' && a.action.type === 'end')) break;
     await page.evaluate((x) => window.__bb!.dispatch(x), a);
     if (await page.locator('.count-overlay').count()) {
       await page.waitForTimeout(2600);
